@@ -1,0 +1,4 @@
+email.address=some_user@gmail.com
+password=some_password
+release.number=version_number
+test.env=dashboard_to_test
