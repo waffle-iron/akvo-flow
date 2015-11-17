@@ -63,6 +63,14 @@
 		<url-pattern>/currentuser.js</url-pattern>
 	</servlet-mapping>
 	<servlet>
+		<servlet-name>DataScriptServlet</servlet-name>
+		<servlet-class>org.waterforpeople.mapping.app.web.DataScriptServlet</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>DataScriptServlet</servlet-name>
+		<url-pattern>/datascript</url-pattern>
+	</servlet-mapping>
+	<servlet>
 		<servlet-name>EnvServlet</servlet-name>
 		<servlet-class>org.waterforpeople.mapping.app.web.EnvServlet</servlet-class>
 	</servlet>
