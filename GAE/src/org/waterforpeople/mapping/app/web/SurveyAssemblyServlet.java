@@ -18,7 +18,9 @@ package org.waterforpeople.mapping.app.web;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -31,6 +33,12 @@ import javax.xml.bind.JAXBException;
 
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.log4j.Logger;
+import org.apache.velocity.Template;
+import org.apache.velocity.VelocityContext;
+import org.apache.velocity.app.VelocityEngine;
+import org.apache.velocity.exception.MethodInvocationException;
+import org.apache.velocity.exception.ParseErrorException;
+import org.apache.velocity.exception.ResourceNotFoundException;
 import org.waterforpeople.mapping.app.web.dto.SurveyAssemblyRequest;
 import org.waterforpeople.mapping.dao.SurveyContainerDao;
 
@@ -155,7 +163,8 @@ public class SurveyAssemblyServlet extends AbstractRestApiServlet {
                 queue.add(options);
             } else {
                 // assembleSurvey(importReq.getSurveyId());
-                assembleSurveyOnePass(importReq.getSurveyId());
+                // assembleSurveyOnePass(importReq.getSurveyId());
+                assembleReportOnePass(importReq.getSurveyId());
             }
 
             List<Long> ids = new ArrayList<Long>();
@@ -352,6 +361,237 @@ public class SurveyAssemblyServlet extends AbstractRestApiServlet {
             log.warn("Completed onepass assembly method for " + surveyId);
         }
     }
+
+    // ****************************** Report stuff ***********************
+    private Map<String, String> createContents(List<Question> questions) {
+        StringBuilder columnHints = new StringBuilder();
+        StringBuilder resultSet = new StringBuilder();
+        StringBuilder queryText = new StringBuilder();
+        StringBuilder boundDataColumns = new StringBuilder();
+        StringBuilder headerCells = new StringBuilder();
+        StringBuilder detailCells = new StringBuilder();
+
+        int index = 0;
+        queryText.append("select ");
+
+        if (questions != null) {
+            for (Question q : questions) {
+                // compute column names
+                List<Map<String, String>> colNames = new ArrayList<Map<String, String>>();
+                if (q.getType().equals(Question.Type.GEO)) {
+                    Map<String, String> names = new HashMap<String, String>();
+                    names.put("columnName", "latitude");
+                    names.put("displayName", q.getText() + " - latitude");
+                    names.put("heading", q.getText() + " - latitude");
+                    names.put("position", index + "");
+                    names.put("dataType", "string");
+                    colNames.add(names);
+
+                    // queryText
+                    queryText.append("q" + q.getKey().getId() + "->>'lat' AS latitude,");
+                    index++;
+
+                    Map<String, String> names2 = new HashMap<String, String>();
+                    names2.put("columnName", "longitude");
+                    names2.put("displayName", q.getText() + " - longitude");
+                    names2.put("heading", q.getText() + " - longitude");
+                    names2.put("position", index + "");
+                    names2.put("dataType", "string");
+                    colNames.add(names2);
+
+                    // queryText
+                    queryText.append("q" + q.getKey().getId() + "->>'lon' AS longitude,");
+
+                } else {
+                    Map<String, String> names = new HashMap<String, String>();
+                    names.put("columnName", "q" + q.getKey().getId());
+                    names.put("displayName", q.getText());
+                    names.put("heading", q.getText());
+                    names.put("position", index + "");
+                    names.put("dataType", "string");
+                    colNames.add(names);
+
+                    // queryText
+                    queryText.append("q" + q.getKey().getId() + ",");
+                }
+
+                for (Map<String, String> name : colNames) {
+                    // columnHints
+                    columnHints.append("<structure>\n");
+                    columnHints.append("<property name=\"columnName\">" + name.get("columnName")
+                            + "</property>\n");
+                    columnHints.append("<text-property name=\"displayName\">"
+                            + name.get("displayName")
+                            + "</text-property>\n");
+                    columnHints.append("<text-property name=\"heading\">" + name.get("displayName")
+                            + "</text-property>\n");
+                    columnHints.append("</structure>\n");
+
+                    // resultSet
+                    resultSet.append("<structure>\n");
+                    resultSet.append("<property name=\"position\">" + name.get("position")
+                            + "</property>\n");
+                    resultSet.append("<property name=\"name\">" + name.get("columnName")
+                            + "</property>\n");
+                    resultSet.append("<property name=\"nativeName\">" + name.get("columnName")
+                            + "</property>\n");
+                    resultSet.append("<property name=\"dataType\">" + name.get("dataType")
+                            + "</property>\n");
+                    resultSet.append("</structure>\n");
+
+                    // boundColumns
+                    boundDataColumns.append("<structure>\n");
+                    boundDataColumns.append("<property name=\"name\">" + name.get("columnName")
+                            + "</property>\n");
+                    boundDataColumns.append("<text-property name=\"displayName\">"
+                            + name.get("displayName")
+                            + "</text-property>\n");
+                    boundDataColumns
+                            .append("<expression name=\"expression\" type=\"javascript\">dataSetRow[\""
+                                    + name.get("columnName") + "\"]</expression>");
+                    boundDataColumns
+                            .append("<property name=\"dataType\">" + name.get("dataType")
+                                    + "</property>\n");
+                    boundDataColumns.append("</structure>\n");
+
+                    // headerCells
+                    headerCells.append("<cell>\n<label>\n");
+                    headerCells.append("<text-property name=\"text\">" + name.get("displayName")
+                            + "</text-property>\n");
+                    headerCells.append("</label>\n</cell>\n");
+
+                    // detailCells
+                    detailCells.append("<cell>\n<data>\n");
+                    detailCells.append("<property name=\"resultSetColumn\">"
+                            + name.get("columnName")
+                            + "</property>");
+                    detailCells.append("</data>\n</cell>\n");
+                }
+                index++;
+            }
+        }
+        // remove last added comma
+        queryText.deleteCharAt(queryText.length() - 1);
+
+        queryText.append(" from " + "f" + questions.get(0).getSurveyId());
+
+        Map<String, String> result = new HashMap<String, String>();
+        result.put("columnHints", columnHints.toString());
+        result.put("resultSet", resultSet.toString());
+        result.put("queryText", queryText.toString());
+        result.put("boundDataColumns", boundDataColumns.toString());
+        result.put("headerCells", headerCells.toString());
+        result.put("detailCells", detailCells.toString());
+
+        return result;
+    }
+
+    private void assembleReportOnePass(Long surveyId) {
+        log.warn("Starting assembly of report for " + surveyId);
+        SurveyDAO surveyDao = new SurveyDAO();
+        Survey s = surveyDao.getById(surveyId);
+        SurveyGroupDAO surveyGroupDao = new SurveyGroupDAO();
+        SurveyGroup sg = surveyGroupDao.getByKey(s.getSurveyGroupId());
+        Long transactionId = randomNumber.nextLong();
+        String lang = "en";
+        if (s != null && s.getDefaultLanguageCode() != null) {
+            lang = s.getDefaultLanguageCode();
+        }
+        final String versionAttribute = s.getVersion() == null ? "" : "version='"
+                + s.getVersion() + "'";
+        String name = s.getName();
+
+        final VelocityEngine engine = new VelocityEngine();
+        engine.setProperty("runtime.log.logsystem.class",
+                "org.apache.velocity.runtime.log.NullLogChute");
+        Template t = null;
+        try {
+            engine.init();
+            t = engine.getTemplate("simpleReport.vm");
+        } catch (Exception e) {
+            log.error("Could not initialize velocity templating engine or get template", e);
+            return;
+        }
+
+        final VelocityContext context = new VelocityContext();
+
+        QuestionDao questionDao = new QuestionDao();
+        // get list of questions
+        List<Question> questions = questionDao.listQuestionsInOrder(surveyId, null);
+
+        // create survey specific content
+        Map<String, String> contents = createContents(questions);
+
+        context.put("columnHints", contents.get("columnHints"));
+        context.put("resultSet", contents.get("resultSet"));
+        context.put("queryText", contents.get("queryText"));
+        context.put("boundDataColumns", contents.get("boundDataColumns"));
+        context.put("headerCells", contents.get("headerCells"));
+        context.put("detailCells", contents.get("detailCells"));
+
+        StringWriter writer = new StringWriter();
+        try {
+            t.merge(context, writer);
+        } catch (ResourceNotFoundException | ParseErrorException | MethodInvocationException
+                | IOException e) {
+            log.error("Could not create XML for report", e);
+            e.printStackTrace();
+        }
+        String reportXml = writer.toString();
+
+        // save the report to S3
+        saveReportToS3(s, sg, transactionId, surveyId, reportXml);
+    }
+
+    private void saveReportToS3(Survey s, SurveyGroup sg, Long transactionId, Long surveyId,
+            String reportXml) {
+        log.warn("Uploading report for" + surveyId);
+        UploadStatusContainer uc = uploadReportXML(surveyId,
+                reportXml);
+        Message message = new Message();
+        message.setActionAbout("reportAssembly");
+        message.setObjectId(surveyId);
+        message.setObjectTitle(sg.getCode() + " / " + s.getName());
+
+        if (uc.getUploadedFile()) {
+            log.warn("Finishing assembly of " + surveyId);
+            String messageText = "Report published.  Please check: " + uc.getUrl();
+            message.setShortMessage(messageText);
+            message.setTransactionUUID(transactionId.toString());
+            MessageDao messageDao = new MessageDao();
+            messageDao.save(message);
+        } else {
+            String messageText = "Failed to publish report: " + surveyId + "\n"
+                    + uc.getMessage();
+            message.setTransactionUUID(transactionId.toString());
+            message.setShortMessage(messageText);
+            MessageDao messageDao = new MessageDao();
+            messageDao.save(message);
+        }
+        log.warn("Completed onepass assembly method for report for " + surveyId);
+    }
+
+    public UploadStatusContainer uploadReportXML(Long surveyId, String reportXML) {
+        Properties props = System.getProperties();
+        String bucketName = props.getProperty("s3bucket");
+        boolean uploadedFile = false;
+
+        try {
+            uploadedFile = S3Util.put(bucketName, "reports" + "/" + surveyId
+                    + ".xml", reportXML.getBytes("UTF-8"), "text/xml", true);
+        } catch (IOException e) {
+            log.error("Error uploading file: " + e.getMessage(), e);
+        }
+
+        UploadStatusContainer uc = new UploadStatusContainer();
+
+        uc.setUploadedFile(uploadedFile);
+        uc.setUrl(props.getProperty(SURVEY_UPLOAD_URL)
+                + "reports" + "/" + surveyId
+                + ".xml");
+        return uc;
+    }
+    // ****************************** Report stuff ***********************
 
     public UploadStatusContainer uploadSurveyXML(Long surveyId, String surveyXML) {
         Properties props = System.getProperties();
