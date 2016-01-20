@@ -41,6 +41,9 @@ FLOW.Router = Ember.Router.extend({
     doNavMaps: function (router, context) {
       router.transitionTo('navMaps');
     },
+    doNavCustomMaps: function (router, context) {
+      router.transitionTo('navCustomMaps.index');
+    },
     doNavUsers: function (router, context) {
       router.transitionTo('navUsers');
     },
@@ -395,6 +398,47 @@ FLOW.Router = Ember.Router.extend({
         router.get('applicationController').connectOutlet('navMaps');
         router.set('navigationController.selected', 'navMaps');
       }
+    }),
+
+    // ************************** Custom Maps **********************************
+    navCustomMaps: Ember.Route.extend({
+      route: '/custom-maps',
+      connectOutlets: function (router, context) {
+        router.get('applicationController').connectOutlet('navCustomMaps');
+        router.resetState();
+        router.set('navigationController.selected', 'navCustomMaps');
+      },
+
+      doDataMap: function (router, event) {
+        router.transitionTo('navCustomMaps.dataMap');
+      },
+
+      doCustomMaps: function (router, event) {
+        router.transitionTo('navCustomMaps.customMapsList');
+      },
+
+      index: Ember.Route.extend({
+        route: '/',
+        redirectsTo: 'dataMap'
+      }),
+
+      dataMap: Ember.Route.extend({
+        route: '/data-map',
+        connectOutlets: function(router, context) {
+          router.resetState();
+          router.get('navCustomMapsController').connectOutlet('dataMap');
+          router.set('customMapsSubnavController.selected', 'dataMap');
+        }
+      }),
+
+      customMapsList: Ember.Route.extend({
+        route: '/customized-maps',
+        connectOutlets: function (router, context) {
+          router.resetState();
+          router.get('navCustomMapsController').connectOutlet('customMapsList');
+          router.set('customMapsSubnavController.selected', 'customMapsList');
+        }
+      })
     }),
 
     // ************************** USERS ROUTER **********************************

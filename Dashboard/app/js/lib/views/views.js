@@ -20,6 +20,7 @@ require('akvo-flow/views/data/question-answer-view');
 require('akvo-flow/views/reports/report-views');
 require('akvo-flow/views/reports/export-reports-views');
 require('akvo-flow/views/maps/map-views-common');
+require('akvo-flow/views/maps/custom-map-views-common');
 require('akvo-flow/views/messages/message-view');
 require('akvo-flow/views/devices/devices-views');
 require('akvo-flow/views/devices/assignments-list-tab-view');
@@ -663,6 +664,19 @@ FLOW.StatisticsView = Ember.View.extend({
   templateName: 'navReports/statistics'
 });
 
+// custom maps views
+FLOW.NavCustomMapsView = Ember.View.extend({
+  templateName: 'navMaps/nav-custom-maps'
+});
+
+FLOW.NavDataMapView = Ember.View.extend({
+  templateName: 'navMaps/custom-maps-view'
+});
+
+FLOW.CustomMapsView = Ember.View.extend({
+  templateName: 'navMaps/custom-maps-list'
+});
+
 
 // applets
 FLOW.BootstrapApplet = Ember.View.extend({
@@ -757,6 +771,22 @@ FLOW.DevicesSubnavView = FLOW.View.extend({
 // ********************************************************//
 FLOW.ReportsSubnavView = Em.View.extend({
   templateName: 'navReports/reports-subnav',
+  selectedBinding: 'controller.selected',
+  NavItemView: Ember.View.extend({
+    tagName: 'li',
+    classNameBindings: 'isActive:active'.w(),
+
+    isActive: function () {
+      return this.get('item') === this.get('parentView.selected');
+    }.property('item', 'parentView.selected').cacheable()
+  })
+});
+
+// ********************************************************//
+//             Subnavigation for custom maps tabs
+// ********************************************************//
+FLOW.CustomMapsSubnavView = Em.View.extend({
+  templateName: 'navMaps/custom-maps-subnav',
   selectedBinding: 'controller.selected',
   NavItemView: Ember.View.extend({
     tagName: 'li',
