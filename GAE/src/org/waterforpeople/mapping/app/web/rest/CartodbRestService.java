@@ -189,6 +189,35 @@ public class CartodbRestService {
         }
     }
 
+    @RequestMapping(method = RequestMethod.GET, value = "custom_maps")
+    @ResponseBody
+    public Map<String, Object> getCustomMaps() {
+      Map<String, Object> response = new HashMap<>();
+      response.put("custom_maps", null);
+      try {
+        //first create a custom maps table in cartodb if one does not already exist
+        queryCartodb(String.format("CREATE TABLE IF NOT EXISTS custom_maps"
+          +"("
+          +"id serial,"
+          +"form_id integer,"
+          +"creator varchar,"
+          +"custom_map_title varchar,"
+          +"custom_map_description varchar,"
+          +"named_map varchar,"
+          +"cartocss varchar,"
+          +"permission text,"
+          +"created_date timestamp,"
+          +"modified_date timestamp"
+          +")"));
+
+        response.put("custom_maps", queryCartodb(String.format("SELECT * FROM custom_maps")));
+
+        return response;
+      } catch (IOException e) {
+        return response;
+      }
+    }
+
     @SuppressWarnings("unchecked")
     @RequestMapping(method = RequestMethod.GET, value = "named_maps")
     @ResponseBody
