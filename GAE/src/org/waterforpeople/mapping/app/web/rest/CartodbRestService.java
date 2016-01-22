@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.sql.Timestamp;
+import java.util.Date;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -23,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.waterforpeople.mapping.app.web.rest.dto.NamedMapPayload;
+import org.waterforpeople.mapping.app.web.rest.dto.CustomMapsPayload;
 
 import com.gallatinsystems.common.util.PropertyUtil;
 import com.google.appengine.api.utils.SystemProperty;
@@ -36,6 +39,8 @@ public class CartodbRestService {
     private static final String CDB_HOST = PropertyUtil.getProperty("cartodbHost");
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final Date date = new Date();
+    private static final Timestamp currentTimestamp = new Timestamp(date.getTime());
 
     @RequestMapping(method = RequestMethod.GET, value = "answers")
     @ResponseBody
@@ -206,8 +211,8 @@ public class CartodbRestService {
           +"named_map varchar,"
           +"cartocss varchar,"
           +"permission text,"
-          +"created_date timestamp,"
-          +"modified_date timestamp"
+          +"create_date timestamp,"
+          +"modify_date timestamp"
           +")"));
 
         response.put("custom_maps", queryCartodb(String.format("SELECT * FROM custom_maps")));
@@ -216,6 +221,28 @@ public class CartodbRestService {
       } catch (IOException e) {
         return response;
       }
+    }
+
+    @RequestMapping(method = RequestMethod.POST, value = "new_custom_map")
+    @ResponseBody
+    public Map<String, Object> createCustomMap(
+            @RequestBody CustomMapsPayload payload)
+            throws IOException {
+        Map<String, Object> response = new HashMap<>();
+        response.put("custom_map", null);
+
+        String insertValues = "('"+payload.getFormId()+"', '"+payload.getCreator()
+            +"', '"+payload.getCustomMapTitle()+"', '"+payload.getCustomMapDescription()
+            +"', '"+payload.getNamedMap()+"', '"+payload.getCartocss()+"', '"+payload.getPermission()
+            +"', '"+currentTimestamp+"', '"+currentTimestamp+"')";
+        String query = String.format("INSERT INTO custom_maps "
+            +"(form_id, creator, custom_map_title, custom_map_description,"
+            +" named_map, cartocss, permission, create_date, modify_date) VALUES "
+            +insertValues);
+        response.put("query", query);
+        response.put("custom_map", queryCartodb(query));
+
+        return response;
     }
 
     @SuppressWarnings("unchecked")
