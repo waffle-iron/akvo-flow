@@ -666,17 +666,8 @@ FLOW.StatisticsView = Ember.View.extend({
 
 // custom maps views
 FLOW.NavCustomMapsView = Ember.View.extend({
-  templateName: 'navMaps/nav-custom-maps'
+  templateName: 'navMaps/nav-maps'
 });
-
-FLOW.NavDataMapView = Ember.View.extend({
-  templateName: 'navMaps/custom-maps-view'
-});
-
-FLOW.CustomMapsView = Ember.View.extend({
-  templateName: 'navMaps/custom-maps-list'
-});
-
 
 // applets
 FLOW.BootstrapApplet = Ember.View.extend({
@@ -785,8 +776,8 @@ FLOW.ReportsSubnavView = Em.View.extend({
 // ********************************************************//
 //             Subnavigation for custom maps tabs
 // ********************************************************//
-FLOW.CustomMapsSubnavView = Em.View.extend({
-  templateName: 'navMaps/custom-maps-subnav',
+FLOW.MapsSubnavView = Em.View.extend({
+  templateName: 'navMaps/maps-subnav',
   selectedBinding: 'controller.selected',
   NavItemView: Ember.View.extend({
     tagName: 'li',

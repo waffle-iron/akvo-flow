@@ -67,6 +67,7 @@ FLOW.selectedControl = Ember.Controller.create({
   radioOptions: "",
   cascadeImportNumLevels: null,
   cascadeImportIncludeCodes: null,
+  selectedCustomMap: null,
 
   // OptionQuestions:function (){
   //   console.log('optionquestions 1');

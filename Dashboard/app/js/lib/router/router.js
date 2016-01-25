@@ -413,8 +413,12 @@ FLOW.Router = Ember.Router.extend({
         router.transitionTo('navCustomMaps.dataMap');
       },
 
-      doCustomMaps: function (router, event) {
+      doCustomMapsList: function (router, event) {
         router.transitionTo('navCustomMaps.customMapsList');
+      },
+
+      doCustomMapEdit: function (router, event) {
+        router.transitionTo('navCustomMaps.customMapEdit');
       },
 
       index: Ember.Route.extend({
@@ -427,7 +431,7 @@ FLOW.Router = Ember.Router.extend({
         connectOutlets: function(router, context) {
           router.resetState();
           router.get('navCustomMapsController').connectOutlet('dataMap');
-          router.set('customMapsSubnavController.selected', 'dataMap');
+          router.set('mapsSubnavController.selected', 'dataMap');
         }
       }),
 
@@ -436,7 +440,16 @@ FLOW.Router = Ember.Router.extend({
         connectOutlets: function (router, context) {
           router.resetState();
           router.get('navCustomMapsController').connectOutlet('customMapsList');
-          router.set('customMapsSubnavController.selected', 'customMapsList');
+          router.set('mapsSubnavController.selected', 'customMapsList');
+        }
+      }),
+
+      customMapEdit: Ember.Route.extend({
+        route: '/custom-map-edit',
+        connectOutlets: function (router, context) {
+          router.resetState();
+          router.get('navCustomMapsController').connectOutlet('customMapEdit');
+          router.set('mapsSubnavController.selected', 'customMapEdit');
         }
       })
     }),

@@ -72,8 +72,6 @@ FLOW.NavMessagesController = Ember.Controller.extend();
 FLOW.NavAdminController = Ember.Controller.extend();
 
 FLOW.NavCustomMapsController = Ember.Controller.extend();
-FLOW.CustomMapsSubnavController = Em.Controller.extend();
-FLOW.DataMapController = Ember.Controller.extend();
-FLOW.CustomMapsController = Ember.Controller.extend();
+FLOW.MapsSubnavController = Em.Controller.extend();
 
 Ember.ENV.RAISE_ON_DEPRECATION = true;
