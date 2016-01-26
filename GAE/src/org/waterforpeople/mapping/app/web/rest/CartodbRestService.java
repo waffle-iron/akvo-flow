@@ -135,7 +135,7 @@ public class CartodbRestService {
     @RequestMapping(method = RequestMethod.GET, value = "columns")
     @ResponseBody
     public Map<String, Object> getColumns(
-            @RequestParam(value = "form_id", required = true) Long formId) {
+            @RequestParam(value = "table_name", required = true) String tableName) {
 
         Map<String, Object> response = new HashMap<>();
         response.put("column_names", null);
@@ -143,8 +143,8 @@ public class CartodbRestService {
             response.put(
                     "column_names",
                     queryCartodb(String
-                            .format("SELECT column_name from information_schema.columns where table_name='raw_data_%d'",
-                                    formId)));
+                            .format("SELECT column_name from information_schema.columns where table_name='%s'",
+                                    tableName)));
             return response;
         } catch (IOException e) {
             return response;
@@ -210,6 +210,7 @@ public class CartodbRestService {
           +"custom_map_description varchar,"
           +"named_map varchar,"
           +"cartocss varchar,"
+          +"legend varchar,"
           +"permission text,"
           +"create_date timestamp,"
           +"modify_date timestamp"
@@ -233,11 +234,11 @@ public class CartodbRestService {
 
         String insertValues = "('"+payload.getFormId()+"', '"+payload.getCreator()
             +"', '"+payload.getCustomMapTitle()+"', '"+payload.getCustomMapDescription()
-            +"', '"+payload.getNamedMap()+"', '"+payload.getCartocss()+"', '"+payload.getPermission()
-            +"', '"+currentTimestamp+"', '"+currentTimestamp+"')";
+            +"', 'custom_map_"+System.currentTimeMillis()+"', '"+payload.getCartocss()+"', '"+payload.getLegend()
+            +"', '"+payload.getPermission()+"', '"+currentTimestamp+"', '"+currentTimestamp+"')";
         String query = String.format("INSERT INTO custom_maps "
             +"(form_id, creator, custom_map_title, custom_map_description,"
-            +" named_map, cartocss, permission, create_date, modify_date) VALUES "
+            +" named_map, cartocss, legend, permission, create_date, modify_date) VALUES "
             +insertValues);
         response.put("query", query);
         response.put("custom_map", queryCartodb(query));

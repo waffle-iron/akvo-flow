@@ -24,8 +24,8 @@ public class CustomMapsPayload implements Serializable {
   private String creator;
   private String customMapTitle;
   private String customMapDescription;
-  private String namedMap;
   private String cartocss;
+  private String legend;
   private String permission;
 
   public String getFormId() {
@@ -60,20 +60,20 @@ public class CustomMapsPayload implements Serializable {
       this.customMapDescription = customMapDescription;
   }
 
-  public String getNamedMap() {
-      return namedMap;
-  }
-
-  public void setNamedMap(String namedMap) {
-      this.namedMap = namedMap;
-  }
-
   public String getCartocss() {
       return cartocss;
   }
 
   public void setCartocss(String cartocss) {
       this.cartocss = cartocss;
+  }
+
+  public String getLegend() {
+      return legend;
+  }
+
+  public void setLegend(String legend) {
+      this.legend = legend;
   }
 
   public String getPermission() {

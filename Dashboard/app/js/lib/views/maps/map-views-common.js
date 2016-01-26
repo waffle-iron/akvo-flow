@@ -128,46 +128,9 @@ FLOW.NavMapsView = FLOW.View.extend({
     //Define the data layer
     var data_layer;
 
-    // create leaflet map
+    // create and draw leaflet map
     var map = L.map('flowMap', {scrollWheelZoom: true}).setView([26.11598592533351, 1.9335937499999998], 2);
-
-    var bounds = new L.LatLngBounds(map.getBounds().getSouthWest(), map.getBounds().getNorthEast());
-
-    map.options.maxBoundsViscosity = 1.0;
-    map.options.maxBounds = bounds;
-    map.options.maxZoom = 18;
-    map.options.minZoom = 2;
-
-    var mbAttr = 'Map &copy; 1987-2014 <a href="http://developer.here.com">HERE</a>',
-			mbUrl = 'https://{s}.{base}.maps.cit.api.here.com/maptile/2.1/maptile/{mapID}/{scheme}/{z}/{x}/{y}/256/{format}?app_id={app_id}&app_code={app_code}';
-
-    var normal = L.tileLayer(mbUrl, {
-      scheme: 'normal.day.transit',
-      format: 'png8',
-      attribution: mbAttr,
-      subdomains: '1234',
-      mapID: 'newest',
-      app_id: FLOW.Env.hereMapsAppId,
-      app_code: FLOW.Env.hereMapsAppCode,
-      base: 'base'
-    }).addTo(map),
-    satellite  = L.tileLayer(mbUrl, {
-      scheme: 'hybrid.day',
-      format: 'jpg',
-      attribution: mbAttr,
-      subdomains: '1234',
-      mapID: 'newest',
-      app_id: FLOW.Env.hereMapsAppId,
-      app_code: FLOW.Env.hereMapsAppCode,
-      base: 'aerial'
-    });
-
-    var baseLayers = {
-			"Normal": normal,
-			"Satellite": satellite
-		};
-
-    L.control.layers(baseLayers).addTo(map);
+    FLOW.drawLeafletMap(map);
 
     this.map = map;
 
@@ -201,7 +164,7 @@ FLOW.NavMapsView = FLOW.View.extend({
       $('#form_selector option[value!=""]').remove();
 
       //remove all 'folder_survey_selector's after current
-      self.cleanHierarchy($(this));
+      FLOW.cleanSurveyGroupHierarchy($(this));
 
       //first remove previously created form selector elements
       $(".form_selector").remove();
@@ -215,7 +178,7 @@ FLOW.NavMapsView = FLOW.View.extend({
             if(data['forms'] && data['forms'].length > 0) {
               rows = data['forms'];
               rows.sort(function(el1, el2) {
-                return self.compare(el1, el2, 'name')
+                return FLOW.compare(el1, el2, 'name')
               });
 
               var hierarchyObject = self.hierarchyObject;
@@ -262,18 +225,18 @@ FLOW.NavMapsView = FLOW.View.extend({
 
     $(document).off('change', '.form_selector').on('change', '.form_selector',function(e) {
       //remove all 'folder_survey_selector's after current
-      self.cleanHierarchy($(this));
+      FLOW.cleanSurveyGroupHierarchy($(this));
 
       if ($(this).val() !== "") {
         var formId = $(this).val();
         //get list of columns to be added to new named map's interactivity
-        $.get("/rest/cartodb/columns?form_id="+formId, function(columnsData) {
+        $.get('/rest/cartodb/columns?table_name=raw_data_'+formId, function(columnsData) {
           var namedMapObject = {};
           namedMapObject['mapObject'] = map;
-          namedMapObject['mapName'] = "raw_data_"+formId;
-          namedMapObject['tableName'] = "raw_data_"+formId;
+          namedMapObject['mapName'] = 'raw_data_'+formId;
+          namedMapObject['tableName'] = 'raw_data_'+formId;
           namedMapObject['interactivity'] = [];
-          namedMapObject['query'] = "SELECT * FROM raw_data_" + formId;
+          namedMapObject['query'] = 'SELECT * FROM raw_data_' + formId;
 
           if (columnsData.column_names) {
             for (var j=0; j<columnsData['column_names'].length; j++) {
@@ -284,7 +247,7 @@ FLOW.NavMapsView = FLOW.View.extend({
           self.namedMapCheck(namedMapObject);
         });
       } else {
-        self.createLayer(map, "data_point_"+$(this).data('survey-id'), "");
+        self.createLayer(map, 'data_point_'+$(this).data('survey-id'), "");
       }
     });
 
@@ -309,7 +272,7 @@ FLOW.NavMapsView = FLOW.View.extend({
   else call function to create a new one*/
   namedMapCheck: function(namedMapObject){
     var self = this;
-    $.get("/rest/cartodb/named_maps", function(data, status) {
+    $.get('/rest/cartodb/named_maps', function(data, status) {
       if (data.template_ids) {
         var mapExists = false;
         for (var i=0; i<data['template_ids'].length; i++) {
@@ -434,10 +397,6 @@ FLOW.NavMapsView = FLOW.View.extend({
           verticalBars[3]);
       }
     }, this);
-  },
-
-  compare: function (el1, el2, index) {
-    return el1[index] == el2[index] ? 0 : (el1[index] < el2[index] ? -1 : 1);
   },
 
   /*Place a marker to highlight clicked point of layer on cartodb map*/
@@ -628,7 +587,7 @@ FLOW.NavMapsView = FLOW.View.extend({
                           if(geoshapeObject !== null){
                             geoshapeCheck = true;
                             //create a container for each feature in geoshape object
-                            clickedPointContent += '<div id="geoShapeMap" style="width:100%; height: 100px; float: left"></div>';
+                            clickedPointContent += '<div id="geoShapeMap" style="width:99%; float: left"></div>';
                             for(var j=0; j<geoshapeObject['features'].length; j++){
                               clickedPointContent += '<label style="font-weight: bold; color: black">'+geoshapeObject['features'][j]['geometry']['type']+'</label>';
                               if(geoshapeObject['features'][j]['geometry']['type'] === "Polygon"
@@ -653,7 +612,13 @@ FLOW.NavMapsView = FLOW.View.extend({
                           var dateQuestion = new Date((isNaN(questionAnswer) === false) ? parseInt(questionAnswer) : questionAnswer);
                           clickedPointContent += dateQuestion.toUTCString().slice(0, -13); //remove last 13 x-ters so only date displays
                           break;
-                        case "CASCADE":
+                        case "SIGNATURE":
+                          clickedPointContent += '<img src="';
+                          var srcAttr = 'data:image/png;base64,', signatureJson;
+                          signatureJson = JSON.parse(questionAnswer);
+                          clickedPointContent += srcAttr + signatureJson.image +'"/>';
+                          clickedPointContent += Ember.String.loc('_signed_by') +': '+signatureJson.name;
+                          break;
                         case "OPTION":
                           var cascadeString = "", cascadeJson;
                           if (questionAnswer.charAt(0) === '[') {
@@ -753,7 +718,7 @@ FLOW.NavMapsView = FLOW.View.extend({
 
     rows = self.hierarchyObject;
     rows.sort(function(el1, el2) {
-      return self.compare(el1, el2, 'name');
+      return FLOW.compare(el1, el2, 'name');
     });
 
     //create folder and/or survey select element
@@ -774,10 +739,6 @@ FLOW.NavMapsView = FLOW.View.extend({
       }
     }
     $("#survey_hierarchy").append(folder_survey_selector);
-  },
-
-  cleanHierarchy: function(element){
-    $(element).nextAll().remove();
   },
 
   clearCartodbLayer: function(){

@@ -1,4 +1,20 @@
 <section class="fullWidth" id="customMapEdit">
-  <a {{action doCustomMapsList}}>{{t _go_back}}</a>
-  <div {{bindAttr data-map="view.customMapType"}}>Custom map edit</div>
+  <style type="text/css">
+  .folder_survey_selector, .question_selector, .form_selector{
+    margin-bottom: 5px;
+    width: 99%;
+    float: left;
+  }
+  #survey_hierarchy{
+    width: 100%;
+    float: left
+  }
+  </style>
+  <div id="dropdown-holder">
+    <div {{action doCustomMapsList}} class="drawHandle">&lsaquo; {{t _go_back}}</div>
+  </div>
+  <div id="flowMap"></div>
+  <div id="pointDetails">
+    <div id="survey_hierarchy"></div>
+  </div>
 </section>

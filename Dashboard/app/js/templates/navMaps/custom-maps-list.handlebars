@@ -1,7 +1,5 @@
 <section class="fullWidth" id="customMapsList">
-  <!--{{view FLOW.CustomMapEditView customMapType="new yo" customMapName="name yo"}}-->
-  <!--<a {{action doCustomMapEdit}}>{{t _new_custom_map}}</a>-->
-  <a {{action "newCustomMap"}}>{{t _new_custom_map}}</a>
+  <a class="newCustomMap">{{t _new_custom_map}}</a>
   <div id="mapsList">Custom maps list</div><br>
-  <a {{action "editCustomMap" "sample" target="this"}}>Edit map</a>
+  <a data-custom-map="testEditCustomMap" class="editCustomMap">Edit map</a>
 </section>

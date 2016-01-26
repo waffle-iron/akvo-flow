@@ -276,6 +276,46 @@ Ember.Handlebars.registerHelper("date3", function (property) {
   }
 });
 
+FLOW.drawLeafletMap = function(mapObject){
+  var bounds = new L.LatLngBounds(mapObject.getBounds().getSouthWest(), mapObject.getBounds().getNorthEast());
+
+  mapObject.options.maxBoundsViscosity = 1.0;
+  mapObject.options.maxBounds = bounds;
+  mapObject.options.maxZoom = 18;
+  mapObject.options.minZoom = 2;
+
+  var mbAttr = 'Map &copy; 1987-2014 <a href="http://developer.here.com">HERE</a>',
+    mbUrl = 'https://{s}.{base}.maps.cit.api.here.com/maptile/2.1/maptile/{mapID}/{scheme}/{z}/{x}/{y}/256/{format}?app_id={app_id}&app_code={app_code}';
+
+  var normal = L.tileLayer(mbUrl, {
+    scheme: 'normal.day.transit',
+    format: 'png8',
+    attribution: mbAttr,
+    subdomains: '1234',
+    mapID: 'newest',
+    app_id: FLOW.Env.hereMapsAppId,
+    app_code: FLOW.Env.hereMapsAppCode,
+    base: 'base'
+  }).addTo(mapObject),
+  satellite  = L.tileLayer(mbUrl, {
+    scheme: 'hybrid.day',
+    format: 'jpg',
+    attribution: mbAttr,
+    subdomains: '1234',
+    mapID: 'newest',
+    app_id: FLOW.Env.hereMapsAppId,
+    app_code: FLOW.Env.hereMapsAppCode,
+    base: 'aerial'
+  });
+
+  var baseLayers = {
+    "Normal": normal,
+    "Satellite": satellite
+  };
+
+  L.control.layers(baseLayers).addTo(mapObject);
+};
+
 FLOW.parseGeoshape = function(geoshapeString) {
   try {
     var geoshapeObject = JSON.parse(geoshapeString);
@@ -293,35 +333,7 @@ FLOW.drawGeoShape = function(containerNode, geoShapeObject){
   containerNode.style.height = "150px";
   var geoshapeMap = L.map(containerNode, {scrollWheelZoom: false}).setView([0, 0], 2);
 
-  geoshapeMap.options.maxZoom = 18;
-  geoshapeMap.options.minZoom = 2;
-  var mbAttr = 'Map &copy; 1987-2014 <a href="http://developer.here.com">HERE</a>';
-  var mbUrl = 'https://{s}.{base}.maps.cit.api.here.com/maptile/2.1/maptile/{mapID}/{scheme}/{z}/{x}/{y}/256/{format}?app_id={app_id}&app_code={app_code}';
-  var normal = L.tileLayer(mbUrl, {
-    scheme: 'normal.day.transit',
-    format: 'png8',
-    attribution: mbAttr,
-    subdomains: '1234',
-    mapID: 'newest',
-    app_id: FLOW.Env.hereMapsAppId,
-    app_code: FLOW.Env.hereMapsAppCode,
-    base: 'base'
-  }).addTo(geoshapeMap);
-  var satellite  = L.tileLayer(mbUrl, {
-    scheme: 'hybrid.day',
-    format: 'jpg',
-    attribution: mbAttr,
-    subdomains: '1234',
-    mapID: 'newest',
-    app_id: FLOW.Env.hereMapsAppId,
-    app_code: FLOW.Env.hereMapsAppCode,
-    base: 'aerial'
-  });
-  var baseLayers = {
-    "Normal": normal,
-    "Satellite": satellite
-  };
-  L.control.layers(baseLayers).addTo(geoshapeMap);
+  FLOW.drawLeafletMap(geoshapeMap);
 
   var featureGroup = new L.featureGroup; //create a leaflet featureGroup to hold all object features
   for(var i=0; i<geoShapeObject.length; i++){
@@ -358,7 +370,15 @@ FLOW.getCentroid = function (arr) {
   return arr.reduce(function (x,y) {
     return [x[0] + y[0]/arr.length, x[1] + y[1]/arr.length]
   }, [0,0])
-}
+};
+
+FLOW.compare = function (el1, el2, index) {
+  return el1[index] == el2[index] ? 0 : (el1[index] < el2[index] ? -1 : 1);
+};
+
+FLOW.cleanSurveyGroupHierarchy = function(element){
+  $(element).nextAll().remove();
+};
 
 Ember.Handlebars.registerHelper("getServer", function () {
   var loc = window.location.href,
