@@ -194,6 +194,15 @@ public class CartodbRestService {
         }
     }
 
+    //returns a current server timestamp
+    @RequestMapping(method = RequestMethod.GET, value = "timestamp")
+    @ResponseBody
+    public Map<String, Object> getTimestamp() {
+        Map<String, Object> response = new HashMap<>();
+        response.put("timestamp", currentTimestamp);
+        return response;
+    }
+
     @RequestMapping(method = RequestMethod.GET, value = "custom_maps")
     @ResponseBody
     public Map<String, Object> getCustomMaps() {
@@ -259,8 +268,9 @@ public class CartodbRestService {
     public Map<String, Object> createNamedMaps(
             @RequestBody NamedMapPayload payload)
             throws IOException {
+        URL url = (payload.getRequestType().equals("POST")) ? mapsApiURL() : editNamedMapApiURL(payload.getName());
 
-        HttpURLConnection connection = getConnection("POST", mapsApiURL());
+        HttpURLConnection connection = getConnection(payload.getRequestType(), url);
         OutputStreamWriter writer = new OutputStreamWriter(connection.getOutputStream());
         objectMapper.writeValue(writer, buildNamedMap(payload));
         writer.close();
@@ -295,6 +305,11 @@ public class CartodbRestService {
                 CDB_ACCOUNT_NAME, CDB_HOST, CDB_API_KEY));
     }
 
+    private static final URL editNamedMapApiURL(String namedMap) throws MalformedURLException {
+        return new URL(String.format("https://%s.%s/api/v1/map/named/%s?api_key=%s",
+                CDB_ACCOUNT_NAME, CDB_HOST, namedMap, CDB_API_KEY));
+    }
+
     private static final URL sqlApiURL(String query) throws MalformedURLException,
             UnsupportedEncodingException {
         String urlString = String.format("https://%s.%s/api/v2/sql?q=%s&api_key=%s",
@@ -314,7 +329,7 @@ public class CartodbRestService {
         Map<String, Object> optionsMap = new HashMap<>();
         optionsMap.put("cartocss_version", "2.1.1");
         optionsMap.put("cartocss", namedMapPayload.getCartocss());
-        optionsMap.put("sql", namedMapPayload.getSql());
+        optionsMap.put("sql", namedMapPayload.getQuery());
         optionsMap.put("interactivity", namedMapPayload.getInteractivity());
         Map<String, Object> layerMap = new HashMap<>();
         layerMap.put("type", "cartodb");

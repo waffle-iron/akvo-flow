@@ -427,10 +427,11 @@ FLOW.NavMapsView = FLOW.View.extend({
       +"}";
 
     var configJsonData = {};
+    configJsonData['requestType'] = "POST";
     configJsonData['interactivity'] = interactivity;
     configJsonData['name'] = mapName;
     configJsonData['cartocss'] = cartocss;
-    configJsonData['sql'] = sql;
+    configJsonData['query'] = sql;
 
     $.ajax({
       type: 'POST',
@@ -619,6 +620,7 @@ FLOW.NavMapsView = FLOW.View.extend({
                           clickedPointContent += srcAttr + signatureJson.image +'"/>';
                           clickedPointContent += Ember.String.loc('_signed_by') +': '+signatureJson.name;
                           break;
+                        case "CASCADE":
                         case "OPTION":
                           var cascadeString = "", cascadeJson;
                           if (questionAnswer.charAt(0) === '[') {
