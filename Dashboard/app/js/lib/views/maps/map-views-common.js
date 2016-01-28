@@ -477,7 +477,7 @@ FLOW.NavMapsView = FLOW.View.extend({
       self.layerExistsCheck = true;
       self.cartodbLayer = layer;
 
-      self.addCursorInteraction(layer);
+      FLOW.addCursorInteraction(layer, 'flowMap');
 
       var current_layer = layer.getSubLayer(0);
       current_layer.setInteraction(true);
@@ -499,25 +499,6 @@ FLOW.NavMapsView = FLOW.View.extend({
           self.getCartodbPointData(pointDataUrl, data.name, data.identifier);
         }
       });
-    });
-  },
-
-  /*function is required to manage how the cursor appears on the cartodb map canvas*/
-  addCursorInteraction: function (layer) {
-    var hovers = [];
-
-    layer.bind('featureOver', function(e, latlon, pxPos, data, layer) {
-      hovers[layer] = 1;
-      if(_.any(hovers)) {
-        $('#flowMap').css('cursor', 'pointer');
-      }
-    });
-
-    layer.bind('featureOut', function(m, layer) {
-      hovers[layer] = 0;
-      if(!_.any(hovers)) {
-        $('#flowMap').css({"cursor":"-moz-grab","cursor":"-webkit-grab"});
-      }
     });
   },
 

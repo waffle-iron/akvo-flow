@@ -40,7 +40,6 @@ public class CartodbRestService {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final Date date = new Date();
-    private static final Timestamp currentTimestamp = new Timestamp(date.getTime());
 
     @RequestMapping(method = RequestMethod.GET, value = "answers")
     @ResponseBody
@@ -181,12 +180,12 @@ public class CartodbRestService {
     @RequestMapping(method = RequestMethod.GET, value = "distinct")
     @ResponseBody
     public Map<String, Object> getDistinctValues(
-            @RequestParam("question_name") String questionName, @RequestParam("form_id") Long formId) {
+            @RequestParam("column_name") String columnName, @RequestParam("form_id") Long formId) {
         Map<String, Object> response = new HashMap<>();
         response.put("distinct_values", null);
         try {
             response.put("distinct_values",
-                    queryCartodb(String.format("SELECT DISTINCT %s FROM raw_data_%d", questionName,
+                    queryCartodb(String.format("SELECT DISTINCT %s FROM raw_data_%d", columnName,
                             formId)));
             return response;
         } catch (IOException e) {
@@ -199,7 +198,7 @@ public class CartodbRestService {
     @ResponseBody
     public Map<String, Object> getTimestamp() {
         Map<String, Object> response = new HashMap<>();
-        response.put("timestamp", currentTimestamp);
+        response.put("timestamp", System.currentTimeMillis());
         return response;
     }
 
@@ -239,6 +238,7 @@ public class CartodbRestService {
             @RequestBody CustomMapsPayload payload)
             throws IOException {
         Map<String, Object> response = new HashMap<>();
+        Timestamp currentTimestamp = new Timestamp(date.getTime());
         response.put("custom_map", null);
 
         String insertValues = "('"+payload.getFormId()+"', '"+payload.getCreator()

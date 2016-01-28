@@ -14,13 +14,26 @@
     /* -moz-box-sizing: border-box;    Firefox, other Gecko */
     /* box-sizing: border-box;         Opera/IE 8+ */
   }
+  .style_selector{
+    width: 100%
+  }
+  .map_details{
+    float: left;
+    margin: 2px;
+    width: 95%;
+  }
   </style>
   <div id="dropdown-holder">
     <div {{action doCustomMapsList}} class="drawHandle">&lsaquo; {{t _go_back}}</div>
   </div>
+  <div id="mapDetails" style="margin: 2px; width:100%; float: left">
+    <input type="text" id="mapTitle" placeholder="{{t _map_title}}" class="map_details">
+    <input type="text" id="mapDescription" placeholder="{{t _map_description}}" class="map_details">
+  </div>
   <div id="flowMap"></div>
   <div id="pointDetails">
     <div id="survey_hierarchy"></div>
+    <button id="saveCustomMap">{{t _save}}</button>
   </div>
 </section>
 <script type="text/javascript">
