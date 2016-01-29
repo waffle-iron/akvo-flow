@@ -24,6 +24,7 @@ public class CustomMapsPayload implements Serializable {
   private String creator;
   private String customMapTitle;
   private String customMapDescription;
+  private String namedMap;
   private String cartocss;
   private String legend;
   private String permission;
@@ -54,6 +55,14 @@ public class CustomMapsPayload implements Serializable {
 
   public String getCustomMapDescription() {
       return customMapDescription;
+  }
+
+  public void setNamedMap(String namedMap) {
+      this.namedMap = namedMap;
+  }
+
+  public String getNamedMap() {
+      return namedMap;
   }
 
   public void setCustomMapDescription(String customMapDescription) {

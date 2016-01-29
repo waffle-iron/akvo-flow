@@ -112,6 +112,7 @@ FLOW.CustomMapEditView = FLOW.View.extend({
     self.customMapData['creator'] = FLOW.currentUser.email;
     self.customMapData['customMapTitle'] = '';
     self.customMapData['customMapDescription'] = '';
+    self.customMapData['namedMap'] = '';
     self.customMapData['cartocss'] = '';
     self.customMapData['legend'] = '';
     self.customMapData['permission'] = '';
@@ -226,20 +227,42 @@ FLOW.CustomMapEditView = FLOW.View.extend({
         $.get(
           '/rest/cartodb/distinct?column_name='+$(this).val()+'&form_id='+$('.form_selector').val(),
           function(optionsData){
-            var styleSelector = $('<div></div>').attr("class", "style_selector");
+            var styleSelector = jQuery('<div></div>').attr("class", "style_selector");
             if(optionsData.distinct_values){
               for(var i=0; i<optionsData.distinct_values.length; i++){
-                var colourPickerLabel = $('<label for="option_'+i+'">'+optionsData.distinct_values[i][$('.question_selector').val()]+'</label>');
-                var colourPickerInput = $('<input id="option_'+i+'" data-option="'+optionsData.distinct_values[i][$(".question_selector").val()]
-                      +'" type="text" value="#'+(Math.random()*0xFFFFFF<<0).toString(16)+'">');
-                //Math.random()*0xFFFFFF<<0).toString(16)
-                styleSelector.append(colourPickerLabel);
-                styleSelector.append(colourPickerInput);
-                colourPickerInput.minicolors();
+                var colourPicker = jQuery('<div class="form-group"><label for="option_'+i+'">'+optionsData.distinct_values[i][$('.question_selector').val()]+'</label></div>');
+                var colourPickerInput = jQuery('<input class="question_options" id="option_'+i+'" data-option="'+optionsData.distinct_values[i][$(".question_selector").val()]
+                      +'" type="text">');
+                colourPicker.append(colourPickerInput);
+                styleSelector.append(colourPicker);
+                colourPickerInput.minicolors({});
+                colourPickerInput.minicolors('value', (Math.random()*0xFFFFFF<<0).toString(16));
               }
             }
-            $("#survey_hierarchy").append(styleSelector);
+            $('#survey_hierarchy').append(styleSelector);
           });
+      }
+    });
+
+    $(document).off('click', '#saveCustomMap').on('click', '#saveCustomMap',function(e){
+      if($('#mapTitle').val() !== "" && $('#mapDescription').val() !== ""){
+        var cartocss = [];
+        self.customMapData['customMapTitle'] = $('#mapTitle').val();
+        self.customMapData['customMapDescription'] = $('#mapDescription').val();
+        self.customMapData['namedMap'] = self.customMapName;
+        if ($('.question_options').length) {
+          $('.question_options').each( function() {
+            var currentColour = {};
+            currentColour['title'] = $(this).data('option');
+            currentColour['colour'] = $(this).val();
+            cartocss.push(currentColour);
+          });
+        }
+        self.customMapData['cartocss'] = JSON.stringify(cartocss);
+        console.log(self.customMapData);
+      }else{
+        //prompt user to enter a map title and/or description
+
       }
     });
   },
@@ -328,7 +351,6 @@ FLOW.CustomMapEditView = FLOW.View.extend({
   else call function to create a new one*/
   namedMapCheck: function(namedMapObject){
     var self = this;
-    console.log(namedMapObject);
     $.get('/rest/cartodb/named_maps', function(data, status) {
       if (data.template_ids) {
         var mapExists = false;
@@ -402,14 +424,20 @@ FLOW.CustomMapEditView = FLOW.View.extend({
 
       FLOW.addCursorInteraction(layer, 'flowMap');
 
-      var current_layer = layer.getSubLayer(0);
-      current_layer.setInteraction(true);
+      var currentLayer = layer.getSubLayer(0);
+      currentLayer.setInteraction(true);
 
-      /*current_layer.on('featureOver', function(e, latlon, pos, data, subLayerIndex) {
-        console.log(data);
+      var tooltip = layer.leafletMap.viz.addOverlay({
+        type: 'tooltip',
+        layer: currentLayer,
+        template: '<div class="cartodb-tooltip-content-wrapper"><p>{{name}}</p></div>',
+        width: 200,
+        position: 'top|right',
+        fields: [{ name: 'cartodb_id' }]
       });
+      $('#flowMap').append(tooltip.render().el);
 
-      current_layer.on('featureClick', function(e, latlng, pos, data) {
+      /*currentLayer.on('featureClick', function(e, latlng, pos, data) {
         if(self.marker != null){
           self.map.removeLayer(self.marker);
         }

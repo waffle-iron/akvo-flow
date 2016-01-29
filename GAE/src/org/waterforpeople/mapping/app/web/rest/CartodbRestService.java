@@ -243,7 +243,7 @@ public class CartodbRestService {
 
         String insertValues = "('"+payload.getFormId()+"', '"+payload.getCreator()
             +"', '"+payload.getCustomMapTitle()+"', '"+payload.getCustomMapDescription()
-            +"', 'custom_map_"+System.currentTimeMillis()+"', '"+payload.getCartocss()+"', '"+payload.getLegend()
+            +"', '"+payload.getNamedMap()+"', '"+payload.getCartocss()+"', '"+payload.getLegend()
             +"', '"+payload.getPermission()+"', '"+currentTimestamp+"', '"+currentTimestamp+"')";
         String query = String.format("INSERT INTO custom_maps "
             +"(form_id, creator, custom_map_title, custom_map_description,"
