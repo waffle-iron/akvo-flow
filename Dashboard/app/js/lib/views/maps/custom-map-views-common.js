@@ -18,6 +18,24 @@ FLOW.CustomMapsListView = FLOW.View.extend({
   didInsertElement: function () {
     $.get('/rest/cartodb/custom_maps', function(customMapsData, status) {
       //load a list of available custom maps here
+      if(customMapsData.custom_maps){
+        for(var i=0; i<customMapsData.custom_maps.length; i++){
+          $('#customMapsTable').append(
+            '<tr>'
+            +'<td>'+customMapsData.custom_maps[i].custom_map_title+'</td>'
+            +'<td>'+customMapsData.custom_maps[i].custom_map_description+'</td>'
+            +'<td>'+customMapsData.custom_maps[i].modify_date+'</td>'
+            +'<td>'+customMapsData.custom_maps[i].creator+'</td>'
+            +'<td  class="action">'
+            +'<a class="edit editCustomMap" data-custom-map="'+customMapsData.custom_maps[i].named_map+'">'
+            +Ember.String.loc('_edit')
+            +'</a>'
+            +'<a class="remove">'+Ember.String.loc('_remove')+'</a>'
+            +'</td>'
+            +'</tr>'
+          );
+        }
+      }
       //console.log(customMapsData);
     });
 
@@ -42,6 +60,7 @@ FLOW.CustomMapEditView = FLOW.View.extend({
   newMap: true,
   customMapData: {},
   customMapName: null,
+  selectedTable: '', //cartodb table name that custom map is based on
   selectedFormColumns: null,
   cartodbLayer: null,
   layerExistsCheck: false,
@@ -73,19 +92,6 @@ FLOW.CustomMapEditView = FLOW.View.extend({
   */
   didInsertElement: function () {
     var self = this;
-    //console.log(FLOW.selectedControl.get('selectedCustomMap'));
-
-    //if a new custom map, get a server timestamp to serve as part of the custom map name
-    if(FLOW.selectedControl.get('selectedCustomMap') === null){
-      $.get('/rest/cartodb/timestamp', function(timestampData){
-        self.customMapName = 'custom_map_'+timestampData.timestamp;
-        //automatically create a named map that's to me customised
-        self.createNamedMapObject('data_point', '', '', '');
-        self.newMap = false;
-      });
-    }else{
-      self.customMapName = FLOW.selectedControl.get('selectedCustomMap');
-    }
 
     $.ajaxSetup({
     	beforeSend: function(){
@@ -107,8 +113,31 @@ FLOW.CustomMapEditView = FLOW.View.extend({
 
     self.showMapEditorPane();
 
+    //if a new custom map, get a server timestamp to serve as part of the custom map name
+    if(FLOW.selectedControl.get('selectedCustomMap') === null){
+      $.get('/rest/cartodb/timestamp', function(timestampData){
+        self.customMapName = 'custom_map_'+timestampData.timestamp;
+        //automatically create a named map that's to me customised
+        self.createNamedMapObject('data_point', '', '', '');
+        self.newMap = false; //immediately set newMap to false because a named map will have a already been created
+      });
+    }else{
+      self.newMap = false;
+      self.customMapName = FLOW.selectedControl.get('selectedCustomMap');
+      //get custom map details
+      $.get('/rest/cartodb/custom_map_details?name='+self.customMapName, function(customMapDetailsData){
+        if(customMapDetailsData.custom_map_details){
+          //set map title and description to selected custom map
+          $('#mapTitle').val(customMapDetailsData.custom_map_details[0]['custom_map_title']);
+          $('#mapDescription').val(customMapDetailsData.custom_map_details[0]['custom_map_description']);
+        }
+      });
+      self.createLayer(self.customMapName, ""); //load selected map
+    }
+
     //initialise map payloads structures as follows
     self.customMapData['formId'] = 0;
+    self.customMapData['surveyTitle'] = '';
     self.customMapData['creator'] = FLOW.currentUser.email;
     self.customMapData['customMapTitle'] = '';
     self.customMapData['customMapDescription'] = '';
@@ -116,6 +145,7 @@ FLOW.CustomMapEditView = FLOW.View.extend({
     self.customMapData['cartocss'] = '';
     self.customMapData['legend'] = '';
     self.customMapData['permission'] = '';
+    self.customMapData['newMap'] = '';
 
     //manage folder and/or survey selection hierarchy
     self.checkHierarchy(0);
@@ -126,11 +156,15 @@ FLOW.CustomMapEditView = FLOW.View.extend({
 
       //first remove previously created form selector elements
       $(".form_selector").remove();
+      self.customMapData['formId'] = 0;
+      self.customMapData['surveyTitle'] = '';
+      self.selectedTable = '';
 
       if($(this).val() !== ""){
         var surveyGroupKeyId = $(this).val();
         //if a survey is selected, load forms to form selector element.
         if($(this).find("option:selected").data('type') === 'PROJECT'){
+          self.customMapData['surveyTitle'] = $(this).find("option:selected").text();
           $.get('/rest/cartodb/forms?surveyId='+surveyGroupKeyId, function(data, status) {
             var rows = [];
             if(data['forms'] && data['forms'].length > 0) {
@@ -177,9 +211,13 @@ FLOW.CustomMapEditView = FLOW.View.extend({
     $(document).off('change', '.form_selector').on('change', '.form_selector',function(e) {
       //remove all 'folder_survey_selector's after current
       FLOW.cleanSurveyGroupHierarchy($(this));
+      self.customMapData['formId'] = 0;
+      self.selectedTable = '';
 
       if ($(this).val() !== "") {
         var formId = $(this).val();
+        self.customMapData['formId'] = formId;
+        self.selectedTable = 'raw_data_'+formId;
 
         //create a question selector element
         var questionSelector = $('<select></select>').attr("class", "question_selector");
@@ -223,16 +261,19 @@ FLOW.CustomMapEditView = FLOW.View.extend({
 
     $(document).off('change', '.question_selector').on('change', '.question_selector',function(e) {
       if ($(this).val() !== "") {
+        var columnName = $(this).val();
         //get a list of distinct values associated with this question
         $.get(
           '/rest/cartodb/distinct?column_name='+$(this).val()+'&form_id='+$('.form_selector').val(),
           function(optionsData){
-            var styleSelector = jQuery('<div></div>').attr("class", "style_selector");
+            var styleSelector = $('<div></div>').attr("class", "style_selector");
             if(optionsData.distinct_values){
               for(var i=0; i<optionsData.distinct_values.length; i++){
-                var colourPicker = jQuery('<div class="form-group"><label for="option_'+i+'">'+optionsData.distinct_values[i][$('.question_selector').val()]+'</label></div>');
-                var colourPickerInput = jQuery('<input class="question_options" id="option_'+i+'" data-option="'+optionsData.distinct_values[i][$(".question_selector").val()]
-                      +'" type="text">');
+                var colourPicker = $('<div class="form-group"><label for="option_'+i+'">'
+                  +optionsData.distinct_values[i][$('.question_selector').val()]+'</label></div>');
+                var colourPickerInput = $('<input class="question_options" id="option_'+i+'" data-column="'
+                  +columnName+'" data-option="'+optionsData.distinct_values[i][$(".question_selector").val()]
+                  +'" type="text">');
                 colourPicker.append(colourPickerInput);
                 styleSelector.append(colourPicker);
                 colourPickerInput.minicolors({});
@@ -246,7 +287,8 @@ FLOW.CustomMapEditView = FLOW.View.extend({
 
     $(document).off('click', '#saveCustomMap').on('click', '#saveCustomMap',function(e){
       if($('#mapTitle').val() !== "" && $('#mapDescription').val() !== ""){
-        var cartocss = [];
+
+        var cartocss = [], current_cartocss = '';
         self.customMapData['customMapTitle'] = $('#mapTitle').val();
         self.customMapData['customMapDescription'] = $('#mapDescription').val();
         self.customMapData['namedMap'] = self.customMapName;
@@ -256,13 +298,38 @@ FLOW.CustomMapEditView = FLOW.View.extend({
             currentColour['title'] = $(this).data('option');
             currentColour['colour'] = $(this).val();
             cartocss.push(currentColour);
+
+            current_cartocss += '#'+self.selectedTable+'['+$(this).data('column')+'="'+$(this).data('option')+'"]';
+    				current_cartocss += '{';
+    				//cartocss += "marker-fill: #"+Math.random().toString(16).slice(2, 8);
+    				current_cartocss += 'marker-fill: '+$(this).val()+';';
+    				current_cartocss += '}';
           });
+          self.customMapData['cartocss'] = JSON.stringify(cartocss);
+
+          //first update the named map before uploading it to cartodb
+          self.createNamedMapObject(self.selectedTable, '', '', current_cartocss);
         }
-        self.customMapData['cartocss'] = JSON.stringify(cartocss);
-        console.log(self.customMapData);
+        //if creating a new map set mapType to 'new'
+        if(FLOW.selectedControl.get('selectedCustomMap') === null){
+          self.customMapData['newMap'] = 'true';
+        }else{
+          self.customMapData['newMap'] = 'false';
+        }
+
+        var ajaxObject = {};
+        ajaxObject['call'] = "POST";
+        ajaxObject['url'] = "/rest/cartodb/edit_custom_map";
+        ajaxObject['data'] = JSON.stringify(self.customMapData);
+
+        FLOW.ajaxCall(function(response){
+          if(response){
+            FLOW.selectedControl.set('selectedCustomMap', self.customMapName);
+          }
+        }, ajaxObject);
       }else{
         //prompt user to enter a map title and/or description
-
+        alert("Please enter a title and/or description");
       }
     });
   },
@@ -322,18 +389,21 @@ FLOW.CustomMapEditView = FLOW.View.extend({
     namedMapObject['requestType'] = (self.newMap) ? "POST" : "PUT";
 
     //if cartocss is not defined, create map using default style
-    if(cartocss === ""){
-      namedMapObject['cartocss'] = "#"+table+"{"
-        +"marker-fill-opacity: 0.9;"
-        +"marker-line-color: #FFF;"
-        +"marker-line-width: 1.5;"
-        +"marker-line-opacity: 1;"
-        +"marker-placement: point;"
-        +"marker-type: ellipse;"
-        +"marker-width: 10;"
-        +"marker-fill: #FF6600;"
-        +"marker-allow-overlap: true;"
-        +"}";
+    namedMapObject['cartocss'] = "#"+table+"{"
+      +"marker-fill-opacity: 0.9;"
+      +"marker-line-color: #FFF;"
+      +"marker-line-width: 1.5;"
+      +"marker-line-opacity: 1;"
+      +"marker-placement: point;"
+      +"marker-type: ellipse;"
+      +"marker-width: 10;"
+      +"marker-fill: #FF6600;"
+      +"marker-allow-overlap: true;"
+      +"}";
+
+    //if cartocss is defined, create map using specified style
+    if(cartocss !== ""){
+      namedMapObject['cartocss'] += cartocss;
     }
 
     //get list of columns to be added to new named map's interactivity
@@ -343,33 +413,7 @@ FLOW.CustomMapEditView = FLOW.View.extend({
           namedMapObject['interactivity'].push(columnsData['column_names'][j]['column_name']);
         }
       }
-      self.namedMapCheck(namedMapObject);
-    });
-  },
-
-  /*Check if a named map exists. If one exists, call function to overlay it
-  else call function to create a new one*/
-  namedMapCheck: function(namedMapObject){
-    var self = this;
-    $.get('/rest/cartodb/named_maps', function(data, status) {
-      if (data.template_ids) {
-        var mapExists = false;
-        for (var i=0; i<data['template_ids'].length; i++) {
-          if(data['template_ids'][i] === namedMapObject.name && self.newMap) {
-            //named map already exists
-            mapExists = true;
-            break;
-          }
-        }
-
-        if (mapExists) {
-          //overlay named map
-          self.createLayer(namedMapObject.name, "");
-        }else{
-          //create/edit named map
-          self.namedMaps(namedMapObject);
-        }
-      }
+      self.namedMaps(namedMapObject);
     });
   },
 

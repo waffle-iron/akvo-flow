@@ -213,6 +213,7 @@ public class CartodbRestService {
           +"("
           +"id serial,"
           +"form_id integer,"
+          +"survey_title varchar,"
           +"creator varchar,"
           +"custom_map_title varchar,"
           +"custom_map_description varchar,"
@@ -232,23 +233,48 @@ public class CartodbRestService {
       }
     }
 
-    @RequestMapping(method = RequestMethod.POST, value = "new_custom_map")
+    @RequestMapping(method = RequestMethod.GET, value = "custom_map_details")
     @ResponseBody
-    public Map<String, Object> createCustomMap(
+    public Map<String, Object> getCustomMapDetails(
+            @RequestParam("name") String customMapName) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("custom_map_details", null);
+        try {
+            response.put("custom_map_details",
+                    queryCartodb(String.format("SELECT * FROM custom_maps WHERE named_map = '%s'", customMapName)));
+            return response;
+        } catch (IOException e) {
+            return response;
+        }
+    }
+
+    @RequestMapping(method = RequestMethod.POST, value = "edit_custom_map")
+    @ResponseBody
+    public Map<String, Object> editCustomMap(
             @RequestBody CustomMapsPayload payload)
             throws IOException {
         Map<String, Object> response = new HashMap<>();
         Timestamp currentTimestamp = new Timestamp(date.getTime());
+        String query = "";
         response.put("custom_map", null);
 
-        String insertValues = "('"+payload.getFormId()+"', '"+payload.getCreator()
-            +"', '"+payload.getCustomMapTitle()+"', '"+payload.getCustomMapDescription()
-            +"', '"+payload.getNamedMap()+"', '"+payload.getCartocss()+"', '"+payload.getLegend()
-            +"', '"+payload.getPermission()+"', '"+currentTimestamp+"', '"+currentTimestamp+"')";
-        String query = String.format("INSERT INTO custom_maps "
-            +"(form_id, creator, custom_map_title, custom_map_description,"
-            +" named_map, cartocss, legend, permission, create_date, modify_date) VALUES "
-            +insertValues);
+        if(payload.getNewMap().equals("true")){
+          String insertValues = "('"+payload.getFormId()+"', '"+payload.getSurveyTitle()
+              +"', '"+payload.getCreator()+"', '"+payload.getCustomMapTitle()+"', '"+payload.getCustomMapDescription()
+              +"', '"+payload.getNamedMap()+"', '"+payload.getCartocss()+"', '"+payload.getLegend()
+              +"', '"+payload.getPermission()+"', '"+currentTimestamp+"', '"+currentTimestamp+"')";
+          query = String.format("INSERT INTO custom_maps "
+              +"(form_id, survey_title, creator, custom_map_title, custom_map_description,"
+              +" named_map, cartocss, legend, permission, create_date, modify_date) VALUES "
+              +insertValues);
+        }else{
+          query = "UPDATE custom_maps SET (form_id, survey_title, custom_map_title, custom_map_description,"
+          +" cartocss, legend, permission, modify_date) = ('"+payload.getFormId()+"', '"+payload.getSurveyTitle()
+          +"', '"+payload.getCustomMapTitle()+"', '"+payload.getCustomMapDescription()+"', '"+payload.getCartocss()
+          +"', '"+payload.getLegend()+"', '"+payload.getPermission()+"', '"+currentTimestamp+"')"
+          +" WHERE named_map = '"+payload.getNamedMap()+"'";
+        }
+
         response.put("query", query);
         response.put("custom_map", queryCartodb(query));
 

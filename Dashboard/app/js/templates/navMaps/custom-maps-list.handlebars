@@ -1,5 +1,15 @@
 <section class="fullWidth" id="customMapsList">
-  <a class="newCustomMap">{{t _new_custom_map}}</a>
-  <div id="mapsList">Custom maps list</div><br>
-  <a data-custom-map="testEditCustomMap" class="editCustomMap">Edit map</a>
+  <a class="newCustomMap standardBtn btnAboveTable">{{t _new_custom_map}}</a>
+  <table class="dataTable">
+    <thead>
+      <tr>
+        <th class="noArrows"> <a>{{t _title}}</a></th>
+        <th class="noArrows"> <a>{{t _survey}}</a></th>
+        <th class="noArrows"> <a>{{t _modified}}</a></th>
+        <th class="noArrows"> <a>{{t _created}}</a></th>
+        <th class="action noArrows"> <a>{{t _action}}</a></th>
+      </tr>
+    </thead>
+    <tbody id="customMapsTable"></tbody>
+  </table>
 </section>
