@@ -125,9 +125,6 @@ FLOW.NavMapsView = FLOW.View.extend({
     $('#dropdown-holder').prepend(filterContent);
     $('#dropdown-holder').append('<div style="clear: both"></div>');
 
-    //Define the data layer
-    var data_layer;
-
     // create and draw leaflet map
     var map = L.map('flowMap', {scrollWheelZoom: true}).setView([26.11598592533351, 1.9335937499999998], 2);
     FLOW.drawLeafletMap(map);
@@ -569,7 +566,7 @@ FLOW.NavMapsView = FLOW.View.extend({
                           if(geoshapeObject !== null){
                             geoshapeCheck = true;
                             //create a container for each feature in geoshape object
-                            clickedPointContent += '<div id="geoShapeMap" style="width:99%; float: left"></div>';
+                            clickedPointContent += '<div id="geoShapeMap" style="width:99%; height: 150px; float: left"></div>';
                             for(var j=0; j<geoshapeObject['features'].length; j++){
                               clickedPointContent += '<label style="font-weight: bold; color: black">'+geoshapeObject['features'][j]['geometry']['type']+'</label>';
                               if(geoshapeObject['features'][j]['geometry']['type'] === "Polygon"
@@ -629,7 +626,7 @@ FLOW.NavMapsView = FLOW.View.extend({
               //if there's geoshape, draw it
               if(geoshapeCheck){
                 //pass container node, object type, and object coordinates to drawGeoShape function
-                FLOW.drawGeoShape($("#geoShapeMap")[0], geoshapeObject['features']);
+                FLOW.drawGeoShape('geoShapeMap', geoshapeObject['features']);
               }
             });
       } else {
@@ -750,6 +747,7 @@ FLOW.GeoshapeMapView = FLOW.View.extend({
 
     self.set('geoshape', JSON.parse(this.get('parentView.geoShapeObject')));
     containerNode = self.get('element').getElementsByClassName('geoshapeMapContainer')[0];
+    containerNode.style.height = "150px";
     if (containerNode) {
       FLOW.drawGeoShape(containerNode, geoShapeObject['features']);
     }

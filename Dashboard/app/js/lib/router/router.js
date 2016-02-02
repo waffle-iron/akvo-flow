@@ -421,6 +421,10 @@ FLOW.Router = Ember.Router.extend({
         router.transitionTo('navCustomMaps.customMapEdit');
       },
 
+      doCustomMap: function (router, event) {
+        router.transitionTo('navCustomMaps.customMap');
+      },
+
       index: Ember.Route.extend({
         route: '/',
         redirectsTo: 'dataMap'
@@ -450,6 +454,15 @@ FLOW.Router = Ember.Router.extend({
           router.resetState();
           router.get('navCustomMapsController').connectOutlet('customMapEdit');
           router.set('mapsSubnavController.selected', 'customMapEdit');
+        }
+      }),
+
+      customMap: Ember.Route.extend({
+        route: '/custom-map-view',
+        connectOutlets: function (router, context) {
+          router.resetState();
+          router.get('navCustomMapsController').connectOutlet('customMap');
+          router.set('mapsSubnavController.selected', 'customMap');
         }
       })
     }),

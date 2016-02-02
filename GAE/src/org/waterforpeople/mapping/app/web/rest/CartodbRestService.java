@@ -39,7 +39,6 @@ public class CartodbRestService {
     private static final String CDB_HOST = PropertyUtil.getProperty("cartodbHost");
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
-    private static final Date date = new Date();
 
     @RequestMapping(method = RequestMethod.GET, value = "answers")
     @ResponseBody
@@ -213,7 +212,7 @@ public class CartodbRestService {
           +"("
           +"id serial,"
           +"form_id integer,"
-          +"survey_title varchar,"
+          +"survey_id integer,"
           +"creator varchar,"
           +"custom_map_title varchar,"
           +"custom_map_description varchar,"
@@ -254,22 +253,22 @@ public class CartodbRestService {
             @RequestBody CustomMapsPayload payload)
             throws IOException {
         Map<String, Object> response = new HashMap<>();
-        Timestamp currentTimestamp = new Timestamp(date.getTime());
+        Timestamp currentTimestamp = new Timestamp(System.currentTimeMillis());
         String query = "";
         response.put("custom_map", null);
 
         if(payload.getNewMap().equals("true")){
-          String insertValues = "('"+payload.getFormId()+"', '"+payload.getSurveyTitle()
+          String insertValues = "('"+payload.getFormId()+"', '"+payload.getSurveyId()
               +"', '"+payload.getCreator()+"', '"+payload.getCustomMapTitle()+"', '"+payload.getCustomMapDescription()
               +"', '"+payload.getNamedMap()+"', '"+payload.getCartocss()+"', '"+payload.getLegend()
               +"', '"+payload.getPermission()+"', '"+currentTimestamp+"', '"+currentTimestamp+"')";
           query = String.format("INSERT INTO custom_maps "
-              +"(form_id, survey_title, creator, custom_map_title, custom_map_description,"
+              +"(form_id, survey_id, creator, custom_map_title, custom_map_description,"
               +" named_map, cartocss, legend, permission, create_date, modify_date) VALUES "
               +insertValues);
         }else{
-          query = "UPDATE custom_maps SET (form_id, survey_title, custom_map_title, custom_map_description,"
-          +" cartocss, legend, permission, modify_date) = ('"+payload.getFormId()+"', '"+payload.getSurveyTitle()
+          query = "UPDATE custom_maps SET (form_id, survey_id, custom_map_title, custom_map_description,"
+          +" cartocss, legend, permission, modify_date) = ('"+payload.getFormId()+"', '"+payload.getSurveyId()
           +"', '"+payload.getCustomMapTitle()+"', '"+payload.getCustomMapDescription()+"', '"+payload.getCartocss()
           +"', '"+payload.getLegend()+"', '"+payload.getPermission()+"', '"+currentTimestamp+"')"
           +" WHERE named_map = '"+payload.getNamedMap()+"'";

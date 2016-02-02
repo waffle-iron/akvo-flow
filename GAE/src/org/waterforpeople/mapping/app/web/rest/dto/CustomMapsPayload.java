@@ -21,7 +21,7 @@ import java.util.List;
 
 public class CustomMapsPayload implements Serializable {
   private String formId;
-  private String surveyTitle;
+  private String surveyId;
   private String creator;
   private String customMapTitle;
   private String customMapDescription;
@@ -39,12 +39,12 @@ public class CustomMapsPayload implements Serializable {
       this.formId = formId;
   }
 
-  public String getSurveyTitle() {
-      return surveyTitle;
+  public String getSurveyId() {
+      return surveyId;
   }
 
-  public void setSurveyTitle(String surveyTitle) {
-      this.surveyTitle = surveyTitle;
+  public void setSurveyId(String surveyId) {
+      this.surveyId = surveyId;
   }
 
   public String getCreator() {
