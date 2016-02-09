@@ -28,7 +28,7 @@ FLOW.CustomMapsListView = FLOW.View.extend({
     $.get('/rest/cartodb/custom_maps', function(customMapsData, status) {
       //load a list of available custom maps here
       if(customMapsData.custom_maps){
-        $.get('/rest/survey_groups'/*place survey_groups endpoint here*/
+      $.get('/rest/survey_groups'/*place survey_groups endpoint here*/
         , function(surveyGroupsData, status){
           if(surveyGroupsData.survey_groups){
             for(var i=0; i<customMapsData.custom_maps.length; i++){
@@ -402,8 +402,7 @@ FLOW.CustomMapEditView = FLOW.View.extend({
     if(self.hierarchyObject.length > 0){
       self.manageHierarchy(parentFolderId);
     }else{
-      $.get('http://localhost:8080/akvo_flow_api/index.php/survey_groups/akvoflow-uat1'
-      //$.get('/rest/survey_groups'/*place survey_groups endpoint here*/
+      $.get('/rest/survey_groups'/*place survey_groups endpoint here*/
       , function(data, status){
         if(data['survey_groups'].length > 0){
           self.hierarchyObject = data['survey_groups'];
@@ -627,6 +626,22 @@ FLOW.CustomMapView = FLOW.View.extend({
     FLOW.selectedControl.set('polygons', []);
 
     this.map = map;
+
+    //get selected custom map details
+    $.get(
+      '/rest/cartodb/custom_map_details?name='+FLOW.selectedControl.get('selectedCustomMap')
+      , function(customMapDetailsData){
+        if(customMapDetailsData.custom_map_details){
+          //set map title and description to selected custom map
+          var mapTitle = '<div style="width: 100%; float: left">'
+            +customMapDetailsData.custom_map_details[0]['custom_map_title']
+            +'</div>';
+          var mapDescription = '<div style="width: 100%; float: left">'
+            +customMapDetailsData.custom_map_details[0]['custom_map_description']
+            +'</div>';
+          $('#customMapDetails').html(mapTitle+mapDescription);
+        }
+    });
 
     map.on('click', function(e) {
       if(self.marker != null){
