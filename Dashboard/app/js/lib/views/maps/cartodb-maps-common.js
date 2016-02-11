@@ -317,3 +317,14 @@ FLOW.projectGeoshape = function(mapObject, geoShapeObject){
   FLOW.selectedControl.set('polygons', polygons);
   mapObject.fitBounds(featureGroup.getBounds()); //fit featureGroup to map bounds
 }
+
+FLOW.initAjaxSetup = function(){
+  $.ajaxSetup({
+    beforeSend: function(){
+      FLOW.savingMessageControl.numLoadingChange(1);
+      },
+    complete: function(){
+      FLOW.savingMessageControl.numLoadingChange(-1);
+      }
+  });
+};

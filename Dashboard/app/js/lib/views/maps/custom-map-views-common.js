@@ -5,93 +5,49 @@ FLOW.DataMapView = FLOW.View.extend({
     Once the view is in the DOM create the map
   */
   didInsertElement: function () {
-    console.log("load default map");
+    var self = this;
+
+    FLOW.initAjaxSetup();
+
+    //onetime get survey groups
+    $.get('/rest/survey_groups'/*place survey_groups endpoint here*/
+    , function(surveyGroupsData, status){
+      FLOW.selectedControl.set('cartodbMapsSurveyGroups', surveyGroupsData);
+      console.log("load default map");
+    });
   }
 });
 
 FLOW.CustomMapsListView = FLOW.View.extend({
   templateName: 'navMaps/custom-maps-list',
+  refreshIntervalId: null,
 
   /**
     Once the view is in the DOM populate the list
   */
   didInsertElement: function () {
-    $.ajaxSetup({
-    	beforeSend: function(){
-    		FLOW.savingMessageControl.numLoadingChange(1);
-        },
-    	complete: function(){
-    		FLOW.savingMessageControl.numLoadingChange(-1);
-        }
-    });
+    var self = this;
+
+    FLOW.initAjaxSetup();
 
     $.get('/rest/cartodb/custom_maps', function(customMapsData, status) {
       //load a list of available custom maps here
       if(customMapsData.custom_maps){
-      $.get('/rest/survey_groups'/*place survey_groups endpoint here*/
-        , function(surveyGroupsData, status){
-          if(surveyGroupsData.survey_groups){
-            for(var i=0; i<customMapsData.custom_maps.length; i++){
-              var modifyDate = new Date(customMapsData.custom_maps[i].modify_date);
-              var customMapsList = '';
-              customMapsList += '<tr>'
-                +'<td>'
-                +'<a class="viewCustomMap" data-form-id="'+customMapsData.custom_maps[i].form_id
-                +'" data-custom-map="'+customMapsData.custom_maps[i].named_map+'">'
-                +customMapsData.custom_maps[i].custom_map_title
-                +'</a></td>';
-              customMapsList += '<td>';
-              //if survey id is set, get its title from survey groups object else leave it empty
-              if(customMapsData.custom_maps[i].survey_id !== 0){
-                for(var j=0; j<surveyGroupsData['survey_groups'].length; j++){
-                  if(surveyGroupsData['survey_groups'][j].keyId === customMapsData.custom_maps[i].survey_id){
-                    customMapsList += surveyGroupsData['survey_groups'][j].name;
-                  }
-                }
-              }
-              customMapsList += '</td>';
-              customMapsList += '<td>'+modifyDate.toUTCString()+'</td>'
-                +'<td>'+customMapsData.custom_maps[i].creator+'</td>'
-                +'<td  class="action">';
-              if(customMapsData.custom_maps[i].form_id !== 0){
-                //only allow users who have access to specified form to edit or delete custom map
-                for(var j=0; j<surveyGroupsData['survey_groups'].length; j++){
-                  if(surveyGroupsData['survey_groups'][j]['surveyList'] !== null){
-                    if(surveyGroupsData['survey_groups'][j]['surveyList'][0].keyId === customMapsData.custom_maps[i].form_id){
-                      //console.log(surveyGroupsData['survey_groups'][j].keyId+" confirmed...you may proceed");
-                      customMapsList += '<a class="edit editCustomMap" data-custom-map="'+customMapsData.custom_maps[i].named_map+'">'
-                        +Ember.String.loc('_edit')
-                        +'</a>'
-                        +'<a class="remove">'+Ember.String.loc('_remove')+'</a>';
-                    }
-                  }
-                }
-              }else{
-                if(customMapsData.custom_maps[i].survey_id !== 0){
-                  //only allow users who have access to specified survey to edit or delete custom map
-                  for(var j=0; j<surveyGroupsData['survey_groups'].length; j++){
-                    if(surveyGroupsData['survey_groups'][j]['surveyList'] !== null){
-                      if(surveyGroupsData['survey_groups'][j].keyId === customMapsData.custom_maps[i].survey_id){
-                        customMapsList += '<a class="edit editCustomMap" data-custom-map="'+customMapsData.custom_maps[i].named_map+'">'
-                          +Ember.String.loc('_edit')
-                          +'</a>'
-                          +'<a class="remove">'+Ember.String.loc('_remove')+'</a>';
-                      }
-                    }
-                  }
-                }else{
-                  // TODO:
-                  //only allow dashboard administrators to be able to delete a custom map of all data points
-                }
-              }
-              customMapsList += '</td></tr>';
-
-              $('#customMapsTable').append(customMapsList);
-            }
-          }
-        });
+        if($.active > 0){
+    			self.refreshIntervalId = setInterval(function () {
+    				//keep checking if there are any pending ajax requests
+    				if($.active > 0){
+    					//keep displaying loading icon
+    				}else{ //if no pending ajax requests
+    					//call function to load the custom maps list view
+    					self.createCustomMapsListTable(customMapsData);
+    				}
+    		  },2000);
+    		}else{
+    			//call function to load the custom maps list view
+          self.createCustomMapsListTable(customMapsData);
+    		}
       }
-      //console.log(customMapsData);
     });
 
     $(document.body).on('click', '.newCustomMap', function(){
@@ -109,6 +65,70 @@ FLOW.CustomMapsListView = FLOW.View.extend({
       FLOW.selectedControl.set('selectedCustomMapFormId', $(this).data('formId'));
       FLOW.router.transitionTo('navCustomMaps.customMap');
     });
+  },
+
+  createCustomMapsListTable: function(customMapsData){
+    clearInterval(this.refreshIntervalId); //stop the interval if running
+    var surveyGroupsData = FLOW.selectedControl.get('cartodbMapsSurveyGroups');
+    if(surveyGroupsData.survey_groups){
+      for(var i=0; i<customMapsData.custom_maps.length; i++){
+        var modifyDate = new Date(customMapsData.custom_maps[i].modify_date);
+        var customMapsList = '';
+        customMapsList += '<tr>'
+          +'<td>'
+          +'<a class="viewCustomMap" data-form-id="'+customMapsData.custom_maps[i].form_id
+          +'" data-custom-map="'+customMapsData.custom_maps[i].named_map+'">'
+          +customMapsData.custom_maps[i].custom_map_title
+          +'</a></td>';
+        customMapsList += '<td>';
+        //if survey id is set, get its title from survey groups object else leave it empty
+        if(customMapsData.custom_maps[i].survey_id !== 0){
+          for(var j=0; j<surveyGroupsData['survey_groups'].length; j++){
+            if(surveyGroupsData['survey_groups'][j].keyId === customMapsData.custom_maps[i].survey_id){
+              customMapsList += surveyGroupsData['survey_groups'][j].name;
+            }
+          }
+        }
+        customMapsList += '</td>';
+        customMapsList += '<td>'+modifyDate.toUTCString()+'</td>'
+          +'<td>'+customMapsData.custom_maps[i].creator+'</td>'
+          +'<td  class="action">';
+        if(customMapsData.custom_maps[i].form_id !== 0){
+          //only allow users who have access to specified form to edit or delete custom map
+          for(var j=0; j<surveyGroupsData['survey_groups'].length; j++){
+            if(surveyGroupsData['survey_groups'][j]['surveyList'] !== null){
+              if(surveyGroupsData['survey_groups'][j]['surveyList'][0].keyId === customMapsData.custom_maps[i].form_id){
+                //console.log(surveyGroupsData['survey_groups'][j].keyId+" confirmed...you may proceed");
+                customMapsList += '<a class="edit editCustomMap" data-custom-map="'+customMapsData.custom_maps[i].named_map+'">'
+                  +Ember.String.loc('_edit')
+                  +'</a>'
+                  +'<a class="remove">'+Ember.String.loc('_remove')+'</a>';
+              }
+            }
+          }
+        }else{
+          if(customMapsData.custom_maps[i].survey_id !== 0){
+            //only allow users who have access to specified survey to edit or delete custom map
+            for(var j=0; j<surveyGroupsData['survey_groups'].length; j++){
+              if(surveyGroupsData['survey_groups'][j]['surveyList'] !== null){
+                if(surveyGroupsData['survey_groups'][j].keyId === customMapsData.custom_maps[i].survey_id){
+                  customMapsList += '<a class="edit editCustomMap" data-custom-map="'+customMapsData.custom_maps[i].named_map+'">'
+                    +Ember.String.loc('_edit')
+                    +'</a>'
+                    +'<a class="remove">'+Ember.String.loc('_remove')+'</a>';
+                }
+              }
+            }
+          }else{
+            // TODO:
+            //only allow dashboard administrators to be able to delete a custom map of all data points
+          }
+        }
+        customMapsList += '</td></tr>';
+
+        $('#customMapsTable').append(customMapsList);
+      }
+    }
   }
 });
 
@@ -154,14 +174,7 @@ FLOW.CustomMapEditView = FLOW.View.extend({
   didInsertElement: function () {
     var self = this;
 
-    $.ajaxSetup({
-    	beforeSend: function(){
-    		FLOW.savingMessageControl.numLoadingChange(1);
-        },
-    	complete: function(){
-    		FLOW.savingMessageControl.numLoadingChange(-1);
-        }
-    });
+    FLOW.initAjaxSetup();
 
     // create and draw leaflet map
     var map = L.map('flowMap', {scrollWheelZoom: true}).setView([26.11598592533351, 1.9335937499999998], 2);
@@ -402,17 +415,27 @@ FLOW.CustomMapEditView = FLOW.View.extend({
     if(self.hierarchyObject.length > 0){
       self.manageHierarchy(parentFolderId);
     }else{
-      $.get('/rest/survey_groups'/*place survey_groups endpoint here*/
-      , function(data, status){
-        if(data['survey_groups'].length > 0){
-          self.hierarchyObject = data['survey_groups'];
-          self.manageHierarchy(parentFolderId);
-        }
-      });
+      if($.active > 0){
+        self.refreshIntervalId = setInterval(function () {
+          //keep checking if there are any pending ajax requests
+          if($.active > 0){
+            //keep displaying loading icon
+          }else{ //if no pending ajax requests
+            //call function to manage the hierarchy
+            self.hierarchyObject = FLOW.selectedControl.get('cartodbMapsSurveyGroups')['survey_groups'];
+            self.manageHierarchy(parentFolderId);
+          }
+        },2000);
+      }else{
+        //call function to manage the hierarchy
+        self.hierarchyObject = FLOW.selectedControl.get('cartodbMapsSurveyGroups')['survey_groups'];
+        self.manageHierarchy(parentFolderId);
+      }
     }
   },
 
   manageHierarchy: function(parentFolderId){
+    clearInterval(this.refreshIntervalId); //stop the interval if running
     var self = this, rows = self.hierarchyObject;
 
     rows.sort(function(el1, el2) {
@@ -608,14 +631,7 @@ FLOW.CustomMapView = FLOW.View.extend({
   didInsertElement: function () {
     var self = this, pointDataUrl;
 
-    $.ajaxSetup({
-    	beforeSend: function(){
-    		FLOW.savingMessageControl.numLoadingChange(1);
-        },
-    	complete: function(){
-    		FLOW.savingMessageControl.numLoadingChange(-1);
-        }
-    });
+    FLOW.initAjaxSetup();
 
     // create and draw leaflet map
     var map = L.map('flowMap', {scrollWheelZoom: true}).setView([26.11598592533351, 1.9335937499999998], 2);
@@ -640,6 +656,11 @@ FLOW.CustomMapView = FLOW.View.extend({
             +customMapDetailsData.custom_map_details[0]['custom_map_description']
             +'</div>';
           $('#customMapDetails').html(mapTitle+mapDescription);
+          $('#customMapEditOptions').html('<a class="edit editCustomMap" data-custom-map="'
+            +customMapDetailsData.custom_map_details[0]['named_map']+'">'
+            +Ember.String.loc('_edit')
+            +'</a>'
+            +'<a class="remove">'+Ember.String.loc('_remove')+'</a>');
         }
     });
 
@@ -663,6 +684,11 @@ FLOW.CustomMapView = FLOW.View.extend({
 
     map.on('zoomend', function() {
       $('body, html, #flowMap').scrollTop(0);
+    });
+
+    $(document.body).on('click', '.editCustomMap', function(){
+      FLOW.selectedControl.set('selectedCustomMap', $(this).data('customMap'));
+      FLOW.router.transitionTo('navCustomMaps.customMapEdit');
     });
 
     // add scale indication to map

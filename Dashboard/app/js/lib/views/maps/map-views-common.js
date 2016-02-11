@@ -111,14 +111,7 @@ FLOW.NavMapsView = FLOW.View.extend({
   insertCartodbMap: function() {
     var self = this;
 
-    $.ajaxSetup({
-    	beforeSend: function(){
-    		FLOW.savingMessageControl.numLoadingChange(1);
-        },
-    	complete: function(){
-    		FLOW.savingMessageControl.numLoadingChange(-1);
-        }
-    });
+    FLOW.initAjaxSetup();
 
     var filterContent = '<div id="survey_hierarchy" style="float: left"></div>&nbsp;';
 
