@@ -280,6 +280,20 @@ public class CartodbRestService {
         return response;
     }
 
+    @RequestMapping(method = RequestMethod.GET, value = "delete_custom_map")
+    @ResponseBody
+    public Map<String, Object> deleteCustomMap(@RequestParam("map_name") String mapName) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("response", null);
+        try {
+            response.put("response",
+                    queryCartodb(String.format("DELETE FROM custom_maps WHERE named_map = '%s'", mapName)));
+            return response;
+        } catch (IOException e) {
+            return response;
+        }
+    }
+
     @SuppressWarnings("unchecked")
     @RequestMapping(method = RequestMethod.GET, value = "named_maps")
     @ResponseBody

@@ -78,7 +78,7 @@ FLOW.NavMapsView = FLOW.View.extend({
     // add scale indication to map
     L.control.scale({position:'topleft', maxWidth:150}).addTo(this.map);
 
-    this.$('#mapDetailsHideShow').click(function () {
+    $('#mapDetailsHideShow').click(function () {
       self.handleShowHideDetails();
     });
 

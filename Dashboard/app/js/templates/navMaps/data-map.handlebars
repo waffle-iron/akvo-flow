@@ -1,3 +1,79 @@
-<section class="fullWidth" id="dataMap">
-  <div>Data map</div>
+<section id="dataMap" class="fullWidth">
+  <div id="dropdown-holder">
+    <div id="mapDetailsHideShow" class="drawHandle hideMapD">{{t _hide}} &rsaquo;</div>
+  </div>
+  <div id="flowMap"></div>
+  {{#view FLOW.PlacemarkDetailView controllerBinding="FLOW.placemarkDetailController"}}
+    <div id="pointDetails">
+      {{#if content}}
+        <ul class="placeMarkBasicInfo floats-in">
+          <li>
+            <span>{{t _collected_on}}:</span>
+            <div class="placeMarkCollectionDate">
+              {{date2 collectionDate}}
+            </div>
+          </li>
+          <li></li>
+        </ul>
+        <div {{bindAttr class=":imgContainer photoUrl:shown:hidden"}}>
+          {{#each photo in photoUrl}}
+            <a href="{{unbound photo}}" target="_blank">
+              <img src="{{unbound photo}}" alt=""/>
+            </a>
+          {{/each}}
+        </div>
+        <div class="mapInfoDetail">
+          {{#each arrangedContent}}
+            <p>{{placemarkDetail}}</p>
+          {{else}}
+            <p class="noDetails">{{t _no_details}}</p>
+          {{/each}}
+        </div>
+      {{else}}
+        <p class="noDetails">{{t _no_details}}</p>
+      {{/if}}
+
+    </div>
+  {{/view}}
+  <div id="flowMapLegend">
+    <h1>{{t _legend}}</h1>
+  </div>
 </section>
+
+<style>
+  #pointDetails > dl > div.defListWrap:nth-child(odd) {
+    background-color: rgb(204,214,214);
+  }
+</style>
+
+<script type="text/javascript">
+(function(){
+
+  var dropDown = document.querySelector('#dropdown-holder');
+  var header = document.querySelector('header');
+  var footer = document.querySelector('footer');
+
+  function resizeMap() {
+
+    if (!document.querySelector('#flowMap')) {
+      // If we can't find the map element, assume we have changed tabs and remove listener
+      window.removeEventListener('resize', resizeMap);
+      return;
+    }
+
+    var totalHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+    var newHeight = totalHeight;
+
+    newHeight -= dropDown.offsetHeight;
+    newHeight -= header.offsetHeight;
+    newHeight -= footer.offsetHeight;
+    newHeight = newHeight * 0.95;
+
+    document.querySelector('#flowMap').style.height = newHeight + 'px';
+    document.querySelector('#pointDetails').style.height = newHeight + 'px';
+  }
+
+  window.addEventListener('resize', resizeMap);
+  resizeMap();
+})()
+</script>
