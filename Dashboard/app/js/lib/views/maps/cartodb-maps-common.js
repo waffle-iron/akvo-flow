@@ -314,7 +314,10 @@ FLOW.projectGeoshape = function(mapObject, geoShapeObject){
     polygons.push(geoShape);
   }
   FLOW.selectedControl.set('polygons', polygons);
-  mapObject.fitBounds(featureGroup.getBounds()); //fit featureGroup to map bounds
+
+  setTimeout(function() {
+    mapObject.fitBounds(featureGroup.getBounds()); //fit featureGroup to map bounds
+  }, 0);
 }
 
 FLOW.initAjaxSetup = function(){
@@ -474,6 +477,140 @@ FLOW.namedMaps = function(map, mapName, table, sql, interactivity){
       }
     }
   });
+};
+
+FLOW.manageHierarchy = function(parentFolderId){
+  var rows = FLOW.selectedControl.get('cartodbMapsSurveyGroups')['survey_groups'];
+
+  rows.sort(function(el1, el2) {
+    return FLOW.compare(el1, el2, 'name');
+  });
+
+  //create folder and/or survey select element
+  var folder_survey_selector = $('<select></select>').attr("class", "folder_survey_selector");
+  folder_survey_selector.append('<option value="">--' + Ember.String.loc('_choose_folder_or_survey') + '--</option>');
+
+  for (var i=0; i<rows.length; i++) {
+    //append return survey list to the survey selector element
+    var surveyGroup = rows[i];
+
+    //if a subfolder, only load folders and surveys from parent folder
+    if(surveyGroup.parentId == parentFolderId){
+      folder_survey_selector.append('<option value="'
+        + surveyGroup.keyId + '"'
+        +'data-type="'+surveyGroup.projectType+'">'
+        + surveyGroup.name
+        + '</option>');
+    }
+  }
+  $("#survey_hierarchy").append(folder_survey_selector);
+};
+
+FLOW.createNamedMapObject = function(mapObject, queryObject, cartocss){
+  /* Build a (temporary) named map based on currently selected survey/form */
+  var namedMapObject = {};
+  namedMapObject['name'] = FLOW.selectedControl.get('customMapName');
+  namedMapObject['interactivity'] = [];
+  namedMapObject['query'] = FLOW.buildQuery(queryObject.table, queryObject.column, queryObject.value);
+  namedMapObject['requestType'] = (FLOW.selectedControl.get('newMap')) ? "POST" : "PUT";
+
+  //if cartocss is not defined, create map using default style
+  namedMapObject['cartocss'] = "#"+queryObject.table+"{"
+    +"marker-fill-opacity: 0.9;"
+    +"marker-line-color: #FFF;"
+    +"marker-line-width: 1.5;"
+    +"marker-line-opacity: 1;"
+    +"marker-placement: point;"
+    +"marker-type: ellipse;"
+    +"marker-width: 10;"
+    +"marker-fill: #FF6600;"
+    +"marker-allow-overlap: true;"
+    +"}";
+
+  //if cartocss is defined, create map using specified style
+  if(cartocss !== ""){
+    namedMapObject['cartocss'] += cartocss;
+  }
+
+  //get list of columns to be added to new named map's interactivity
+  $.get('/rest/cartodb/columns?table_name='+queryObject.table, function(columnsData) {
+    if (columnsData.column_names) {
+      for (var j=0; j<columnsData['column_names'].length; j++) {
+        namedMapObject['interactivity'].push(columnsData['column_names'][j]['column_name']);
+      }
+    }
+    FLOW.customNamedMaps(mapObject, namedMapObject);
+  });
+};
+
+//create named maps
+FLOW.customNamedMaps = function(mapObject, namedMapObject){
+  var configJsonData = {};
+
+  var ajaxObject = {};
+  ajaxObject['call'] = "POST";
+  ajaxObject['url'] = "/rest/cartodb/named_maps";
+  ajaxObject['data'] = JSON.stringify(namedMapObject);
+
+  FLOW.ajaxCall(function(response){
+    if(response.template_id){
+      FLOW.selectedControl.set('customMapName', response.template_id);
+      FLOW.createCustomMapLayer(mapObject, response.template_id);
+    }
+  }, ajaxObject);
+};
+
+/*this function overlays a named map on the cartodb map*/
+FLOW.createCustomMapLayer = function(mapObject, mapName){
+  //first clear any currently overlayed cartodb layer
+  FLOW.selectedControl.set('layerExistsCheck', FLOW.clearCartodbLayer(mapObject, FLOW.selectedControl.get('cartodbLayer')));
+
+  // add cartodb layer with one sublayer
+  cartodb.createLayer(mapObject, {
+    user_name: FLOW.Env.appId,
+    type: 'namedmap',
+    named_map: {
+      name: mapName,
+      layers: [{
+        layer_name: "t",
+        interactivity: "id"
+      }]
+    }
+  },{
+    tiler_domain: FLOW.Env.cartodbHost,
+    tiler_port: "", //set to empty string to stop cartodb js from appending default port
+    tiler_protocol: "https",
+    no_cdn: true
+  })
+  .addTo(mapObject)
+  .done(function(layer) {
+    layer.setZIndex(1000); //required to ensure that the cartodb layer is not obscured by the here maps base layers
+    FLOW.selectedControl.set('layerExistsCheck', true);
+    FLOW.selectedControl.set('cartodbLayer', layer);
+
+    FLOW.addCursorInteraction(layer, 'flowMap');
+
+    var currentLayer = layer.getSubLayer(0);
+    currentLayer.setInteraction(true);
+
+    var tooltip = layer.leafletMap.viz.addOverlay({
+      type: 'tooltip',
+      layer: currentLayer,
+      template: '<div class="cartodb-tooltip-content-wrapper"><p>{{name}}</p></div>',
+      width: 200,
+      position: 'top|right',
+      fields: [{ name: 'cartodb_id' }]
+    });
+    $('#flowMap').append(tooltip.render().el);
+  });
+};
+
+FLOW.buildQuery = function(table, column, value){
+  var query = "SELECT * FROM "+table;
+  if(column !== ""){
+    query += " WHERE "+column+" = '"+value+"'";
+  }
+  return query;
 };
 
 /**

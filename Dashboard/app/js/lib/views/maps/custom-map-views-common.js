@@ -1,19 +1,7 @@
 FLOW.DataMapView = FLOW.View.extend({
   templateName: 'navMaps/data-map',
-  detailsPaneElements: null,
-  detailsPaneVisible: null,
   map: null,
-  marker: null,
-  geoShape: null,
-  geoshapeCoordinates: null,
-  polygons: [],
-  mapZoomLevel: 0,
-  mapCenter: null,
-  hierarchyObject: [],
-  lastSelectedElement: 0,
-  cartodbLayer: null,
   layerExistsCheck: false,
-  refreshIntervalId: null,
 
   init: function () {
     this._super();
@@ -26,14 +14,6 @@ FLOW.DataMapView = FLOW.View.extend({
       ", .placeMarkBasicInfo" +
       ", .noDetails");
     FLOW.selectedControl.set('detailsPaneVisible', false);
-
-    this.detailsPaneElements = "#pointDetails h2" +
-      ", #pointDetails dl" +
-      ", #pointDetails img" +
-      ", #pointDetails .imgContainer" +
-      ", .placeMarkBasicInfo" +
-      ", .noDetails";
-    this.detailsPaneVisible = false;
   },
 
   /**
@@ -48,7 +28,6 @@ FLOW.DataMapView = FLOW.View.extend({
     $.get('/rest/survey_groups'/*place survey_groups endpoint here*/
     , function(surveyGroupsData, status){
       FLOW.selectedControl.set('cartodbMapsSurveyGroups', surveyGroupsData);
-      self.hierarchyObject = FLOW.selectedControl.get('cartodbMapsSurveyGroups')['survey_groups'];
 
       self.insertCartodbMap();
 
@@ -91,19 +70,19 @@ FLOW.DataMapView = FLOW.View.extend({
 
     map.on('click', function(e) {
       if(FLOW.selectedControl.get('marker') != null){
-        self.map.removeLayer(FLOW.selectedControl.get('marker'));
+        map.removeLayer(FLOW.selectedControl.get('marker'));
         FLOW.hideDetailsPane();
         $('#pointDetails').html('<p class="noDetails">'+Ember.String.loc('_no_details') +'</p>');
       }
 
       if(FLOW.selectedControl.get('polygons').length > 0){
         for(var i=0; i<FLOW.selectedControl.get('polygons').length; i++){
-          self.map.removeLayer(FLOW.selectedControl.get('polygons')[i])
+          map.removeLayer(FLOW.selectedControl.get('polygons')[i])
         }
         //restore the previous zoom level and map center
-        self.map.setZoom(FLOW.selectedControl.get('mapZoomLevel'));
-        self.map.panTo(FLOW.selectedControl.get('mapCenter'));
-        FLOW.selectedControl.set('mapCenter', [])
+        map.setZoom(FLOW.selectedControl.get('mapZoomLevel'));
+        map.panTo(FLOW.selectedControl.get('mapCenter'));
+        FLOW.selectedControl.set('polygons', [])
       }
     });
 
@@ -112,7 +91,7 @@ FLOW.DataMapView = FLOW.View.extend({
     });
 
     //manage folder and/or survey selection hierarchy
-    self.manageHierarchy(0);
+    FLOW.manageHierarchy(0);
 
     $(document).off('change', '.folder_survey_selector').on('change', '.folder_survey_selector',function(e) {
 
@@ -135,8 +114,6 @@ FLOW.DataMapView = FLOW.View.extend({
               rows.sort(function(el1, el2) {
                 return FLOW.compare(el1, el2, 'name')
               });
-
-              var hierarchyObject = self.hierarchyObject;
 
               //create folder and/or survey select element
               var form_selector = $("<select></select>").attr("data-survey-id", keyId).attr("class", "form_selector");
@@ -161,19 +138,17 @@ FLOW.DataMapView = FLOW.View.extend({
           FLOW.namedMapCheck(namedMapObject);
         }else{ //if a folder is selected, load the folder's children on a new 'folder_survey_selector'
           //first clear any currently overlayed cartodb layer (if any)
-          FLOW.selectedControl.set('layerExistsCheck', FLOW.clearCartodbLayer(self.map, self.cartodbLayer));
+          FLOW.selectedControl.set('layerExistsCheck', FLOW.clearCartodbLayer(map, FLOW.selectedControl.get('cartodbLayer')));
 
-          var hierarchyObject = self.hierarchyObject;
-
-          for(var i=0; i<hierarchyObject.length; i++){
-            if(hierarchyObject[i].keyId === parseInt(keyId) && self.lastSelectedElement !== parseInt(keyId)){
-              self.manageHierarchy(keyId);
+          for(var i=0; i<FLOW.selectedControl.get('cartodbMapsSurveyGroups')['survey_groups'].length; i++){
+            if(FLOW.selectedControl.get('cartodbMapsSurveyGroups')['survey_groups'][i].keyId === parseInt(keyId) && self.lastSelectedElement !== parseInt(keyId)){
+              FLOW.manageHierarchy(keyId);
               self.lastSelectedElement = parseInt(keyId);
             }
           }
         }
       }else{ //if nothing is selected, delete all children 'folder_survey_selector's and clear form selector
-        FLOW.selectedControl.set('layerExistsCheck', FLOW.clearCartodbLayer(self.map, self.cartodbLayer));
+        FLOW.selectedControl.set('layerExistsCheck', FLOW.clearCartodbLayer(map, FLOW.selectedControl.get('cartodbLayer')));
       }
 
     });
@@ -202,7 +177,7 @@ FLOW.DataMapView = FLOW.View.extend({
           FLOW.namedMapCheck(namedMapObject);
         });
       } else {
-        FLOW.selectedControl.set('layerExistsCheck', FLOW.clearCartodbLayer(self.map, 'data_point_'+$(this).data('survey-id')));
+        FLOW.selectedControl.set('layerExistsCheck', FLOW.clearCartodbLayer(map, 'data_point_'+$(this).data('survey-id')));
       }
     });
 
@@ -210,45 +185,17 @@ FLOW.DataMapView = FLOW.View.extend({
       if(FLOW.selectedControl.get('polygons').length > 0){
         $(this).html(Ember.String.loc('_project_geoshape_onto_main_map'));
         for(var i=0; i<FLOW.selectedControl.get('polygons').length; i++){
-          self.map.removeLayer(FLOW.selectedControl.get('polygons')[i]);
+          map.removeLayer(FLOW.selectedControl.get('polygons')[i]);
         }
         //restore the previous zoom level and map center
-        self.map.setZoom(FLOW.selectedControl.get('mapZoomLevel'));
-        self.map.panTo(FLOW.selectedControl.get('mapCenter'));
+        map.setZoom(FLOW.selectedControl.get('mapZoomLevel'));
+        map.panTo(FLOW.selectedControl.get('mapCenter'));
         FLOW.selectedControl.set('polygons', []);
       }else{
         $(this).html(Ember.String.loc('_clear_geoshape_from_main_map'));
-        FLOW.projectGeoshape(self.map, FLOW.selectedControl.get('geoshapeCoordinates'));
+        FLOW.projectGeoshape(map, FLOW.selectedControl.get('geoshapeCoordinates'));
       }
     });
-  },
-
-  manageHierarchy: function(parentFolderId){
-    clearInterval(this.refreshIntervalId); //stop the interval if running
-    var self = this, rows = self.hierarchyObject;
-
-    rows.sort(function(el1, el2) {
-      return FLOW.compare(el1, el2, 'name');
-    });
-
-    //create folder and/or survey select element
-    var folder_survey_selector = $('<select></select>').attr("class", "folder_survey_selector");
-    folder_survey_selector.append('<option value="">--' + Ember.String.loc('_choose_folder_or_survey') + '--</option>');
-
-    for (var i=0; i<rows.length; i++) {
-      //append return survey list to the survey selector element
-      var surveyGroup = rows[i];
-
-      //if a subfolder, only load folders and surveys from parent folder
-      if(surveyGroup.parentId == parentFolderId){
-        folder_survey_selector.append('<option value="'
-          + surveyGroup.keyId + '"'
-          +'data-type="'+surveyGroup.projectType+'">'
-          + surveyGroup.name
-          + '</option>');
-      }
-    }
-    $("#survey_hierarchy").append(folder_survey_selector);
   }
 });
 
@@ -301,11 +248,30 @@ FLOW.CustomMapsListView = FLOW.View.extend({
     });
 
     $(document.body).on('click', '.deleteCustomMap', function(){
-      if(confirm("Are you sure you want to delete this map?")){
+      if(confirm("Are you sure you want to delete this map?")){ //TODO create translation
         $.get(
           '/rest/cartodb/delete_custom_map?map_name='+$(this).data('customMap') ,
           function(response, status){
-            FLOW.router.transitionTo('navMaps.customMapsList');
+            //FLOW.router.transitionTo('navMaps.customMapsList');
+            $.get('/rest/cartodb/custom_maps', function(customMapsData, status) {
+              //load a list of available custom maps here
+              if(customMapsData.custom_maps){
+                if($.active > 0){
+            			self.refreshIntervalId = setInterval(function () {
+            				//keep checking if there are any pending ajax requests
+            				if($.active > 0){
+            					//keep displaying loading icon
+            				}else{ //if no pending ajax requests
+            					//call function to load the custom maps list view
+            					self.createCustomMapsListTable(customMapsData);
+            				}
+            		  },2000);
+            		}else{
+            			//call function to load the custom maps list view
+                  self.createCustomMapsListTable(customMapsData);
+            		}
+              }
+            });
         });
       }
     });
@@ -315,6 +281,7 @@ FLOW.CustomMapsListView = FLOW.View.extend({
     clearInterval(this.refreshIntervalId); //stop the interval if running
     var surveyGroupsData = FLOW.selectedControl.get('cartodbMapsSurveyGroups');
     if(surveyGroupsData.survey_groups){
+      $('#customMapsTable').html('');
       for(var i=0; i<customMapsData.custom_maps.length; i++){
         var modifyDate = new Date(customMapsData.custom_maps[i].modify_date);
         var customMapsList = '';
@@ -334,9 +301,9 @@ FLOW.CustomMapsListView = FLOW.View.extend({
           }
         }
         customMapsList += '</td>';
-        customMapsList += '<td>'+modifyDate.toUTCString()+'</td>'
-          +'<td>'+customMapsData.custom_maps[i].creator+'</td>'
-          +'<td  class="action">';
+        /*customMapsList += '<td>'+modifyDate.toUTCString()+'</td>'
+          +'<td>'+customMapsData.custom_maps[i].creator+'</td>';*/
+        customMapsList += '<td  class="action">';
         if(customMapsData.custom_maps[i].form_id !== 0){
           //only allow users who have access to specified form to edit or delete custom map
           for(var j=0; j<surveyGroupsData['survey_groups'].length; j++){
@@ -380,28 +347,19 @@ FLOW.CustomMapsListView = FLOW.View.extend({
 FLOW.CustomMapEditView = FLOW.View.extend({
   templateName: 'navMaps/custom-map-edit',
   map: null,
-  mapEditorPaneVisible: null,
-  hierarchyObject: [],
   lastSelectedElement: 0,
-  newMap: true,
   customMapData: {},
-  customMapName: null,
   selectedTable: '', //cartodb table name that custom map is based on
   selectedFormColumns: null,
-  cartodbLayer: null,
-  layerExistsCheck: false,
 
   init: function () {
     this._super();
-    this.mapEditorPaneVisible = false;
   },
 
   /**
     Slide in the map editor pane
   */
   showMapEditorPane: function () {
-    this.set('detailsPaneVisible', true);
-
     this.$('#flowMap').animate({
       width: '75%'
     }, 200);
@@ -432,26 +390,35 @@ FLOW.CustomMapEditView = FLOW.View.extend({
 
     self.showMapEditorPane();
 
+    //first assume that we're creating a new map
+    FLOW.selectedControl.set('newMap', true);
+
     //if a new custom map, get a server timestamp to serve as part of the custom map name
     if(FLOW.selectedControl.get('selectedCustomMap') === null){
       $.get('/rest/cartodb/timestamp', function(timestampData){
-        self.customMapName = 'custom_map_'+timestampData.timestamp;
+        FLOW.selectedControl.set('customMapName', 'custom_map_'+timestampData.timestamp);
         //automatically create a named map that's to me customised
-        self.createNamedMapObject('data_point', '', '', '');
-        self.newMap = false; //immediately set newMap to false because a named map will have a already been created
+        var queryObject = {};
+        queryObject['table'] = 'data_point';
+        queryObject['column'] = '';
+        queryObject['value'] = '';
+        FLOW.createNamedMapObject(map, queryObject, ''); //TODO: only create named map object of surveys set as public
+        FLOW.selectedControl.set('newMap', false); //immediately set newMap to false because a named map will have a already been created
       });
     }else{
-      self.newMap = false;
-      self.customMapName = FLOW.selectedControl.get('selectedCustomMap');
+      FLOW.selectedControl.set('newMap', false);
+      FLOW.selectedControl.set('customMapName', FLOW.selectedControl.get('selectedCustomMap'));
       //get custom map details
-      $.get('/rest/cartodb/custom_map_details?name='+self.customMapName, function(customMapDetailsData){
-        if(customMapDetailsData.custom_map_details){
-          //set map title and description to selected custom map
-          $('#mapTitle').val(customMapDetailsData.custom_map_details[0]['custom_map_title']);
-          $('#mapDescription').val(customMapDetailsData.custom_map_details[0]['custom_map_description']);
-        }
+      $.get(
+        '/rest/cartodb/custom_map_details?name='+FLOW.selectedControl.get('customMapName')
+        , function(customMapDetailsData){
+          if(customMapDetailsData.custom_map_details){
+            //set map title and description to selected custom map
+            $('#mapTitle').val(customMapDetailsData.custom_map_details[0]['custom_map_title']);
+            $('#mapDescription').val(customMapDetailsData.custom_map_details[0]['custom_map_description']);
+          }
       });
-      self.createLayer(self.customMapName, ""); //load selected map
+      FLOW.createLayer( map, FLOW.selectedControl.get('customMapName')); //load selected map
     }
 
     //initialise map payloads structures as follows
@@ -467,7 +434,7 @@ FLOW.CustomMapEditView = FLOW.View.extend({
     self.customMapData['newMap'] = '';
 
     //manage folder and/or survey selection hierarchy
-    self.checkHierarchy(0);
+    FLOW.manageHierarchy(0);
 
     $(document).off('change', '.folder_survey_selector').on('change', '.folder_survey_selector',function(e) {
       //remove all 'folder_survey_selector's after current
@@ -492,8 +459,6 @@ FLOW.CustomMapEditView = FLOW.View.extend({
                 return FLOW.compare(el1, el2, 'name')
               });
 
-              var hierarchyObject = self.hierarchyObject;
-
               //create folder and/or survey select element
               var form_selector = $('<select></select>').attr("data-survey-id", surveyGroupKeyId).attr("class", "form_selector");
               form_selector.append('<option value="">--' + Ember.String.loc('_choose_a_form') + '--</option>');
@@ -507,22 +472,24 @@ FLOW.CustomMapEditView = FLOW.View.extend({
             }
           });
 
-          self.createNamedMapObject('data_point', 'survey_id', surveyGroupKeyId, '');
+          var queryObject = {};
+          queryObject['table'] = 'data_point';
+          queryObject['column'] = 'survey_id';
+          queryObject['value'] = surveyGroupKeyId;
+          FLOW.createNamedMapObject(map, queryObject, '');
         }else{ //if a folder is selected, load the folder's children on a new 'folder_survey_selector'
           //first clear any currently overlayed cartodb layer (if any)
-          self.layerExistsCheck = FLOW.clearCartodbLayer(self.map, self.cartodbLayer);
+          FLOW.selectedControl.set('layerExistsCheck', FLOW.clearCartodbLayer(map, FLOW.selectedControl.get('cartodbLayer')));
 
-          var hierarchyObject = self.hierarchyObject;
-
-          for(var i=0; i<hierarchyObject.length; i++){
-            if(hierarchyObject[i].keyId === parseInt(surveyGroupKeyId) && self.lastSelectedElement !== parseInt(surveyGroupKeyId)){
-              self.checkHierarchy(surveyGroupKeyId);
+          for(var i=0; i<FLOW.selectedControl.get('cartodbMapsSurveyGroups')['survey_groups'].length; i++){
+            if(FLOW.selectedControl.get('cartodbMapsSurveyGroups')['survey_groups'][i].keyId === parseInt(surveyGroupKeyId) && self.lastSelectedElement !== parseInt(surveyGroupKeyId)){
+              FLOW.manageHierarchy(surveyGroupKeyId);
               self.lastSelectedElement = parseInt(surveyGroupKeyId);
             }
           }
         }
       }else{ //if nothing is selected, delete all children 'folder_survey_selector's and clear form selector
-        self.layerExistsCheck = FLOW.clearCartodbLayer(self.map, self.cartodbLayer);
+          FLOW.selectedControl.set('layerExistsCheck', FLOW.clearCartodbLayer(map, FLOW.selectedControl.get('cartodbLayer')));
       }
 
     });
@@ -572,9 +539,13 @@ FLOW.CustomMapEditView = FLOW.View.extend({
               });
           }
         }, ajaxObject);
-        self.createNamedMapObject('raw_data_'+formId, '', '', '');
+        var queryObject = {};
+        queryObject['table'] = 'raw_data_'+formId;
+        queryObject['column'] = '';
+        queryObject['value'] = '';
+        FLOW.createNamedMapObject(map, queryObject, '');
       } else {
-        self.createLayer(self.customMapName, "");
+        FLOW.createLayer(map, FLOW.selectedControl.get('customMapName'));
       }
     });
 
@@ -610,7 +581,7 @@ FLOW.CustomMapEditView = FLOW.View.extend({
         var cartocss = [], current_cartocss = '';
         self.customMapData['customMapTitle'] = $('#mapTitle').val();
         self.customMapData['customMapDescription'] = $('#mapDescription').val();
-        self.customMapData['namedMap'] = self.customMapName;
+        self.customMapData['namedMap'] = FLOW.selectedControl.get('customMapName');
         if ($('.question_options').length) {
           $('.question_options').each( function() {
             var currentColour = {};
@@ -620,14 +591,17 @@ FLOW.CustomMapEditView = FLOW.View.extend({
 
             current_cartocss += '#'+self.selectedTable+'['+$(this).data('column')+'="'+$(this).data('option')+'"]';
     				current_cartocss += '{';
-    				//cartocss += "marker-fill: #"+Math.random().toString(16).slice(2, 8);
     				current_cartocss += 'marker-fill: '+$(this).val()+';';
     				current_cartocss += '}';
           });
           self.customMapData['cartocss'] = JSON.stringify(cartocss);
 
           //first update the named map before uploading it to cartodb
-          self.createNamedMapObject(self.selectedTable, '', '', current_cartocss);
+          var queryObject = {};
+          queryObject['table'] = self.selectedTable;
+          queryObject['column'] = '';
+          queryObject['value'] = '';
+          FLOW.createNamedMapObject(map, queryObject, current_cartocss);
         }
         //if creating a new map set mapType to 'new'
         if(FLOW.selectedControl.get('selectedCustomMap') === null){
@@ -643,223 +617,32 @@ FLOW.CustomMapEditView = FLOW.View.extend({
 
         FLOW.ajaxCall(function(response){
           if(response){
-            FLOW.selectedControl.set('selectedCustomMap', self.customMapName);
+            FLOW.selectedControl.set('selectedCustomMap', FLOW.selectedControl.get('customMapName'));
           }
         }, ajaxObject);
       }else{
         //prompt user to enter a map title and/or description
-        alert("Please enter a title and/or description");
+        alert("Please enter a title and/or description"); //TODO add translation
       }
     });
-  },
-
-  checkHierarchy: function(parentFolderId){
-    var self = this;
-
-    //if survey hierarchy object has previously been retrieved, no need to pull it anew
-    if(self.hierarchyObject.length > 0){
-      self.manageHierarchy(parentFolderId);
-    }else{
-      if($.active > 0){
-        self.refreshIntervalId = setInterval(function () {
-          //keep checking if there are any pending ajax requests
-          if($.active > 0){
-            //keep displaying loading icon
-          }else{ //if no pending ajax requests
-            //call function to manage the hierarchy
-            self.hierarchyObject = FLOW.selectedControl.get('cartodbMapsSurveyGroups')['survey_groups'];
-            self.manageHierarchy(parentFolderId);
-          }
-        },2000);
-      }else{
-        //call function to manage the hierarchy
-        self.hierarchyObject = FLOW.selectedControl.get('cartodbMapsSurveyGroups')['survey_groups'];
-        self.manageHierarchy(parentFolderId);
-      }
-    }
-  },
-
-  manageHierarchy: function(parentFolderId){
-    clearInterval(this.refreshIntervalId); //stop the interval if running
-    var self = this, rows = self.hierarchyObject;
-
-    rows.sort(function(el1, el2) {
-      return FLOW.compare(el1, el2, 'name');
-    });
-
-    //create folder and/or survey select element
-    var folder_survey_selector = $('<select></select>').attr("class", "folder_survey_selector");
-    folder_survey_selector.append('<option value="">--' + Ember.String.loc('_choose_folder_or_survey') + '--</option>');
-
-    for (var i=0; i<rows.length; i++) {
-      //append return survey list to the survey selector element
-      var surveyGroup = rows[i];
-
-      //if a subfolder, only load folders and surveys from parent folder
-      if(surveyGroup.parentId == parentFolderId){
-        folder_survey_selector.append('<option value="'
-          + surveyGroup.keyId + '"'
-          +'data-type="'+surveyGroup.projectType+'">'
-          + surveyGroup.name
-          + '</option>');
-      }
-    }
-    $("#survey_hierarchy").append(folder_survey_selector);
-  },
-
-  createNamedMapObject: function(table, column, value, cartocss){
-    var self = this;
-
-    /* Build a (temporary) named map based on currently selected survey/form */
-    var namedMapObject = {};
-    namedMapObject['name'] = self.customMapName;
-    namedMapObject['interactivity'] = [];
-    namedMapObject['query'] = self.buildQuery(table, column, value);
-    namedMapObject['requestType'] = (self.newMap) ? "POST" : "PUT";
-
-    //if cartocss is not defined, create map using default style
-    namedMapObject['cartocss'] = "#"+table+"{"
-      +"marker-fill-opacity: 0.9;"
-      +"marker-line-color: #FFF;"
-      +"marker-line-width: 1.5;"
-      +"marker-line-opacity: 1;"
-      +"marker-placement: point;"
-      +"marker-type: ellipse;"
-      +"marker-width: 10;"
-      +"marker-fill: #FF6600;"
-      +"marker-allow-overlap: true;"
-      +"}";
-
-    //if cartocss is defined, create map using specified style
-    if(cartocss !== ""){
-      namedMapObject['cartocss'] += cartocss;
-    }
-
-    //get list of columns to be added to new named map's interactivity
-    $.get('/rest/cartodb/columns?table_name='+table, function(columnsData) {
-      if (columnsData.column_names) {
-        for (var j=0; j<columnsData['column_names'].length; j++) {
-          namedMapObject['interactivity'].push(columnsData['column_names'][j]['column_name']);
-        }
-      }
-      self.namedMaps(namedMapObject);
-    });
-  },
-
-  //create named maps
-  namedMaps: function(namedMapObject){
-    var self = this;
-
-    var configJsonData = {};
-
-    var ajaxObject = {};
-    ajaxObject['call'] = "POST";
-    ajaxObject['url'] = "/rest/cartodb/named_maps";
-    ajaxObject['data'] = JSON.stringify(namedMapObject);
-
-    FLOW.ajaxCall(function(response){
-      if(response.template_id){
-        self.customMapName = response.template_id;
-        self.createLayer(response.template_id, "");
-      }
-    }, ajaxObject);
-  },
-
-  /*this function overlays a named map on the cartodb map*/
-  createLayer: function(mapName, interactivity){
-    var self = this, pointDataUrl;
-
-    //first clear any currently overlayed cartodb layer
-    self.layerExistsCheck = FLOW.clearCartodbLayer(self.map, self.cartodbLayer);
-
-    // add cartodb layer with one sublayer
-    cartodb.createLayer(self.map, {
-      user_name: FLOW.Env.appId,
-      type: 'namedmap',
-      named_map: {
-        name: mapName,
-        layers: [{
-          layer_name: "t",
-          interactivity: "id"
-        }]
-      }
-    },{
-      tiler_domain: FLOW.Env.cartodbHost,
-      tiler_port: "", //set to empty string to stop cartodb js from appending default port
-      tiler_protocol: "https",
-      no_cdn: true
-    })
-    .addTo(self.map)
-    .done(function(layer) {
-      layer.setZIndex(1000); //required to ensure that the cartodb layer is not obscured by the here maps base layers
-      self.layerExistsCheck = true;
-      self.cartodbLayer = layer;
-
-      FLOW.addCursorInteraction(layer, 'flowMap');
-
-      var currentLayer = layer.getSubLayer(0);
-      currentLayer.setInteraction(true);
-
-      var tooltip = layer.leafletMap.viz.addOverlay({
-        type: 'tooltip',
-        layer: currentLayer,
-        template: '<div class="cartodb-tooltip-content-wrapper"><p>{{name}}</p></div>',
-        width: 200,
-        position: 'top|right',
-        fields: [{ name: 'cartodb_id' }]
-      });
-      $('#flowMap').append(tooltip.render().el);
-
-      /*currentLayer.on('featureClick', function(e, latlng, pos, data) {
-        if(self.marker != null){
-          self.map.removeLayer(self.marker);
-        }
-        self.placeMarker([data.lat, data.lon]);
-
-        self.showDetailsPane();
-        if($('.form_selector').length && $('.form_selector').val() !== ""){
-          pointDataUrl = '/rest/cartodb/raw_data?dataPointId='+data.data_point_id+'&formId='+$('.form_selector').val();
-          $.get('/rest/cartodb/data_point?id='+data.data_point_id, function(pointData, status){
-            self.getCartodbPointData(pointDataUrl, pointData['row']['name'], pointData['row']['identifier']);
-          });
-        }else{
-          pointDataUrl = '/rest/cartodb/answers?dataPointId='+data.id+'&surveyId='+data.survey_id;
-          self.getCartodbPointData(pointDataUrl, data.name, data.identifier);
-        }
-      });*/
-    });
-  },
-
-  buildQuery: function(table, column, value){
-    var query = "SELECT * FROM "+table;
-    if(column !== ""){
-      query += " WHERE "+column+" = '"+value+"'";
-    }
-    return query;
   }
 });
 
 FLOW.CustomMapView = FLOW.View.extend({
   templateName: 'navMaps/custom-map-view',
-  detailsPaneElements: null,
-  detailsPaneVisible: null,
   map: null,
-  marker: null,
-  geoShape: null,
-  geoshapeCoordinates: null,
-  polygons: [],
-  mapZoomLevel: 0,
-  mapCenter: null,
 
   init: function () {
     this._super();
-    this.detailsPaneElements = "#pointDetails h2" +
+
+    FLOW.selectedControl.set('layerExistsCheck', false);
+    FLOW.selectedControl.set('detailsPaneElements', "#pointDetails h2" +
       ", #pointDetails dl" +
       ", #pointDetails img" +
       ", #pointDetails .imgContainer" +
       ", .placeMarkBasicInfo" +
-      ", .noDetails";
-    this.detailsPaneVisible = false;
+      ", .noDetails");
+    FLOW.selectedControl.set('detailsPaneVisible', false);
   },
 
   /**
@@ -872,13 +655,17 @@ FLOW.CustomMapView = FLOW.View.extend({
 
     // create and draw leaflet map
     var map = L.map('flowMap', {scrollWheelZoom: true}).setView([26.11598592533351, 1.9335937499999998], 2);
-    FLOW.drawLeafletMap(map);
 
     FLOW.selectedControl.set('mapZoomLevel', map.getZoom());
     FLOW.selectedControl.set('mapCenter', map.getCenter());
     FLOW.selectedControl.set('polygons', []);
 
-    this.map = map;
+    FLOW.drawLeafletMap(map);
+
+    // add scale indication to map
+    L.control.scale({position:'topleft', maxWidth:150}).addTo(map);
+
+    FLOW.createLayer(map, FLOW.selectedControl.get('selectedCustomMap'));
 
     //get selected custom map details
     $.get(
@@ -904,19 +691,19 @@ FLOW.CustomMapView = FLOW.View.extend({
     });
 
     map.on('click', function(e) {
-      if(self.marker != null){
-        self.map.removeLayer(self.marker);
-        self.hideDetailsPane();
+      if(FLOW.selectedControl.get('marker') != null){
+        map.removeLayer(FLOW.selectedControl.get('marker'));
+        FLOW.hideDetailsPane();
         $('#pointDetails').html('<p class="noDetails">'+Ember.String.loc('_no_details') +'</p>');
       }
 
       if(FLOW.selectedControl.get('polygons').length > 0){
         for(var i=0; i<FLOW.selectedControl.get('polygons').length; i++){
-          self.map.removeLayer(FLOW.selectedControl.get('polygons')[i]);
+          map.removeLayer(FLOW.selectedControl.get('polygons')[i]);
         }
         //restore the previous zoom level and map center
-        self.map.setZoom(FLOW.selectedControl.get('mapZoomLevel'));
-        self.map.panTo(FLOW.selectedControl.get('mapCenter'));
+        map.setZoom(FLOW.selectedControl.get('mapZoomLevel'));
+        map.panTo(FLOW.selectedControl.get('mapCenter'));
         FLOW.selectedControl.set('polygons', []);
       }
     });
@@ -931,7 +718,7 @@ FLOW.CustomMapView = FLOW.View.extend({
     });
 
     $(document.body).on('click', '.deleteCustomMap', function(){
-      if(confirm("Are you sure you want to delete this map?")){
+      if(confirm("Are you sure you want to delete this map?")){ //TODO create translation
         $.get(
           '/rest/cartodb/delete_custom_map?map_name='+$(this).data('customMap') ,
           function(response, status){
@@ -940,158 +727,28 @@ FLOW.CustomMapView = FLOW.View.extend({
       }
     });
 
-    // add scale indication to map
-    L.control.scale({position:'topleft', maxWidth:150}).addTo(this.map);
-
-    this.$('#mapDetailsHideShow').click(function () {
-      self.handleShowHideDetails();
+    $('#mapDetailsHideShow').click(function () {
+      FLOW.handleShowHideDetails();
     });
 
     $(document.body).on('click', '.projectGeoshape', function(){
       if(FLOW.selectedControl.get('polygons').length > 0){
         $(this).html(Ember.String.loc('_project_geoshape_onto_main_map'));
+        for(var i=0; i<FLOW.selectedControl.get('polygons').length; i++){
+          map.removeLayer(FLOW.selectedControl.get('polygons')[i]);
+        }
         //restore the previous zoom level and map center
-        self.map.setZoom(FLOW.selectedControl.get('mapZoomLevel'));
-        self.map.panTo(FLOW.selectedControl.get('mapCenter'));
+        map.setZoom(FLOW.selectedControl.get('mapZoomLevel'));
+        map.panTo(FLOW.selectedControl.get('mapCenter'));
         FLOW.selectedControl.set('polygons', []);
       }else{
+        console.log(Ember.String.loc('_clear_geoshape_from_main_map'));
         $(this).html(Ember.String.loc('_clear_geoshape_from_main_map'));
-        FLOW.projectGeoshape(self.map, FLOW.selectedControl.get('geoshapeCoordinates'));
+        FLOW.projectGeoshape(map, FLOW.selectedControl.get('geoshapeCoordinates'));
       }
     });
 
     // Slide in detailspane after 1 sec
-    this.hideDetailsPane(1000);
-
-    // add cartodb layer with one sublayer
-    cartodb.createLayer(self.map, {
-      user_name: FLOW.Env.appId,
-      type: 'namedmap',
-      named_map: {
-        name: FLOW.selectedControl.get('selectedCustomMap'),
-        layers: [{
-          layer_name: "t",
-          interactivity: "id"
-        }]
-      }
-    },{
-      tiler_domain: FLOW.Env.cartodbHost,
-      tiler_port: "", //set to empty string to stop cartodb js from appending default port
-      tiler_protocol: "https",
-      no_cdn: true
-    })
-    .addTo(self.map)
-    .done(function(layer) {
-      layer.setZIndex(1000); //required to ensure that the cartodb layer is not obscured by the here maps base layers
-      self.layerExistsCheck = true;
-      self.cartodbLayer = layer;
-
-      FLOW.addCursorInteraction(layer, 'flowMap');
-
-      var currentLayer = layer.getSubLayer(0);
-      currentLayer.setInteraction(true);
-
-      currentLayer.on('featureClick', function(e, latlng, pos, data) {
-        var dataPointObject = {};
-        dataPointObject['pointDetailsPane'] = 'pointDetails';
-        if(self.marker != null){
-          self.map.removeLayer(self.marker);
-        }
-        self.placeMarker([data.lat, data.lon]);
-
-        self.showDetailsPane();
-        if(typeof data.survey_id !== "undefined"){
-          pointDataUrl = '/rest/cartodb/answers?dataPointId='+data.id+'&surveyId='+data.survey_id;
-          //self.getCartodbPointData(pointDataUrl, data.name, data.identifier);
-          dataPointObject['url'] = pointDataUrl;
-          dataPointObject['dataPointName'] = data.name;
-          dataPointObject['dataPointIdentifier'] = data.identifier;
-          FLOW.getCartodbPointData(dataPointObject);
-        }else{
-          pointDataUrl = '/rest/cartodb/raw_data?dataPointId='+data.data_point_id+'&formId='+FLOW.selectedControl.get('selectedCustomMapFormId');
-          $.get('/rest/cartodb/data_point?id='+data.data_point_id, function(pointData, status){
-            //self.getCartodbPointData(pointDataUrl, pointData['row']['name'], pointData['row']['identifier']);
-            dataPointObject['url'] = pointDataUrl;
-            dataPointObject['dataPointName'] = pointData['row']['name'];
-            dataPointObject['dataPointIdentifier'] = pointData['row']['identifier'];
-            FLOW.getCartodbPointData(dataPointObject);
-          });
-        }
-      });
-    });
-  },
-
-  /**
-    Helper function to dispatch to either hide or show details pane
-  */
-  handleShowHideDetails: function () {
-    if (this.detailsPaneVisible) {
-      this.hideDetailsPane();
-    } else {
-      this.showDetailsPane();
-    }
-  },
-
-  /**
-    Slide in the details pane
-  */
-  showDetailsPane: function () {
-    var button;
-
-    button = this.$('#mapDetailsHideShow');
-    button.html('Hide &rsaquo;');
-    this.set('detailsPaneVisible', true);
-
-    this.$('#flowMap').animate({
-      width: '75%'
-    }, 200);
-    this.$('#pointDetails').animate({
-      width: '24.5%'
-    }, 200).css({
-      overflow: 'auto',
-      marginLeft: '-2px'
-    });
-    this.$(this.detailsPaneElements, '#pointDetails').animate({
-      opacity: '1'
-    }, 200).css({
-      display: 'inherit'
-    });
-  },
-
-
-  /**
-    Slide out details pane
-  */
-  hideDetailsPane: function (delay) {
-    var button;
-
-    delay = typeof delay !== 'undefined' ? delay : 0;
-    button = this.$('#mapDetailsHideShow');
-
-    this.set('detailsPaneVisible', false);
-    button.html('&lsaquo; Show');
-
-    this.$('#flowMap').delay(delay).animate({
-      width: '99.25%'
-    }, 200);
-    this.$('#pointDetails').delay(delay).animate({
-      width: '0.25%'
-    }, 200).css({
-      overflow: 'scroll-y',
-      marginLeft: '-2px'
-    });
-    this.$(this.detailsPaneElements, '#pointDetails').delay(delay).animate({
-      opacity: '0',
-      display: 'none'
-    });
-  },
-
-  placeMarker: function(latlng){
-    var markerIcon = new L.Icon({
-      iconUrl: 'images/marker.svg',
-      iconSize: [10, 10]
-    });
-    this.marker = new L.marker(latlng, {icon: markerIcon});
-    this.map.addLayer(this.marker);
+    FLOW.hideDetailsPane(1000);
   }
 });
