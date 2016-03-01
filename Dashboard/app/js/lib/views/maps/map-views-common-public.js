@@ -5,8 +5,6 @@ FLOW.NavMapsView = FLOW.View.extend({
   detailsPaneVisible: null,
   map: null,
   geomodel: null,
-  cartodb_layer: null,
-  layer_exists_check: 0,
 
   init: function () {
     this._super();

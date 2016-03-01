@@ -24,6 +24,14 @@ FLOW.DataMapView = FLOW.View.extend({
 
     FLOW.initAjaxSetup();
 
+    // create and draw leaflet map
+    var map = L.map('flowMap', {scrollWheelZoom: true}).setView([26.11598592533351, 1.9335937499999998], 2);
+    var bounds = new L.LatLngBounds(map.getBounds().getSouthWest(), map.getBounds().getNorthEast());
+    map.options.maxBoundsViscosity = 1.0;
+    map.options.maxBounds = bounds;
+    FLOW.drawLeafletMap(map);
+    this.map = map;
+
     //onetime get survey groups
     $.get('/rest/survey_groups'/*place survey_groups endpoint here*/
     , function(surveyGroupsData, status){
@@ -53,47 +61,37 @@ FLOW.DataMapView = FLOW.View.extend({
     $('#dropdown-holder').prepend(filterContent);
     $('#dropdown-holder').append('<div style="clear: both"></div>');
 
-    // create and draw leaflet map
-    var map = L.map('flowMap', {scrollWheelZoom: true}).setView([26.11598592533351, 1.9335937499999998], 2);
-    var bounds = new L.LatLngBounds(map.getBounds().getSouthWest(), map.getBounds().getNorthEast());
-    map.options.maxBoundsViscosity = 1.0;
-    map.options.maxBounds = bounds;
-    FLOW.drawLeafletMap(map);
-
     FLOW.selectedControl.set('marker', null);
     FLOW.selectedControl.set('cartodbLayer', null);
-    FLOW.selectedControl.set('mapZoomLevel', map.getZoom());
-    FLOW.selectedControl.set('mapCenter', map.getCenter());
+    FLOW.selectedControl.set('mapZoomLevel', self.map.getZoom());
+    FLOW.selectedControl.set('mapCenter', self.map.getCenter());
     FLOW.selectedControl.set('polygons', []);
 
-    this.map = map;
-
-    map.on('click', function(e) {
+    self.map.on('click', function(e) {
       if(FLOW.selectedControl.get('marker') != null){
-        map.removeLayer(FLOW.selectedControl.get('marker'));
+        self.map.removeLayer(FLOW.selectedControl.get('marker'));
         FLOW.hideDetailsPane();
         $('#pointDetails').html('<p class="noDetails">'+Ember.String.loc('_no_details') +'</p>');
       }
 
       if(FLOW.selectedControl.get('polygons').length > 0){
         for(var i=0; i<FLOW.selectedControl.get('polygons').length; i++){
-          map.removeLayer(FLOW.selectedControl.get('polygons')[i])
+          self.map.removeLayer(FLOW.selectedControl.get('polygons')[i])
         }
         //restore the previous zoom level and map center
-        map.setZoom(FLOW.selectedControl.get('mapZoomLevel'));
-        map.panTo(FLOW.selectedControl.get('mapCenter'));
+        self.map.setView(FLOW.selectedControl.get('mapCenter'), FLOW.selectedControl.get('mapZoomLevel'));
         FLOW.selectedControl.set('polygons', [])
       }
     });
 
-    map.on('zoomend', function() {
+    self.map.on('zoomend', function() {
       $('body, html, #flowMap').scrollTop(0);
     });
 
     //manage folder and/or survey selection hierarchy
     FLOW.manageHierarchy(0);
 
-    $(document).off('change', '.folder_survey_selector').on('change', '.folder_survey_selector',function(e) {
+    this.$(document).off('change', '.folder_survey_selector').on('change', '.folder_survey_selector',function(e) {
 
       $('#form_selector option[value!=""]').remove();
 
@@ -129,7 +127,7 @@ FLOW.DataMapView = FLOW.View.extend({
           });
 
           var namedMapObject = {};
-          namedMapObject['mapObject'] = map;
+          namedMapObject['mapObject'] = self.map;
           namedMapObject['mapName'] = 'data_point_'+keyId;
           namedMapObject['tableName'] = 'data_point';
           namedMapObject['interactivity'] = ["name", "survey_id", "id", "identifier", "lat", "lon"];
@@ -138,7 +136,7 @@ FLOW.DataMapView = FLOW.View.extend({
           FLOW.namedMapCheck(namedMapObject);
         }else{ //if a folder is selected, load the folder's children on a new 'folder_survey_selector'
           //first clear any currently overlayed cartodb layer (if any)
-          FLOW.selectedControl.set('layerExistsCheck', FLOW.clearCartodbLayer(map, FLOW.selectedControl.get('cartodbLayer')));
+          FLOW.selectedControl.set('layerExistsCheck', FLOW.clearCartodbLayer(self.map, FLOW.selectedControl.get('cartodbLayer')));
 
           for(var i=0; i<FLOW.selectedControl.get('cartodbMapsSurveyGroups')['survey_groups'].length; i++){
             if(FLOW.selectedControl.get('cartodbMapsSurveyGroups')['survey_groups'][i].keyId === parseInt(keyId) && self.lastSelectedElement !== parseInt(keyId)){
@@ -148,12 +146,12 @@ FLOW.DataMapView = FLOW.View.extend({
           }
         }
       }else{ //if nothing is selected, delete all children 'folder_survey_selector's and clear form selector
-        FLOW.selectedControl.set('layerExistsCheck', FLOW.clearCartodbLayer(map, FLOW.selectedControl.get('cartodbLayer')));
+        FLOW.selectedControl.set('layerExistsCheck', FLOW.clearCartodbLayer(self.map, FLOW.selectedControl.get('cartodbLayer')));
       }
 
     });
 
-    $(document).off('change', '.form_selector').on('change', '.form_selector',function(e) {
+    this.$(document).off('change', '.form_selector').on('change', '.form_selector',function(e) {
       //remove all 'folder_survey_selector's after current
       FLOW.cleanSurveyGroupHierarchy($(this));
 
@@ -162,7 +160,7 @@ FLOW.DataMapView = FLOW.View.extend({
         //get list of columns to be added to new named map's interactivity
         $.get('/rest/cartodb/columns?table_name=raw_data_'+formId, function(columnsData) {
           var namedMapObject = {};
-          namedMapObject['mapObject'] = map;
+          namedMapObject['mapObject'] = self.map;
           namedMapObject['mapName'] = 'raw_data_'+formId;
           namedMapObject['tableName'] = 'raw_data_'+formId;
           namedMapObject['interactivity'] = [];
@@ -177,23 +175,26 @@ FLOW.DataMapView = FLOW.View.extend({
           FLOW.namedMapCheck(namedMapObject);
         });
       } else {
-        FLOW.selectedControl.set('layerExistsCheck', FLOW.clearCartodbLayer(map, 'data_point_'+$(this).data('survey-id')));
+        FLOW.selectedControl.set('layerExistsCheck', FLOW.clearCartodbLayer(self.map, 'data_point_'+$(this).data('survey-id')));
       }
     });
 
-    $(document.body).on('click', '.projectGeoshape', function(){
+    this.$(document).off('click', '.projectGeoshape').on('click', '.projectGeoshape', function(){
       if(FLOW.selectedControl.get('polygons').length > 0){
         $(this).html(Ember.String.loc('_project_geoshape_onto_main_map'));
         for(var i=0; i<FLOW.selectedControl.get('polygons').length; i++){
-          map.removeLayer(FLOW.selectedControl.get('polygons')[i]);
+          self.map.removeLayer(FLOW.selectedControl.get('polygons')[i]);
         }
+
         //restore the previous zoom level and map center
-        map.setZoom(FLOW.selectedControl.get('mapZoomLevel'));
-        map.panTo(FLOW.selectedControl.get('mapCenter'));
+        setTimeout(function() {
+          self.map.setView(FLOW.selectedControl.get('mapCenter'), FLOW.selectedControl.get('mapZoomLevel'));
+        }, 0);
+
         FLOW.selectedControl.set('polygons', []);
       }else{
         $(this).html(Ember.String.loc('_clear_geoshape_from_main_map'));
-        FLOW.projectGeoshape(map, FLOW.selectedControl.get('geoshapeCoordinates'));
+        FLOW.projectGeoshape(self.map, FLOW.selectedControl.get('geoshapeCoordinates'));
       }
     });
   }
@@ -231,23 +232,24 @@ FLOW.CustomMapsListView = FLOW.View.extend({
       }
     });
 
-    $(document.body).on('click', '.newCustomMap', function(){
+    this.$(document).off('click', '.newCustomMap').on('click', '.newCustomMap', function(){
       FLOW.selectedControl.set('selectedCustomMap', null);
       FLOW.router.transitionTo('navMaps.customMapEdit');
     });
 
-    $(document.body).on('click', '.editCustomMap', function(){
+    this.$(document).off('click', '.editCustomMap').on('click', '.editCustomMap', function(){
       FLOW.selectedControl.set('selectedCustomMap', $(this).data('customMap'));
       FLOW.router.transitionTo('navMaps.customMapEdit');
     });
 
-    $(document.body).on('click', '.viewCustomMap', function(){
+    this.$(document).off('click', '.viewCustomMap').on('click', '.viewCustomMap', function(){
       FLOW.selectedControl.set('selectedCustomMap', $(this).data('customMap'));
       FLOW.selectedControl.set('selectedCustomMapFormId', $(this).data('formId'));
       FLOW.router.transitionTo('navMaps.customMap');
     });
 
-    $(document.body).on('click', '.deleteCustomMap', function(){
+    this.$(document).off('click', '.deleteCustomMap').on('click', '.deleteCustomMap', function(){
+      console.log("Am executing even though I shouldn't be");
       if(confirm("Are you sure you want to delete this map?")){ //TODO create translation
         $.get(
           '/rest/cartodb/delete_custom_map?map_name='+$(this).data('customMap') ,
@@ -556,21 +558,34 @@ FLOW.CustomMapEditView = FLOW.View.extend({
         $.get(
           '/rest/cartodb/distinct?column_name='+$(this).val()+'&form_id='+$('.form_selector').val(),
           function(optionsData){
-            var styleSelector = $('<div></div>').attr("class", "style_selector");
             if(optionsData.distinct_values){
+              var styleSelector = $('<div></div>').attr("class", "style_selector");
               for(var i=0; i<optionsData.distinct_values.length; i++){
-                var colourPicker = $('<div class="form-group"><label for="option_'+i+'">'
+                /*var colourPicker = $('<div class="form-group"><label for="option_'+i+'">'
                   +optionsData.distinct_values[i][$('.question_selector').val()]+'</label></div>');
                 var colourPickerInput = $('<input class="question_options" id="option_'+i+'" data-column="'
                   +columnName+'" data-option="'+optionsData.distinct_values[i][$(".question_selector").val()]
-                  +'" type="text">');
+                  +'" type="text" value="'+(Math.random()*0xFFFFFF<<0).toString(16)+'">');
                 colourPicker.append(colourPickerInput);
-                styleSelector.append(colourPicker);
+                $('#survey_hierarchy').append(colourPicker);
                 colourPickerInput.minicolors({});
-                colourPickerInput.minicolors('value', (Math.random()*0xFFFFFF<<0).toString(16));
+                colourPickerInput.minicolors('value', (Math.random()*0xFFFFFF<<0).toString(16));*/
+                var colourPicker = '<div id="preview-'+i+'" class="picker-preview"></div>'
+                +'<div class="picker" id="picker-'+i+'" style="display:none">'
+                +'<canvas id="picker-canvas-'+i+'" class="picker-canvas" var="3" height="256px" width="256px"></canvas>'
+                +'<div class="picker-controls">'
+                +'<div><label>R</label> <input type="text" id="rVal'+i+'" /></div>'
+                +'<div><label>G</label> <input type="text" id="gVal'+i+'" /></div>'
+                +'<div><label>B</label> <input type="text" id="bVal'+i+'" /></div>'
+                +'<div><label>RGB</label> <input type="text" id="rgbVal'+i+'" /></div>'
+                +'<div><label>HEX</label> <input type="text" id="hexVal'+i+'" /></div>'
+                +'</div>'
+                +'</div>';
+                styleSelector.append(colourPicker);
               }
+              $('#survey_hierarchy').append(colourPicker);
+              self.initColourPicker(optionsData.distinct_values);
             }
-            $('#survey_hierarchy').append(styleSelector);
           });
       }
     });
@@ -625,6 +640,61 @@ FLOW.CustomMapEditView = FLOW.View.extend({
         alert("Please enter a title and/or description"); //TODO add translation
       }
     });
+  },
+
+  initColourPicker: function(options){
+    var bCanPreview = {};
+    //loop through optionsData
+    for(var i=0; i<options.length; i++){
+      bCanPreview['picker'+i] = true; // can preview
+
+      // create canvas and context objects
+      var canvas = $('#picker'+i);
+      var ctx = canvas.getContext('2d');
+
+      // drawing active image
+      var image = new Image();
+      image.onload = function () {
+          ctx.drawImage(image, 0, 0, image.width, image.height); // draw the image on the canvas
+      }
+
+      // select desired colorwheel
+      var imageSrc='images/colour-picker-saturation.png';
+      image.src = imageSrc;
+
+      $('#picker-canvas-'+i).mousemove(function(e) { // mouse move handler
+          if (bCanPreview['picker'+i]) {
+              // get coordinates of current position
+              var canvasOffset = $(canvas).offset();
+              var canvasX = Math.floor(e.pageX - canvasOffset.left);
+              var canvasY = Math.floor(e.pageY - canvasOffset.top);
+
+              // get current pixel
+              var imageData = ctx.getImageData(canvasX, canvasY, 1, 1);
+              var pixel = imageData.data;
+
+              // update preview color
+              var pixelColor = 'rgb('+pixel[0]+', '+pixel[1]+', '+pixel[2]+')';
+              $('#preview-'+i).css('backgroundColor', pixelColor);
+
+              // update controls
+              $('#rVal'+i).val(pixel[0]);
+              $('#gVal'+i).val(pixel[1]);
+              $('#bVal'+i).val(pixel[2]);
+              $('#rgbVal'+i).val(pixel[0]+','+pixel[1]+','+pixel[2]);
+
+              var dColor = pixel[2] + 256 * pixel[1] + 65536 * pixel[0];
+              $('#hexVal'+i).val('#' + ('0000' + dColor.toString(16)).substr(-6));
+          }
+      });
+      $('#picker-canvas-'+i).click(function(e) { // click event handler
+          bCanPreview['picker'+i] = !bCanPreview['picker'+i];
+      });
+      $('#picker-preview-'+i).click(function(e) { // preview click
+          $('#picker-'+i).fadeToggle('slow', 'linear');
+          bCanPreview['picker'+i] = true;
+      });
+    }
   }
 });
 
@@ -655,12 +725,13 @@ FLOW.CustomMapView = FLOW.View.extend({
 
     // create and draw leaflet map
     var map = L.map('flowMap', {scrollWheelZoom: true}).setView([26.11598592533351, 1.9335937499999998], 2);
+    FLOW.drawLeafletMap(map);
 
+    FLOW.selectedControl.set('marker', null);
+    FLOW.selectedControl.set('cartodbLayer', null);
     FLOW.selectedControl.set('mapZoomLevel', map.getZoom());
     FLOW.selectedControl.set('mapCenter', map.getCenter());
     FLOW.selectedControl.set('polygons', []);
-
-    FLOW.drawLeafletMap(map);
 
     // add scale indication to map
     L.control.scale({position:'topleft', maxWidth:150}).addTo(map);
@@ -702,8 +773,7 @@ FLOW.CustomMapView = FLOW.View.extend({
           map.removeLayer(FLOW.selectedControl.get('polygons')[i]);
         }
         //restore the previous zoom level and map center
-        map.setZoom(FLOW.selectedControl.get('mapZoomLevel'));
-        map.panTo(FLOW.selectedControl.get('mapCenter'));
+        map.setView(FLOW.selectedControl.get('mapCenter'), FLOW.selectedControl.get('mapZoomLevel'));
         FLOW.selectedControl.set('polygons', []);
       }
     });
@@ -712,12 +782,13 @@ FLOW.CustomMapView = FLOW.View.extend({
       $('body, html, #flowMap').scrollTop(0);
     });
 
-    $(document.body).on('click', '.editCustomMap', function(){
+    this.$(document).off('click', '.editCustomMap').on('click', '.editCustomMap', function(){
       FLOW.selectedControl.set('selectedCustomMap', $(this).data('customMap'));
       FLOW.router.transitionTo('navMaps.customMapEdit');
     });
 
-    $(document.body).on('click', '.deleteCustomMap', function(){
+    this.$(document).off('click', '.deleteCustomMap').on('click', '.deleteCustomMap', function(){
+      console.log("Can confirm, am the one who should be executing");
       if(confirm("Are you sure you want to delete this map?")){ //TODO create translation
         $.get(
           '/rest/cartodb/delete_custom_map?map_name='+$(this).data('customMap') ,
@@ -727,22 +798,22 @@ FLOW.CustomMapView = FLOW.View.extend({
       }
     });
 
-    $('#mapDetailsHideShow').click(function () {
+    this.$('#mapDetailsHideShow').click(function () {
       FLOW.handleShowHideDetails();
     });
 
-    $(document.body).on('click', '.projectGeoshape', function(){
+    this.$(document).off('click', '.projectGeoshape').on('click', '.projectGeoshape', function(){
       if(FLOW.selectedControl.get('polygons').length > 0){
         $(this).html(Ember.String.loc('_project_geoshape_onto_main_map'));
         for(var i=0; i<FLOW.selectedControl.get('polygons').length; i++){
           map.removeLayer(FLOW.selectedControl.get('polygons')[i]);
         }
         //restore the previous zoom level and map center
-        map.setZoom(FLOW.selectedControl.get('mapZoomLevel'));
-        map.panTo(FLOW.selectedControl.get('mapCenter'));
+        setTimeout(function() {
+          map.setView(FLOW.selectedControl.get('mapCenter'), FLOW.selectedControl.get('mapZoomLevel'));
+        }, 0);
         FLOW.selectedControl.set('polygons', []);
       }else{
-        console.log(Ember.String.loc('_clear_geoshape_from_main_map'));
         $(this).html(Ember.String.loc('_clear_geoshape_from_main_map'));
         FLOW.projectGeoshape(map, FLOW.selectedControl.get('geoshapeCoordinates'));
       }

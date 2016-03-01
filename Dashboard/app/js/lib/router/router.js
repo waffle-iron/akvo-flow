@@ -401,7 +401,6 @@ FLOW.Router = Ember.Router.extend({
           router.resetState();
         }else{
           router.get('applicationController').connectOutlet('navMaps');
-          router.set('navigationController.selected', 'navMaps');
         }
         router.set('navigationController.selected', 'navMaps');
       },
@@ -430,36 +429,36 @@ FLOW.Router = Ember.Router.extend({
       dataMap: Ember.Route.extend({
         route: '/data-map',
         connectOutlets: function(router, context) {
-          router.resetState();
           router.get('navCartodbMapsController').connectOutlet('dataMap');
           router.set('mapsSubnavController.selected', 'dataMap');
+          router.resetState();
         }
       }),
 
       customMapsList: Ember.Route.extend({
         route: '/customized-maps',
         connectOutlets: function (router, context) {
-          router.resetState();
           router.get('navCartodbMapsController').connectOutlet('customMapsList');
           router.set('mapsSubnavController.selected', 'customMapsList');
+          router.resetState();
         }
       }),
 
       customMapEdit: Ember.Route.extend({
         route: '/custom-map-edit',
         connectOutlets: function (router, context) {
-          router.resetState();
           router.get('navCartodbMapsController').connectOutlet('customMapEdit');
           router.set('mapsSubnavController.selected', 'customMapEdit');
+          router.resetState();
         }
       }),
 
       customMap: Ember.Route.extend({
         route: '/custom-map-view',
         connectOutlets: function (router, context) {
-          router.resetState();
           router.get('navCartodbMapsController').connectOutlet('customMap');
           router.set('mapsSubnavController.selected', 'customMap');
+          router.resetState();
         }
       })
     }),
