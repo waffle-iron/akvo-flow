@@ -20,8 +20,9 @@ import java.io.Serializable;
 import java.util.List;
 
 public class CustomMapsPayload implements Serializable {
-  private String formId;
   private String surveyId;
+  private String formId;
+  private String questionId;
   private String creator;
   private String customMapTitle;
   private String customMapDescription;
@@ -30,6 +31,15 @@ public class CustomMapsPayload implements Serializable {
   private String legend;
   private String permission;
   private String newMap;
+  private String customMapView;
+
+  public String getSurveyId() {
+      return surveyId;
+  }
+
+  public void setSurveyId(String surveyId) {
+      this.surveyId = surveyId;
+  }
 
   public String getFormId() {
       return formId;
@@ -39,12 +49,12 @@ public class CustomMapsPayload implements Serializable {
       this.formId = formId;
   }
 
-  public String getSurveyId() {
-      return surveyId;
+  public String getQuestionId() {
+      return questionId;
   }
 
-  public void setSurveyId(String surveyId) {
-      this.surveyId = surveyId;
+  public void setQuestionId(String questionId) {
+      this.questionId = questionId;
   }
 
   public String getCreator() {
@@ -109,5 +119,13 @@ public class CustomMapsPayload implements Serializable {
 
   public void setNewMap(String newMap) {
       this.newMap = newMap;
+  }
+
+  public String getCustomMapView() {
+      return customMapView;
+  }
+
+  public void setCustomMapView(String customMapView) {
+      this.customMapView = customMapView;
   }
 }

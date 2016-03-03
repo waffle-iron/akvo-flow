@@ -487,8 +487,10 @@ FLOW.manageHierarchy = function(parentFolderId){
   });
 
   //create folder and/or survey select element
-  var folder_survey_selector = $('<select></select>').attr("class", "folder_survey_selector");
-  folder_survey_selector.append('<option value="">--' + Ember.String.loc('_choose_folder_or_survey') + '--</option>');
+  var folderSurveySelector = $('<select></select>').attr({
+    id: "selector_"+parentFolderId,
+    class: "folder_survey_selector"});
+  folderSurveySelector.append('<option value="">--' + Ember.String.loc('_choose_folder_or_survey') + '--</option>');
 
   for (var i=0; i<rows.length; i++) {
     //append return survey list to the survey selector element
@@ -496,14 +498,15 @@ FLOW.manageHierarchy = function(parentFolderId){
 
     //if a subfolder, only load folders and surveys from parent folder
     if(surveyGroup.parentId == parentFolderId){
-      folder_survey_selector.append('<option value="'
+      folderSurveySelector.append('<option value="'
         + surveyGroup.keyId + '"'
         +'data-type="'+surveyGroup.projectType+'">'
         + surveyGroup.name
         + '</option>');
     }
   }
-  $("#survey_hierarchy").append(folder_survey_selector);
+
+  $("#survey_hierarchy").append(folderSurveySelector);
 };
 
 FLOW.createNamedMapObject = function(mapObject, queryObject, cartocss){

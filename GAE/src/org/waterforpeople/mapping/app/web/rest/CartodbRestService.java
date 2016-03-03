@@ -211,8 +211,9 @@ public class CartodbRestService {
         queryCartodb(String.format("CREATE TABLE IF NOT EXISTS custom_maps"
           +"("
           +"id serial,"
-          +"form_id integer,"
           +"survey_id integer,"
+          +"form_id integer,"
+          +"question_id integer,"
           +"creator varchar,"
           +"custom_map_title varchar,"
           +"custom_map_description varchar,"
@@ -221,7 +222,8 @@ public class CartodbRestService {
           +"legend varchar,"
           +"permission text,"
           +"create_date timestamp,"
-          +"modify_date timestamp"
+          +"modify_date timestamp,"
+          +"custom_map_view varchar"
           +")"));
 
         response.put("custom_maps", queryCartodb(String.format("SELECT * FROM custom_maps")));
@@ -258,19 +260,19 @@ public class CartodbRestService {
         response.put("custom_map", null);
 
         if(payload.getNewMap().equals("true")){
-          String insertValues = "('"+payload.getFormId()+"', '"+payload.getSurveyId()
-              +"', '"+payload.getCreator()+"', '"+payload.getCustomMapTitle()+"', '"+payload.getCustomMapDescription()
-              +"', '"+payload.getNamedMap()+"', '"+payload.getCartocss()+"', '"+payload.getLegend()
-              +"', '"+payload.getPermission()+"', '"+currentTimestamp+"', '"+currentTimestamp+"')";
+          String insertValues = "('"+payload.getFormId()+"', '"+payload.getSurveyId()+"', '"+payload.getQuestionId()
+              +"', '"+payload.getCustomMapView()+"', '"+payload.getCreator()+"', '"+payload.getCustomMapTitle()
+              +"', '"+payload.getCustomMapDescription()+"', '"+payload.getNamedMap()+"', '"+payload.getCartocss()
+              +"', '"+payload.getLegend()+"', '"+payload.getPermission()+"', '"+currentTimestamp+"', '"+currentTimestamp+"')";
           query = String.format("INSERT INTO custom_maps "
-              +"(form_id, survey_id, creator, custom_map_title, custom_map_description,"
+              +"(form_id, survey_id, question_id, custom_map_view, creator, custom_map_title, custom_map_description,"
               +" named_map, cartocss, legend, permission, create_date, modify_date) VALUES "
               +insertValues);
         }else{
-          query = "UPDATE custom_maps SET (form_id, survey_id, custom_map_title, custom_map_description,"
-          +" cartocss, legend, permission, modify_date) = ('"+payload.getFormId()+"', '"+payload.getSurveyId()
-          +"', '"+payload.getCustomMapTitle()+"', '"+payload.getCustomMapDescription()+"', '"+payload.getCartocss()
-          +"', '"+payload.getLegend()+"', '"+payload.getPermission()+"', '"+currentTimestamp+"')"
+          query = "UPDATE custom_maps SET (form_id, survey_id, question_id, custom_map_view, custom_map_title, custom_map_description,"
+          +" cartocss, legend, permission, modify_date) = ('"+payload.getFormId()+"', '"+payload.getSurveyId()+"', '"+payload.getQuestionId()
+          +"', '"+payload.getCustomMapView()+"', '"+payload.getCustomMapTitle()+"', '"+payload.getCustomMapDescription()
+          +"', '"+payload.getCartocss()+"', '"+payload.getLegend()+"', '"+payload.getPermission()+"', '"+currentTimestamp+"')"
           +" WHERE named_map = '"+payload.getNamedMap()+"'";
         }
 
