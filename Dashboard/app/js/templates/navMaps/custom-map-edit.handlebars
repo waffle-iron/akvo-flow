@@ -76,7 +76,8 @@
   /*End of colour picker styles*/
   </style>
   <div id="dropdown-holder">
-    <div {{action doCustomMapsList}} class="drawHandle">&lsaquo; {{t _go_back}}</div>
+    <div class="drawHandle backToCustomMaps" style="float: right; position: static !important">&lsaquo; {{t _go_back}}</div>
+    <a id="saveCustomMap" class="standardBtn" style="float: right;">{{t _save}}</a>
   </div>
   <div id="mapDetails" style="margin: 2px; width:100%; float: left">
     <input type="text" id="mapTitle" placeholder="{{t _map_title}}" class="map_details">
@@ -85,7 +86,6 @@
   <div id="flowMap"></div>
   <div id="pointDetails">
     <div id="survey_hierarchy"></div>
-    <input id="saveCustomMap" type="button" value="{{t _save}}">
   </div>
 </section>
 <script type="text/javascript">

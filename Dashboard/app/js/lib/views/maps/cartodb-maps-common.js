@@ -679,3 +679,30 @@ FLOW.hideDetailsPane = function (delay) {
     display: 'none'
   });
 };
+
+FLOW.addSlashes = function ( str ) {
+  return (str + '').replace(/[\\"']/g, '\\$&').replace(/\u0000/g, '\\0');
+};
+
+FLOW.namedMapPresetStyle = function (customMapDetailsObject){
+  var presetMapStyle = {};
+  presetMapStyle['cartocss'] = '';
+  presetMapStyle['queryObject'] = {};
+  if(customMapDetailsObject['cartocss'] != ""){
+    var cartocssData = JSON.parse(customMapDetailsObject['cartocss']);
+    presetMapStyle['queryObject']['table'] = 'raw_data_'+customMapDetailsObject['form_id'];
+    presetMapStyle['queryObject']['column'] = '';
+    presetMapStyle['queryObject']['value'] = '';
+    for(var n=0; n<cartocssData.length; n++){
+      presetMapStyle['cartocss'] += '#raw_data_'+customMapDetailsObject['form_id']+'['+cartocssData[n]['column']+'="'+FLOW.addSlashes(JSON.stringify(cartocssData[n]['title']))+'"]';
+      presetMapStyle['cartocss'] += '{';
+      presetMapStyle['cartocss'] += 'marker-fill: '+cartocssData[n]['title']['colour']+';';
+      presetMapStyle['cartocss'] += '}';
+    }
+  }else{
+    presetMapStyle['queryObject']['table'] = 'data_point';
+    presetMapStyle['queryObject']['column'] = (customMapDetailsObject['survey_id'] != 0) ? 'survey_id' : '';
+    presetMapStyle['queryObject']['value'] = (customMapDetailsObject['survey_id'] != 0) ? customMapDetailsObject['survey_id'] : '';
+  }
+  return presetMapStyle;
+};
