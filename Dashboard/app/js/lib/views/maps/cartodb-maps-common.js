@@ -122,20 +122,20 @@ FLOW.ajaxCall = function(callback, ajaxObject){
 };
 
 /*function is required to manage how the cursor appears on the cartodb map canvas*/
-FLOW.addCursorInteraction = function (layer, mapCanvasId) {
+FLOW.addCursorInteraction = function (layer) {
   var hovers = [];
 
   layer.bind('featureOver', function(e, latlon, pxPos, data, layer) {
     hovers[layer] = 1;
     if(_.any(hovers)) {
-      $('#'+mapCanvasId).css('cursor', 'pointer');
+      $('.flowMap').css('cursor', 'pointer');
     }
   });
 
   layer.bind('featureOut', function(m, layer) {
     hovers[layer] = 0;
     if(!_.any(hovers)) {
-      $('#'+mapCanvasId).css({"cursor":"-moz-grab","cursor":"-webkit-grab"});
+      $('.flowMap').css({"cursor":"-moz-grab","cursor":"-webkit-grab"});
     }
   });
 };
@@ -369,7 +369,7 @@ FLOW.createLayer = function(mapObject, mapName){
     layer.setZIndex(1000); //required to ensure that the cartodb layer is not obscured by the here maps base layers
     FLOW.selectedControl.set('cartodbLayer', layer);
 
-    FLOW.addCursorInteraction(layer, 'flowMap');
+    FLOW.addCursorInteraction(layer);
 
     var current_layer = layer.getSubLayer(0);
     current_layer.setInteraction(true);
@@ -544,6 +544,13 @@ FLOW.createNamedMapObject = function(mapObject, queryObject, cartocss){
     }
     FLOW.customNamedMaps(mapObject, namedMapObject);
   });
+
+  //get points count
+  $.get(
+    '/rest/cartodb/points_count?table='+queryObject.table+'&column='+queryObject.column+'&value='+queryObject.value,
+    function(response, status) {
+      $('#show-points-number').data('count', response.count[0].count);
+  });
 };
 
 //create named maps
@@ -591,7 +598,7 @@ FLOW.createCustomMapLayer = function(mapObject, mapName){
     FLOW.selectedControl.set('layerExistsCheck', true);
     FLOW.selectedControl.set('cartodbLayer', layer);
 
-    FLOW.addCursorInteraction(layer, 'flowMap');
+    FLOW.addCursorInteraction(layer);
 
     var currentLayer = layer.getSubLayer(0);
     currentLayer.setInteraction(true);

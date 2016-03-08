@@ -1,18 +1,32 @@
 <section class="fullWidth" id="customMapEdit">
   <style type="text/css">
   .folder_survey_selector, .question_selector, .form_selector{
-    margin-bottom: 5px;
+    margin-top: 5px;
     width: 99%;
     float: left;
   }
-  #survey_hierarchy{
+  .point-details-content{
     width: 100%;
-    float: left
+    float: left;
+    margin-top: 5px
   }
-  #pointDetails{
-    /* -webkit-box-sizing: border-box; Safari/Chrome, other WebKit */
-    /* -moz-box-sizing: border-box;    Firefox, other Gecko */
-    /* box-sizing: border-box;         Opera/IE 8+ */
+  #flowMap{
+    position: relative;
+  }
+  #customMapEditCanvas{
+    float: left;
+    height: 600px;
+    margin: 0;
+    width: 100%;
+    position: absolute;
+    z-index: 0
+  }
+  #customMapLegend{
+    background: white none repeat scroll 0 0;
+    position: absolute;
+    bottom: 35px;
+    left: 10px;
+    padding: 5px;
   }
   .style_selector{
     width: 100%;
@@ -23,74 +37,48 @@
     margin: 2px;
     width: 95%;
   }
-
-  /* colorpicker styles */
-  .picker {
-      background-color: #222222;
-      border-radius: 5px 5px 5px 5px;
-      box-shadow: 2px 2px 2px #444444;
-      color: #FFFFFF;
-      font-size: 12px;
-      position: absolute;
-      width: 460px;
-  }
-  .picker-canvas {
-      cursor: crosshair;
-      float: left;
-      margin: 10px;
-      border: 0;
-  }
-  .picker-controls {
-      float: right;
-      margin: 10px;
-  }
-  .picker-controls > div {
-      border: 1px solid #2F2F2F;
-      margin-bottom: 5px;
-      overflow: hidden;
-      padding: 5px;
-  }
-  .picker-controls label {
-      float: left;
-  }
-  .picker-controls > div input {
-      background-color: #121212;
-      border: 1px solid #2F2F2F;
-      color: #DDDDDD;
-      float: right;
-      font-size: 10px;
-      height: 14px;
-      margin-left: 6px;
-      text-align: center;
-      text-transform: uppercase;
-      width: 75px;
-  }
-  .picker-preview {
-      background: url("images/colour-picker-select.png") repeat scroll center center transparent;
-      border-radius: 3px;
-      box-shadow: 2px 2px 2px #444444;
-      cursor: pointer;
-      height: 30px;
-      width: 30px;
-  }
-  /*End of colour picker styles*/
   </style>
-  <div id="dropdown-holder">
-    <div class="drawHandle backToCustomMaps" style="float: right; position: static !important">&lsaquo; {{t _go_back}}</div>
+  <div id="dropdown-holder" style="padding-bottom: 5px">
+    <div class="drawHandle backToCustomMaps" style="float: left; position: static !important">&lsaquo; {{t _go_back}}</div>
     <a id="saveCustomMap" class="standardBtn" style="float: right;">{{t _save}}</a>
   </div>
   <div id="mapDetails" style="margin: 2px; width:100%; float: left">
     <input type="text" id="mapTitle" placeholder="{{t _map_title}}" class="map_details">
     <input type="text" id="mapDescription" placeholder="{{t _map_description}}" class="map_details">
   </div>
-  <div id="flowMap"></div>
+  <div id="flowMap">
+    <div id="customMapEditCanvas" class="flowMap"></div>
+    <div id="customMapLegend"></div>
+  </div>
   <div id="pointDetails">
-    <div id="survey_hierarchy"></div>
+    <h2>Map Settings</h2>
+    <div id="survey_hierarchy" class="point-details-content">
+      <h3>{{t _data}}</h3>
+    </div>
+    <div class="point-details-content">
+      <h3>Legend</h3>
+      <div class="point-details-content">
+        <input class="legend-toggle" type="checkbox" name="show-legend" id="show-legend" style="float: left;">
+        <label for="show-legend" style="float: left;">Show legend</label>
+      </div>
+      <div class="point-details-content">
+        <input class="legend-toggle" type="checkbox" name="show-title" id="show-title" style="float: left;" disabled>
+        <label for="show-title" style="float: left;">Title</label>
+        <input type="text" name="custom-map-title" id="custom-map-title" placeholder="Legend - please change name" style="float: left; width: 95%" disabled>
+      </div>
+      <div class="point-details-content" id="legend-question-toggle" style="display: none">
+        <input class="legend-toggle" type="checkbox" name="show-question" id="show-question" style="float: left;" disabled>
+        <label for="show-question" style="float: left;">Show question</label>
+      </div>
+      <div class="point-details-content" style="margin-bottom: 10px">
+        <input class="legend-toggle" type="checkbox" name="show-points-number" id="show-points-number" style="float: left;" disabled>
+        <label for="show-points-number" style="float: left;">Show the total number of data points</label>
+      </div>
+    </div>
   </div>
 </section>
 <script type="text/javascript">
 (function(){
-
   var dropDown = document.querySelector('#dropdown-holder');
   var header = document.querySelector('header');
   var footer = document.querySelector('footer');
@@ -112,6 +100,7 @@
     newHeight = newHeight * 0.95;
 
     document.querySelector('#flowMap').style.height = newHeight + 'px';
+    document.querySelector('#customMapEditCanvas').style.height = newHeight + 'px';
     document.querySelector('#pointDetails').style.height = newHeight + 'px';
   }
 

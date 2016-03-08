@@ -249,6 +249,25 @@ public class CartodbRestService {
         }
     }
 
+    @RequestMapping(method = RequestMethod.GET, value = "points_count")
+    @ResponseBody
+    public Map<String, Object> getPointsCount(
+            @RequestParam("table") String table, @RequestParam("column") String column, @RequestParam("value") String value) {
+        Map<String, Object> response = new HashMap<>();
+        String query = String.format("SELECT COUNT(*) FROM %s", table);
+        if(!column.isEmpty()){
+          query = String.format("%s WHERE %s = '%s'", query, column, value);
+        }
+        response.put("count", null);
+        try {
+            response.put("count",
+                    queryCartodb(query));
+            return response;
+        } catch (IOException e) {
+            return response;
+        }
+    }
+
     @RequestMapping(method = RequestMethod.POST, value = "edit_custom_map")
     @ResponseBody
     public Map<String, Object> editCustomMap(

@@ -399,7 +399,7 @@ FLOW.CustomMapEditView = FLOW.View.extend({
     FLOW.initAjaxSetup();
 
     // create and draw leaflet map
-    var map = L.map('flowMap', {scrollWheelZoom: true}).setView([26.11598592533351, 1.9335937499999998], 2);
+    var map = L.map('customMapEditCanvas', {scrollWheelZoom: true}).setView([26.11598592533351, 1.9335937499999998], 2);
     FLOW.drawLeafletMap(map);
 
     this.map = map;
@@ -466,11 +466,12 @@ FLOW.CustomMapEditView = FLOW.View.extend({
     self.customMapData['customMapDescription'] = '';
     self.customMapData['namedMap'] = '';
     self.customMapData['cartocss'] = '';
-    self.customMapData['legend'] = '';
+    self.customMapData['legend'] = {};
+    self.customMapData['legend']['title'] = '';
+    self.customMapData['legend']['question'] = '';
+    self.customMapData['legend']['points'] = '';
     self.customMapData['permission'] = '';
     self.customMapData['newMap'] = '';
-
-
 
     this.$(document).off('change', '.folder_survey_selector').on('change', '.folder_survey_selector',function(e) {
       //remove all 'folder_survey_selector's after current
@@ -487,6 +488,7 @@ FLOW.CustomMapEditView = FLOW.View.extend({
         var surveyGroupKeyId = $(this).val();
         //if a survey is selected, load forms to form selector element.
         if($(this).find("option:selected").data('type') === 'PROJECT'){
+          self.selectedTable = 'data_point';
           self.customMapData['surveyId'] = $(this).find("option:selected").val();
           $.get('/rest/cartodb/forms?surveyId='+surveyGroupKeyId, function(data, status) {
             var rows = [];
@@ -524,11 +526,18 @@ FLOW.CustomMapEditView = FLOW.View.extend({
               self.lastSelectedElement = parseInt(surveyGroupKeyId);
             }
           }
+
+          $('#show-points-number').data('count', 0);
         }
       }else{ //if nothing is selected, delete all children 'folder_survey_selector's and clear form selector
           FLOW.selectedControl.set('layerExistsCheck', FLOW.clearCartodbLayer(map, FLOW.selectedControl.get('cartodbLayer')));
+
+          $('#show-points-number').data('count', 0);
       }
 
+      //hide legend question toggle
+      $('#legend-question-toggle').css({display: 'none'});
+      $('#legend-question-toggle').data('question', '');
     });
 
     this.$(document).off('change', '.form_selector').on('change', '.form_selector',function(e) {
@@ -586,6 +595,10 @@ FLOW.CustomMapEditView = FLOW.View.extend({
       } else {
         FLOW.createLayer(map, FLOW.selectedControl.get('customMapName'));
       }
+
+      //hide legend question toggle
+      $('#legend-question-toggle').css({display: 'none'});
+      $('#legend-question-toggle').data('question', '');
     });
 
     this.$(document).off('change', '.question_selector').on('change', '.question_selector',function(e) {
@@ -623,8 +636,16 @@ FLOW.CustomMapEditView = FLOW.View.extend({
               }
             }
           });
+
+          //display legend question toggle
+          $('#legend-question-toggle').css({display: 'block'});
+          $('#legend-question-toggle').data('question', $(this).find('option:selected').text());
       }else{
         self.customMapData['questionId'] = 0;
+
+        //hide legend question toggle
+        $('#legend-question-toggle').css({display: 'none'});
+        $('#legend-question-toggle').data('question', '');
       }
     });
 
@@ -682,6 +703,16 @@ FLOW.CustomMapEditView = FLOW.View.extend({
         customMapView['zoom'] = self.map.getZoom();
         self.customMapData['customMapView'] = JSON.stringify(customMapView);
 
+        //if show legend is checked, populate the legend object
+        if($('#show-legend').is(':checked')){
+          self.customMapData['legend']['title'] = ($('#show-title').is(':checked')) ? $('#custom-map-title').val() : '';
+          self.customMapData['legend']['question'] = ($('#show-question').is(':checked')) ? $('#show-question').data('question') : '';
+          self.customMapData['legend']['points'] = ($('#show-points-number').is(':checked')) ? $('#show-points-number').data('count') : '';
+          self.customMapData['legend'] = JSON.stringify(self.customMapData['legend']);
+        }else{
+          self.customMapData['legend'] = '';
+        }
+
         var ajaxObject = {};
         ajaxObject['call'] = "POST";
         ajaxObject['url'] = "/rest/cartodb/edit_custom_map";
@@ -704,6 +735,30 @@ FLOW.CustomMapEditView = FLOW.View.extend({
         FLOW.createNamedMapObject(map, self.presetMapStyle['queryObject'], self.presetMapStyle['cartocss']);
       }
       FLOW.router.transitionTo('navMaps.customMapsList');
+    });
+
+    this.$(document).off('change', '.legend-toggle').on('change', '.legend-toggle', function(){
+      switch ($(this).attr('id')) {
+        case 'show-legend':
+          if($(this).is(':checked')){//enable the rest of the legend toggles
+            $('#show-title').attr('disabled', false);
+            $('#show-question').attr('disabled', false);
+            $('#show-points-number').attr('disabled', false);
+          }else{//disable the rest of the legend toggles
+            $('#show-title').attr('disabled', true);
+            $('#show-question').attr('disabled', true);
+            $('#show-points-number').attr('disabled', true);
+          }
+          break;
+        case 'show-title':
+          if($(this).is(':checked')){
+            $('#custom-map-title').attr('disabled', false);
+          }else{
+            $('#custom-map-title').attr('disabled', true);
+          }
+          break;
+        default:
+      }
     });
   },
 
@@ -807,8 +862,10 @@ FLOW.CustomMapEditView = FLOW.View.extend({
                               $('#survey_hierarchy').append(colourPicker);
                               colourPickerInput.minicolors({});
                             }
-                          }else{
 
+                            //display legend question toggle
+                            $('#legend-question-toggle').css({display: 'block'});
+                            $('#legend-question-toggle').data('question', $('.question_selector').find('option:selected').text());
                           }
                         });
                     }
@@ -820,6 +877,23 @@ FLOW.CustomMapEditView = FLOW.View.extend({
             $('#selector_'+surveyGroups[i]['ancestorIds'][j]).val(surveyGroups[i]['ancestorIds'][j+1]);
           }
         }
+      }
+    }
+
+    if(data.legend != ""){
+      var legend = JSON.parse(data.legend);
+      $('#show-legend').prop('checked', true);
+      if(legend.title != ""){
+        $('#show-title').prop('checked', true);
+        $('#custom-map-title').val(legend.title);
+      }
+      if(legend.question != ""){
+        $('#show-question').prop('checked', true);
+        $('#show-question').data('question', legend.question);
+      }
+      if(legend.points != "" || legend.points != 0){
+        $('#show-points-number').prop('checked', true);
+        $('#show-points-number').data('count', legend.points);
       }
     }
   }
@@ -851,7 +925,7 @@ FLOW.CustomMapView = FLOW.View.extend({
     FLOW.initAjaxSetup();
 
     // create and draw leaflet map
-    var map = L.map('flowMap', {scrollWheelZoom: true}).setView([26.11598592533351, 1.9335937499999998], 2);
+    var map = L.map('customMapViewCanvas', {scrollWheelZoom: true}).setView([26.11598592533351, 1.9335937499999998], 2);
     FLOW.drawLeafletMap(map);
 
     FLOW.selectedControl.set('marker', null);
@@ -920,7 +994,7 @@ FLOW.CustomMapView = FLOW.View.extend({
     });
 
     map.on('zoomend', function() {
-      $('body, html, #flowMap').scrollTop(0);
+      $('body, html, #customMapViewCanvas').scrollTop(0);
     });
 
     this.$(document).off('click', '.editCustomMap').on('click', '.editCustomMap', function(){
