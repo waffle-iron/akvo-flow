@@ -85,7 +85,7 @@
 
   function resizeMap() {
 
-    if (!document.querySelector('#flowMap')) {
+    if (!document.querySelector('#customMapEditCanvas')) {
       // If we can't find the map element, assume we have changed tabs and remove listener
       window.removeEventListener('resize', resizeMap);
       return;
