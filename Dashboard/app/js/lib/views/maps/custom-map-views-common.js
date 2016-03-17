@@ -33,7 +33,8 @@ FLOW.DataMapView = FLOW.View.extend({
     this.map = map;
 
     //onetime get survey groups
-    $.get('/rest/survey_groups'/*place survey_groups endpoint here*/
+    $.get('http://localhost:8080/akvo_flow_api/index.php/survey_groups/akvoflow-uat1'/*place survey_groups endpoint here*/
+    //$.get('/rest/survey_groups'/*place survey_groups endpoint here*/
     , function(surveyGroupsData, status){
       FLOW.selectedControl.set('cartodbMapsSurveyGroups', surveyGroupsData);
 

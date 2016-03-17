@@ -149,7 +149,8 @@ FLOW.getCartodbPointData = function(dataPointObject){
     if (pointData['answers'] != null) {
       //get request for questions
       $.get(
-          "/rest/questions?surveyId="+pointData['formId'],
+          "http://localhost:8080/akvo_flow_api/index.php/questions/flowaglimmerofhope/"+pointData['formId'],
+          //"/rest/questions?surveyId="+pointData['formId'],
           function(questionsData, status){
             //create a questions array with the correct order of questions as in the survey
             var questionsDataArr = [];
