@@ -6375,6 +6375,9 @@ html.navMaps {
     label {
     color: rgb(107, 134, 141);
     }
+    .tabNav {
+        margin-top: -14px !important;
+    }
     #customMap {
         #customMapViewCanvas {
             float: left;
