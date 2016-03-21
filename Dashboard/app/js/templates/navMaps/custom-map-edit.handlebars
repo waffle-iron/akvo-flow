@@ -1,50 +1,16 @@
 <section class="fullWidth" id="customMapEdit">
-  <style type="text/css">
-  .folder_survey_selector, .question_selector, .form_selector{
-    margin-top: 5px;
-    width: 99%;
-    float: left;
-  }
-  .point-details-content{
-    width: 100%;
-    float: left;
-    margin-top: 5px
-  }
-  #flowMap{
-    position: relative;
-  }
-  #customMapEditCanvas{
-    float: left;
-    height: 600px;
-    margin: 0;
-    width: 100%;
-    position: absolute;
-    z-index: 0
-  }
-  #customMapLegend{
-    background: white none repeat scroll 0 0;
-    position: absolute;
-    bottom: 35px;
-    left: 10px;
-    padding: 5px;
-  }
-  .style_selector{
-    width: 100%;
-    float: left
-  }
-  .map_details{
-    float: left;
-    margin: 2px;
-    width: 95%;
-  }
-  </style>
   <div id="dropdown-holder" style="padding-bottom: 5px">
     <div class="drawHandle backToCustomMaps" style="float: left; position: static !important">&lsaquo; {{t _go_back}}</div>
     <a id="saveCustomMap" class="standardBtn" style="float: right;">{{t _save}}</a>
   </div>
-  <div id="mapDetails" style="margin: 2px; width:100%; float: left">
+  <div id="mapDetails">
+
+    <label for="mapTitle">{{t _map_title}}</label>
     <input type="text" id="mapTitle" placeholder="{{t _map_title}}" class="map_details">
+
+    <label for="mapDescription">{{t _map_description}}</label>
     <input type="text" id="mapDescription" placeholder="{{t _map_description}}" class="map_details">
+    
   </div>
   <div id="flowMap">
     <div id="customMapEditCanvas" class="flowMap"></div>

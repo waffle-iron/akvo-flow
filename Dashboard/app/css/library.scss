@@ -114,7 +114,11 @@ $width-large:  1200px;
 }
 
 
-
+@mixin box-sizing($boxSizingProperties) {
+    -moz-box-sizing: $boxSizingProperties;
+    -webkit-box-sizing: $boxSizingProperties;
+    box-sizing: $boxSizingProperties;
+}
 
 @mixin placeholder-color($color){
   &.placeholder{
