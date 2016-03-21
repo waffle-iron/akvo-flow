@@ -1,5 +1,4 @@
 @import "library.scss";
-
 html,
 body,
 div,
@@ -117,6 +116,7 @@ video {
     max-width: 100%;
 }
 
+
 /* IE 6 does not support max-width so default to width 100% */
 
 .ie6 img {
@@ -160,6 +160,7 @@ body {
     font-family: $bodyFont;
     -ms-overflow-style: -ms-autohiding-scrollbar;
 }
+
 
 /*--------------------------------------------------------------
                             Headings
@@ -221,6 +222,7 @@ em {
     padding-bottom: 1em;
 }
 
+
 /* misc.
 --------------------------------------------- */
 
@@ -230,6 +232,7 @@ video,
 embed {
     max-width: 100%;
 }
+
 
 /* Sine the map pin need no max-width */
 
@@ -288,7 +291,8 @@ pre {
 }
 
 .loadSave {
-    .isLoading, .isSaving {
+    .isLoading,
+    .isSaving {
         position: fixed;
         top: 90px;
         left: 46%;
@@ -342,10 +346,13 @@ pre {
     background-image: none !important;
 }
 
+
 /* links
 ---------------------------------------------------------------*/
 
-a, a:link, a:visited {
+a,
+a:link,
+a:visited {
     outline: none;
     color: $anchorLink;
     text-decoration: none;
@@ -502,7 +509,6 @@ input[type="submit"] {
     }
 }
 
-
 .editAnswerMenu {
     position: relative;
     margin: 10px auto;
@@ -516,15 +522,15 @@ input[type="submit"] {
         align-content: center;
         -webkit-justify-content: space-around;
         justify-content: space-around;
-        padding:15px 0;
+        padding: 15px 0;
         li {
-            flex-grow:1;
-            text-align:center;
+            flex-grow: 1;
+            text-align: center;
             &.deleteBtn {
                 position: initial;
                 display: relative;
-                top:10px;
-                left:45%;
+                top: 10px;
+                left: 45%;
             }
             &:first-child {
                 margin-left: 0.5%;
@@ -532,7 +538,7 @@ input[type="submit"] {
             }
             &:last-child {
                 margin-right: 0.5%;
-                text-align:right;
+                text-align: right;
             }
         }
     }
@@ -561,6 +567,7 @@ input[type="submit"] {
 .inline {
     display: inline;
 }
+
 
 /*-------------------------------
             Dialog
@@ -676,6 +683,7 @@ label[for=newDeviceGroupName] {
     width: 70%;
 }
 
+
 /* page structure
 --------------------------------------------- */
 
@@ -742,6 +750,7 @@ label[for=newDeviceGroupName] {
     padding: 0 0 0 0;
     width: 99%;
 }
+
 
 /* .header
 --------------------------------------------- */
@@ -850,6 +859,7 @@ header.top {
         }
     }
 }
+
 
 /* Top navigation styles
 --------------------------------------------- */
@@ -1081,6 +1091,7 @@ nav.appNav {
     }
 }
 
+
 /*---------------------------------------------
                     Data Table
 -----------------------------------------------*/
@@ -1160,6 +1171,7 @@ table.dataTable thead tr th a:visited {
 #statisticsDataTable {
     width: 400px;
 }
+
 
 /* end addition MTW */
 
@@ -1291,6 +1303,7 @@ tfoot tr {
     }
 }
 
+
 /**************** Inspect Data tab. **************/
 
 #inspectData {
@@ -1320,13 +1333,14 @@ tfoot tr {
     }
 }
 
-#inspectData, #monitoringData, .messagesList {
+#inspectData,
+#monitoringData,
+.messagesList {
     .prevNext {
         .prevBtn {
             display: inline-block;
             text-align: left;
             width: 49%;
-
         }
         .nextBtn {
             display: inline-block;
@@ -1335,6 +1349,7 @@ tfoot tr {
         }
     }
 }
+
 
 /********* Editing Multiple Option Type quesitons ********/
 
@@ -1358,7 +1373,7 @@ tfoot tr {
     .editOtherContainer {
         margin-bottom: 1em;
         .otherLabel {
-            display: inline-block; 
+            display: inline-block;
             margin-right: 0.5em;
             &:after {
                 content: ':';
@@ -1372,18 +1387,18 @@ tfoot tr {
     }
 }
 
+
 /******* Multiple Option Type question survey entry ******/
 
 p.optionTitle strong {
     margin-left: 1em;
 }
+
 .optionListView {
     li {
         padding: 0 1em;
-
         input {
             display: inline-block;
-
             &:first-child {
                 width: 10em;
                 margin-right: 1em;
@@ -1392,7 +1407,6 @@ p.optionTitle strong {
                 width: 35em;
             }
         }
-
         a {
             margin-left: 1em;
         }
@@ -1402,12 +1416,12 @@ p.optionTitle strong {
         width: 10em;
         padding: 1em;
         font-weight: bold;
-
         &:before {
             content: '+ ';
         }
     }
 }
+
 
 /**************** Assign Survey to devices. **************/
 
@@ -1700,9 +1714,11 @@ th.action {
     display: inline-block;
 }
 
+
 /*--------------------------------------------------------------------
                             Tabs Styling
 ----------------------------------------------------------------------*/
+
 #tabs {
     position: relative;
     /*overflow-y: scroll;*/
@@ -1751,7 +1767,8 @@ th.action {
         position: fixed;
         margin-top: -10px;
         z-index: 9999;
-        & + div, & + section {
+        & + div,
+        & + section {
             margin-top: 40px;
         }
         ul {
@@ -1806,12 +1823,14 @@ th.action {
     }
 }
 
+
 /* Survey styles
 --------------------------------------------- */
 
 .surveysList {
     position: relative;
 }
+
 
 /* Survey Groups Menu Bar
 --------------------------------------------- */
@@ -1942,7 +1961,8 @@ nav.menuGroupWrap {
                 background: rgb(90, 90, 90) url(../images/selectFolder.svg) left center no-repeat;
                 background: rgba(255, 255, 255, 0.15) url(../images/selectFolder.svg) 2px center no-repeat;
                 background-size: 20px 20px;
-                a, a:hover {
+                a,
+                a:hover {
                     background: url(../images/carretFolderSelected.svg) right center no-repeat;
                     color: $anchorLinkHover;
                     background-size: 15px 25px;
@@ -2068,7 +2088,8 @@ a.FadeIt {
                     border-bottom: thin solid rgb(55, 55, 55);
                     background: rgba($anchorLink, 0.25) url(../images/IconFormsWhite.svg) 2px 11px no-repeat;
                     background-size: 20px 17px;
-                    a, a:hover {
+                    a,
+                    a:hover {
                         background: url(../images/carretFolderSelectedWhite.svg) right center no-repeat;
                         color: white;
                         background-size: 15px 25px;
@@ -2078,6 +2099,7 @@ a.FadeIt {
         }
     }
 }
+
 
 /* Survey Top Bar
 --------------------------------------------- */
@@ -2152,7 +2174,8 @@ section.topBar {
             -webkit-justify-content: flex-start;
             justify-content: flex-start;
         }
-        &:last-child, &.menutopBar {
+        &:last-child,
+        &.menutopBar {
             margin-right: 0.5%;
             -webkit-justify-content: flex-end;
             justify-content: flex-end;
@@ -2331,11 +2354,18 @@ ul.cancelMenu {
 }
 
 a.addGroup,
-a.addSurvey, .moveAction,
+a.addSurvey,
+.moveAction,
 a.stepBack,
-a.editGroupName, a.addMenuAction,
-a.makeMonitorGroup, a.manageNotifications,
-a.deleteGroup, a.addFolder, a.editFolder, a.cancelFolder, a.saveMenuAction {
+a.editGroupName,
+a.addMenuAction,
+a.makeMonitorGroup,
+a.manageNotifications,
+a.deleteGroup,
+a.addFolder,
+a.editFolder,
+a.cancelFolder,
+a.saveMenuAction {
     display: block;
     padding: 1px 0 7px 21px;
     height: 10px;
@@ -2360,11 +2390,13 @@ a.cancelFolder:hover {
     background: url(../images/IconCancelFolderHover.svg) left center no-repeat;
 }
 
-a.addGroup, a.addFolder {
+a.addGroup,
+a.addFolder {
     background: url(../images/IconPlus.svg) left center no-repeat;
 }
 
-a.addGroup:hover, a.addFolder:hover {
+a.addGroup:hover,
+a.addFolder:hover {
     background: url(../images/IconPlusOrange.svg) left center no-repeat;
 }
 
@@ -2449,11 +2481,13 @@ a.makeMonitorGroup:hover {
     background: transparent url(../images/IconMonitorEnable.svg) left center no-repeat;
 }
 
-a.editGroupName, a.editFolder {
+a.editGroupName,
+a.editFolder {
     background: transparent url(../images/IconEdit.svg) left center no-repeat;
 }
 
-a.editGroupName:hover, a.editFolder:hover {
+a.editGroupName:hover,
+a.editFolder:hover {
     background: url(../images/IconEditOrange.svg) left center no-repeat;
 }
 
@@ -2516,6 +2550,7 @@ a.redCancel {
     right: 20px;
 }
 
+
 /* Survey Asset
 --------------------------------------------- */
 
@@ -2573,7 +2608,8 @@ li.aSurvey {
     }
 }
 
-li.aFolder, li.aSurvey {
+li.aFolder,
+li.aSurvey {
     &.highLighted {
         background: #E7EEE0;
         border: 1px solid rgba(141, 198, 63, 0.5);
@@ -2644,7 +2680,7 @@ li.aFolder {
     }
     a {
         display: block;
-        width: calc(100% - 30% );
+        width: calc(100% - 30%);
         padding-top: 10px;
         padding-bottom: 10px;
         h2 {
@@ -2841,12 +2877,13 @@ ul.surveyInfo li.responseNumber {
     background-size: 35px 35px;
 }
 
-.newlyCreated, .newlycreated:hover {
+.newlyCreated,
+.newlycreated:hover {
     -webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
     box-sizing: border-box;
-    -webkit-animation: appearFx 2s linear  1 normal forwards;
-    -moz-animation: appearFx 2s linear  1 normal forwards;
+    -webkit-animation: appearFx 2s linear 1 normal forwards;
+    -moz-animation: appearFx 2s linear 1 normal forwards;
     -o-animation: appearFx 2s linear 1 normal forwards;
     animation: appearFx 2s linear 1 normal forwards;
     background-image: url(../images/carret.svg);
@@ -2878,7 +2915,6 @@ ul.surveyInfo li.responseNumber {
     }
 }
 
-
 @-moz-keyframes appearFx {
     0% {
         opacity: 0;
@@ -2903,7 +2939,6 @@ ul.surveyInfo li.responseNumber {
     }
 }
 
-
 @-o-keyframes appearFx {
     0% {
         opacity: 0;
@@ -2927,7 +2962,6 @@ ul.surveyInfo li.responseNumber {
         border: 2px solid rgba($akvoOrange, 0.3);
     }
 }
-
 
 @keyframes appearFx {
     0% {
@@ -3227,6 +3261,7 @@ a.saveProject {
     }
 }
 
+
 /*****
         A New Question Form
 ******---------------------------------------------------------------------------------*/
@@ -3455,6 +3490,7 @@ nav.questionActionMenu a:hover {
     color: $darkGrey;
 }
 
+
 /*---------------------------------------------------------------------------------
                                 A New Question Form
 ---------------------------------------------------------------------------------*/
@@ -3647,6 +3683,7 @@ nav.smallMenu ul li a.showQuestion:hover {
     background: url(../images/IconShowOrange.svg) left center no-repeat;
 }
 
+
 /*-------------------------------------------------------------------------------------------------------------------------------
                                             New Survey Settings
 --------------------------------------------------------------------------------------------------------------------------------*/
@@ -3695,6 +3732,7 @@ nav.smallMenu ul li a.showQuestion:hover {
     text-align: center;
     color: rgb(153, 153, 153);
 }
+
 
 /********************************************* To remove when Create new survey setting page confirmed deleted. *******************************************/
 
@@ -4015,8 +4053,10 @@ table.dataTable.notificationTable thead tr th a:visited {
     cursor: pointer;
 }
 
+
 /****** Data Page
 ****************************************************************************/
+
 .modularSelection {
     display: -webkit-box;
     display: -webkit-flex;
@@ -4113,7 +4153,6 @@ div.dataCollectedDate {
     @include responsive(small-max-screens) {
         width: 100%;
     }
-
     .rawDataReport & {
         float: none;
         margin-top: 35px;
@@ -4135,8 +4174,8 @@ div.dataCollectedDate {
             border-radius: 3px;
         }
         label {
-            color:rgba($akvoBlack, 0.5);
-            margin-top:5px;
+            color: rgba($akvoBlack, 0.5);
+            margin-top: 5px;
             text-transform: none;
         }
     }
@@ -4246,194 +4285,8 @@ div.dataCollectedDate label input {
     font-weight: normal;
 }
 
-/******************************************************************************
-                                    FLOW MAP
-******************************************************************************/
 
-#flowMap {
-    float: left;
-    margin: 0 0 0 0;
-    width: 99.25%;
-    height: 600px;
-    border-bottom: 2px solid rgb(158, 158, 158);
-}
 
-#dropdown-holder {
-    position: relative;
-    clear: both;
-    margin: 0 auto;
-    padding: 4px 1.25% 0 1.25%;
-    width: 97.5%;
-    height: 23px;
-    background: $darkGrey;
-}
-
-#dropdown-holder label {
-    color: white;
-}
-
-#dropdown-holder select {
-    display: inline;
-    margin: 0 0 0 0.5em;
-}
-
-#pointDetails {
-    position: relative;
-    float: right;
-    overflow: auto;
-    overflow-x: none;
-    margin: 0 0 0 -2px;
-    padding: 5px 0.25% 0px 0.25%;
-    width: 24.5%;
-    height: 595px;
-    border-left: 2px solid rgb(214, 214, 214);
-    background: rgb(241, 241, 241);
-    overflow-style: marquee-line;
-    border-bottom: 2px solid rgb(158, 158, 158);
-}
-
-#pointDetails h2 {
-    margin: 5px 0 10px 5px;
-    line-height: inherit;
-}
-
-#pointDetails div.mapInfoDetail {
-    position: relative;
-    overflow: hidden;
-    padding: 0.5em 0.25%;
-    width: 99.5%;
-    background: rgb(240, 240, 240);
-    letter-spacing: 0em;
-    font-family: Verdana, Geneva, sans-serif;
-    line-height: 1.2em;
-    h4 {
-        margin:5px 0 10px 0;
-        color: $akvoOrange;
-    }
-}
-
-#pointDetails div.mapInfoDetail div.defListWrap {
-    display: table;
-    margin: 2px auto;
-    padding: 0.2em 0;
-    width: 100%;
-}
-
-#pointDetails div.mapInfoDetail div.defListWrap:nth-child(odd) {
-    background: rgb(224, 224, 224);
-}
-
-#pointDetails div.mapInfoDetail div.defListWrap dt {
-    padding: 5px 0 5px 0.75%;
-    width: 44.25%;
-    margin:2px 0 15px 0;
-    color: rgba($akvoBlack,0.4);
-}
-
-#pointDetails div.mapInfoDetail div.defListWrap dd {
-    padding: 5px 0 5px 0.75%;
-    width: 54.25%;
-    color: rgb(0, 0, 0);
-}
-
-#pointDetails div.mapInfoDetail dt:nth-of-type(1),
-#pointDetails div.mapInfoDetail dd:nth-of-type(1) {
-    border-top: none;
-}
-
-div#drawHandleWrap {
-    position: relative;
-    display: block;
-    clear: both;
-    width: 100%;
-    height: 16px;
-}
-
-div.drawHandle {
-    position: absolute;
-    top: 1px;
-    right: 5px;
-    z-index: 99999;
-    display: block;
-    padding: 4px 7px 15px 7px;
-    height: 3px;
-    color: $anchorLinkHover;
-    text-transform: uppercase;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-.noDetails {
-    margin: 2em auto;
-    text-align: center;
-    color: rgb(147, 145, 144);
-    -webkit-text-shadow: 2px 2px 0 white;
-    -moz-text-shadow: 2px 2px 0 white;
-    -o-text-shadow: 2px 2px 0 white;
-    text-shadow: 2px 2px 0 white;
-}
-
-#pointDetails .imgContainer {
-    position: relative;
-    margin: 10px 5px 10px 1px;
-    padding: 1px;
-}
-
-#pointDetails .imgContainer a {
-    position: relative;
-    display: block;
-    width: 62px;
-    padding: 2px;
-    margin: 2px;
-    float: left;
-    border: 1px solid rgb(214, 214, 214);
-}
-
-#pointDetails .imgContainer img {}
-
-#flowMapLegend {
-    position: relative;
-    display: none;
-    clear: both;
-    padding: 5px 1%;
-    width: 98%;
-    border-top: 1px solid white;
-    background: rgb(234, 234, 234);
-}
-
-.placeMarkBasicInfo {
-    padding: 1em 2%;
-    width: 96%;
-    background: url(../images/mapPointDetailSep.png) center bottom no-repeat;
-}
-
-.placeMarkBasicInfo li {
-    display: inline;
-    float: left;
-}
-
-.placeMarkBasicInfo li:last-child {
-    float: right;
-    width: 50px;
-}
-
-.placeMarkBasicInfo li span {
-    display: inline;
-}
-
-.placeMarkCollectionDate {
-    display: inline;
-    margin: 0 0 0 5px;
-    color: rgb(227, 27, 35);
-    font-weight: bold;
-}
-
-.placeMarkPointCode {
-    margin: 0 0 0 5px;
-    color: $darkGrey;
-    text-transform: uppercase;
-    font-weight: bold;
-}
 
 /*---------------------------------------------
                     Footer
@@ -4520,6 +4373,7 @@ footer.bottomPage nav ul li a.akvoDotOrg {
 footer.bottomPage a[rel="self"] {}
 
 footer.bottomPage a[rel="self"]:hover {}
+
 
 /******************************************************************************************************
                                             Survey Preview
@@ -4626,6 +4480,7 @@ footer.bottomPage a[rel="self"]:hover {}
     margin: 2.5em auto 0 auto;
 }
 
+
 /********************************************************************************************************************************
                                                     Reports Tab
 ********************************************************************************************************************************/
@@ -4637,6 +4492,7 @@ footer.bottomPage a[rel="self"]:hover {}
     float: left;
     margin: 0 0 1em 1%;
 }
+
 #reportBlocks.reportTools {
     .geoshapeExport {
         .geoshapeSelect {
@@ -4752,6 +4608,7 @@ footer.bottomPage a[rel="self"]:hover {}
     display: inline;
 }
 
+
 /* Affix the survey select menu to the top of the viewport so it is always visible */
 
 .reportTools {
@@ -4770,6 +4627,7 @@ footer.bottomPage a[rel="self"]:hover {}
         }
     }
 }
+
 
 /* ------------------------------------------------------------------------------------------
                                      .Translate Surveys
@@ -5016,6 +4874,7 @@ table.surveyTranslate .qHelpTooltip label.qTooltip + input {
     }
 }
 
+
 /* Uploader: Drag & Drop */
 
 .resumable-error {
@@ -5051,6 +4910,7 @@ table.surveyTranslate .qHelpTooltip label.qTooltip + input {
     background-color: #ddd;
     border: 1px solid #999;
 }
+
 
 /* Uploader: Progress bar */
 
@@ -5122,6 +4982,7 @@ table.surveyTranslate .qHelpTooltip label.qTooltip + input {
 .is-complete .progress-pause {
     display: none;
 }
+
 
 /* Uploader: List of items being uploaded */
 
@@ -5200,6 +5061,7 @@ table.surveyTranslate .qHelpTooltip label.qTooltip + input {
     right: 3px;
 }
 
+
 /* Uploader: Hover & Active status */
 
 .uploader-item:hover,
@@ -5212,6 +5074,7 @@ table.surveyTranslate .qHelpTooltip label.qTooltip + input {
 .is-active .uploader-item .uploader-item-title {
     background-color: rgba(74, 135, 60, 0.8);
 }
+
 
 /* Uploader: Error status */
 
@@ -5251,7 +5114,9 @@ table.surveyTranslate .qHelpTooltip label.qTooltip + input {
     line-height: 30px;
 }
 
+
 /************************************* New styles ****************************************/
+
 .projectSection {
     background: $projectBackground;
     box-sizing: border-box;
@@ -5277,7 +5142,8 @@ table.surveyTranslate .qHelpTooltip label.qTooltip + input {
                 padding: 8px 8px 8px 31px;
             }
         }
-        .projectSummary, .formSummary {
+        .projectSummary,
+        .formSummary {
             display: -webkit-box;
             display: -moz-box;
             display: -ms-flexbox;
@@ -5309,7 +5175,9 @@ table.surveyTranslate .qHelpTooltip label.qTooltip + input {
                     font-size: 1.8em;
                     margin-top: -5px;
                     font-weight: 600;
-                    &.projectForm, &.projectMonitoring, &.projectStatus {
+                    &.projectForm,
+                    &.projectMonitoring,
+                    &.projectStatus {
                         color: white;
                     }
                     &.projectStatus.redColor {
@@ -5369,7 +5237,8 @@ table.surveyTranslate .qHelpTooltip label.qTooltip + input {
                 border-top: thin solid white;
                 background: white;
                 margin-top: 15px;
-                &.surveyForm, &#questionSet {
+                &.surveyForm,
+                &#questionSet {
                     margin-top: 5px;
                     padding: 0 0 5px 0;
                 }
@@ -5400,7 +5269,8 @@ table.surveyTranslate .qHelpTooltip label.qTooltip + input {
                 width: 100%;
                 margin-top: 10px;
                 z-index: inherit;
-                & + section, & + div {
+                & + section,
+                & + div {
                     margin-top: 0;
                 }
             }
@@ -5540,7 +5410,8 @@ table.surveyTranslate .qHelpTooltip label.qTooltip + input {
             background: rgb(54, 79, 90);
             margin: 10px auto;
         }
-        .projectDetails, .formsContainer {
+        .projectDetails,
+        .formsContainer {
             width: 99.5%;
             position: relative;
             padding: 2em 0.25% 2em 0.25%;
@@ -5566,7 +5437,8 @@ table.surveyTranslate .qHelpTooltip label.qTooltip + input {
             label[for=enableMonitoring] {
                 margin: 10px 0 0 5px;
             }
-            .projectDetailForm, .surveyDetailForm {
+            .projectDetailForm,
+            .surveyDetailForm {
                 display: block;
                 margin-top: 0 !important;
                 .monitoringHint {
@@ -5606,7 +5478,9 @@ table.surveyTranslate .qHelpTooltip label.qTooltip + input {
     }
 }
 
+
 /************************************** CASCADING QUESTIONS ************************************/
+
 .noCascadeContainer {
     color: white;
     background: rgba(white, 0);
@@ -5641,9 +5515,11 @@ table.surveyTranslate .qHelpTooltip label.qTooltip + input {
     }
 }
 
+
 /*.cascadeWrap {
      height:calc(100vh - 180px);
 }*/
+
 .cascadeSection {
     background: $projectBackground;
     box-sizing: border-box;
@@ -5656,7 +5532,8 @@ table.surveyTranslate .qHelpTooltip label.qTooltip + input {
         padding-top: 15px;
         padding-bottom: 15px;
         .offSet {
-            @include offSet(60px, 0);
+            @include offSet(60px,
+            0);
         }
         h2 {
             margin-right: 15px;
@@ -5690,7 +5567,9 @@ table.surveyTranslate .qHelpTooltip label.qTooltip + input {
                 font-size: 1.8em;
                 margin-top: -5px;
                 font-weight: 600;
-                &.projectForm, &.projectMonitoring, &.cascadeStatus {
+                &.projectForm,
+                &.projectMonitoring,
+                &.cascadeStatus {
                     color: white;
                 }
                 &.cascadeStatus.redColor {
@@ -5819,7 +5698,6 @@ nav.cascadeBreadCrumb {
             display: table;
             margin: 10px auto;
         }
-
         &.addLevel {
             display: table;
             &:hover {
@@ -5965,7 +5843,6 @@ ul.cascadeAction {
     @include responsive(medium-max-screens) {
         margin: 10px 0 10px 0;
     }
-
     li {
         display: inline-block;
         a {
@@ -6221,7 +6098,9 @@ li.disable {
     font-size: 1.2em;
 }
 
+
 /* Set device buttons on device tab to position: fixed */
+
 .deviceControls {
     position: fixed;
     top: 120px;
@@ -6249,13 +6128,13 @@ li.disable {
     }
 }
 
+
 /* Repeatable question groups */
 
 .questionGroupBlock {
     header {
         > .labelcheckbox {
             display: inline-block;
-
             .ember-checkbox {
                 width: initial;
                 margin: 5px 5px 5px 12px;
@@ -6264,6 +6143,7 @@ li.disable {
         }
     }
 }
+
 #inspectData {
     h3 {
         &.questionGroupName {
@@ -6284,21 +6164,277 @@ li.disable {
     }
 }
 
-/* Custom styling for navMaps tab */
 
+/******************************************************************************
+                                    FLOW MAP
+******************************************************************************/
+
+#flowMap {
+    float: left;
+    margin: 0 0 0 0;
+    width: 99.25%;
+    height: 600px;
+    border-bottom: 2px solid rgb(158, 158, 158);
+}
+
+#dropdown-holder {
+    position: relative;
+    clear: both;
+    margin: 0 auto;
+    padding: 8px 1.25% 4px 1.25%;
+    width: 97.5%;
+    height: 23px;
+    background: $darkGrey;
+}
+
+#dropdown-holder label {
+    color: white;
+}
+
+#dropdown-holder select {
+    display: inline;
+    margin: 0 0 0 0.5em;
+}
+
+#pointDetails {
+    position: relative;
+    float: right;
+    overflow: auto;
+    overflow-x: none;
+    margin: 0 0 0 -2px;
+    padding: 5px 0.25% 0px 0.25%;
+    width: 24.5%;
+    height: 595px;
+    border-left: 2px solid rgb(214, 214, 214);
+    background: rgb(241, 241, 241);
+    overflow-style: marquee-line;
+    border-bottom: 2px solid rgb(158, 158, 158);
+}
+
+#pointDetails h2 {
+    margin: 5px 0 10px 5px;
+    line-height: inherit;
+}
+
+#pointDetails div.mapInfoDetail {
+    position: relative;
+    overflow: hidden;
+    padding: 0.5em 0.25%;
+    width: 99.5%;
+    background: rgb(240, 240, 240);
+    letter-spacing: 0em;
+    font-family: Verdana, Geneva, sans-serif;
+    line-height: 1.2em;
+    h4 {
+        margin: 5px 0 10px 0;
+        color: $akvoOrange;
+    }
+}
+
+#pointDetails div.mapInfoDetail div.defListWrap {
+    display: table;
+    margin: 2px auto;
+    padding: 0.2em 0;
+    width: 100%;
+}
+
+#pointDetails div.mapInfoDetail div.defListWrap:nth-child(odd) {
+    background: rgb(224, 224, 224);
+}
+
+#pointDetails div.mapInfoDetail div.defListWrap dt {
+    padding: 5px 0 5px 0.75%;
+    width: 44.25%;
+    margin: 2px 0 15px 0;
+    color: rgba($akvoBlack, 0.4);
+}
+
+#pointDetails div.mapInfoDetail div.defListWrap dd {
+    padding: 5px 0 5px 0.75%;
+    width: 54.25%;
+    color: rgb(0, 0, 0);
+}
+
+#pointDetails div.mapInfoDetail dt:nth-of-type(1),
+#pointDetails div.mapInfoDetail dd:nth-of-type(1) {
+    border-top: none;
+}
+
+div#drawHandleWrap {
+    position: relative;
+    display: block;
+    clear: both;
+    width: 100%;
+    height: 16px;
+}
+
+div.drawHandle {
+    position: absolute;
+    top: 1px;
+    right: 5px;
+    z-index: 99999;
+    display: block;
+    padding: 4px 7px 15px 7px;
+    height: 3px;
+    color: $anchorLinkHover;
+    text-transform: uppercase;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.noDetails {
+    margin: 2em auto;
+    text-align: center;
+    color: rgb(147, 145, 144);
+    -webkit-text-shadow: 2px 2px 0 white;
+    -moz-text-shadow: 2px 2px 0 white;
+    -o-text-shadow: 2px 2px 0 white;
+    text-shadow: 2px 2px 0 white;
+}
+
+#pointDetails .imgContainer {
+    position: relative;
+    margin: 10px 5px 10px 1px;
+    padding: 1px;
+}
+
+#pointDetails .imgContainer a {
+    position: relative;
+    display: block;
+    width: 62px;
+    padding: 2px;
+    margin: 2px;
+    float: left;
+    border: 1px solid rgb(214, 214, 214);
+}
+
+#pointDetails .imgContainer img {}
+
+#flowMapLegend {
+    position: relative;
+    display: none;
+    clear: both;
+    padding: 5px 1%;
+    width: 98%;
+    border-top: 1px solid white;
+    background: rgb(234, 234, 234);
+}
+
+.placeMarkBasicInfo {
+    padding: 1em 2%;
+    width: 96%;
+    background: url(../images/mapPointDetailSep.png) center bottom no-repeat;
+}
+
+.placeMarkBasicInfo li {
+    display: inline;
+    float: left;
+}
+
+.placeMarkBasicInfo li:last-child {
+    float: right;
+    width: 50px;
+}
+
+.placeMarkBasicInfo li span {
+    display: inline;
+}
+
+.placeMarkCollectionDate {
+    display: inline;
+    margin: 0 0 0 5px;
+    color: rgb(227, 27, 35);
+    font-weight: bold;
+}
+
+.placeMarkPointCode {
+    margin: 0 0 0 5px;
+    color: $darkGrey;
+    text-transform: uppercase;
+    font-weight: bold;
+}
+
+
+/* Custom styling for navMaps tab */
 html.navMaps {
     border-top: 0px;
-    header {
-        position: initial;
-    }
-    #flowMap, #pointDetails {
+    #flowMap,
+    #pointDetails {
         height: 600px;
         height: 75vh;
     }
     .mapFlow.middleSection {
-        padding: 0;
+        padding-top: 97px;
     }
     footer {
         padding-bottom: 15px;
+    }
+    #flowMap {
+        position: relative;
+    }
+    label {
+    color: rgb(107, 134, 141);
+    }
+    #customMap {
+        #customMapViewCanvas {
+            float: left;
+            height: 600px;
+            margin: 0;
+            width: 100%;
+            position: absolute;
+            z-index: 0
+        }
+        #customMapLegend {
+            background: white none repeat scroll 0 0;
+            position: absolute;
+            bottom: 35px;
+            left: 10px;
+            padding: 5px;
+        }
+    }
+    #customMapEdit {
+        .folder_survey_selector,
+        .question_selector,
+        .form_selector {
+            margin-top: 5px;
+            width: 99%;
+            float: left;
+        }
+        .point-details-content {
+            width: 100%;
+            float: left;
+            margin-top: 10px;
+            margin-bottom: 25px;
+            .point-details-content {
+            margin-top: 5px;
+            margin-bottom: 5px;
+            }
+        }
+        #customMapEditCanvas {
+            float: left;
+            height: 600px;
+            margin: 0;
+            width: 100%;
+            position: absolute;
+            z-index: 0
+        }
+        #customMapLegend {
+            background: white none repeat scroll 0 0;
+            position: absolute;
+            bottom: 35px;
+            left: 10px;
+            padding: 5px;
+        }
+        .style_selector {
+            width: 100%;
+            float: left
+        }
+        #mapDetails {
+            padding: 5px 20px;
+            .map_details {
+                width: 100%;
+                margin: 0px auto 15px;
+            }
+        }
     }
 }
