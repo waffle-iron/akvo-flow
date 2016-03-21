@@ -149,8 +149,7 @@ FLOW.getCartodbPointData = function(dataPointObject){
     if (pointData['answers'] != null) {
       //get request for questions
       $.get(
-          "http://localhost:8080/akvo_flow_api/index.php/questions/flowaglimmerofhope/"+pointData['formId'],
-          //"/rest/questions?surveyId="+pointData['formId'],
+          "/rest/questions?surveyId="+pointData['formId'],
           function(questionsData, status){
             //create a questions array with the correct order of questions as in the survey
             var questionsDataArr = [];
@@ -209,10 +208,18 @@ FLOW.getCartodbPointData = function(dataPointObject){
                     if(questionAnswer !== "" && questionAnswer !== null && questionAnswer !== "null"){
                       switch (questionsDataArr[i].type) {
                         case "PHOTO":
+                          var imageString = "", imageJson;
+                          if (questionAnswer.charAt(0) === '{') {
+                            imageJson = JSON.parse(questionAnswer);
+                            imageString = imageJson.image
+                          } else {
+                            imageString = questionAnswer;
+                          }
+
                           var image = '<div class=":imgContainer photoUrl:shown:hidden">';
-                          var image_filename = FLOW.Env.photo_url_root+questionAnswer.substring(questionAnswer.lastIndexOf("/")+1);
-                          image += '<a href="'+image_filename+'" target="_blank">'
-                          +'<img src="'+image_filename+'" alt=""/></a>';
+                          var imageFilename = FLOW.Env.photo_url_root+imageString.substring(imageString.lastIndexOf("/")+1);
+                          image += '<a href="'+imageFilename+'" target="_blank">'
+                          +'<img src="'+imageFilename+'" alt=""/></a>';
 
                           image += '</div>';
                           clickedPointContent += image;
