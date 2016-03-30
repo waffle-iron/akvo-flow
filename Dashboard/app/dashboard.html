@@ -52,11 +52,6 @@
       document.write("<link rel=\"stylesheet\" href=\""+link_href+"\" />");
       document.write("<script type=\"text/javascript\" src=\""+script_src+"\"><\/script>");
 
-      //start colour picker libraries
-      document.write("<link rel=\"stylesheet\" href=\"//cdn.jsdelivr.net/jquery.minicolors/2.1.2/jquery.minicolors.css\" />");
-      document.write("<script type=\"text/javascript\" src=\"//cdn.jsdelivr.net/jquery.minicolors/2.1.2/jquery.minicolors.min.js\"><\/script>");
-      //end colour picker libraries
-
       var regionBias = FLOW.Env.googleMapsRegionBias;
       var region = regionBias ? '&region=' + regionBias : '';
       document.write('<script src="//maps.google.com/maps/api/js?v=3.2&sensor=false' + region + '"><\/script>');

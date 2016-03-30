@@ -628,11 +628,9 @@ FLOW.CustomMapEditView = FLOW.View.extend({
                   +cascadeString+'</label></div>');
                 var colourPickerInput = $('<input class="question_options" id="option_'+i+'" data-column="'
                   +columnName+'" data-option=\''+optionsData.distinct_values[i][$(".question_selector").val()]
-                  +'\' type="text" value="'+(Math.random()*0xFFFFFF<<0).toString(16)+'">');
+                  +'\' type="color" value="#'+(Math.random()*0xFFFFFF<<0).toString(16)+'" style="padding: 2px !important">');
                 colourPicker.append(colourPickerInput);
                 $('#survey_hierarchy').append(colourPicker);
-                colourPickerInput.minicolors({});
-                colourPickerInput.minicolors('value', (Math.random()*0xFFFFFF<<0).toString(16));
               }
             }
           });
@@ -856,11 +854,10 @@ FLOW.CustomMapEditView = FLOW.View.extend({
                               var colourPicker = $('<div class="form-group"><label for="option_'+n+'">'
                                 +cascadeString+'</label></div>');
                               var colourPickerInput = $('<input class="question_options" id="option_'+n+'" data-column="q'
-                                +data.question_id+'" data-option=\''+cartocssData[n]['title']
-                                +'\' type="text" value="'+cartocssData[n]['colour']+'">');
+                                +data.question_id+'" type="color" data-option=\''+cartocssData[n]['title']
+                                +'\' type="text" value="'+cartocssData[n]['colour']+'" style="padding: 2px !important">');
                               colourPicker.append(colourPickerInput);
                               $('#survey_hierarchy').append(colourPicker);
-                              colourPickerInput.minicolors({});
                             }
 
                             //display legend question toggle
