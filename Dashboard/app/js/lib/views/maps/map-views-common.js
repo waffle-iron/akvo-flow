@@ -175,7 +175,6 @@ FLOW.NavMapsView = FLOW.View.extend({
     }
   }.observes('FLOW.placemarkDetailController.content.isLoaded'),
 
-
   /**
     Populates the details pane with data from a placemark
   */
@@ -193,7 +192,6 @@ FLOW.NavMapsView = FLOW.View.extend({
     }, this);
   }
 });
-
 
 FLOW.countryView = FLOW.View.extend({});
 FLOW.PlacemarkDetailView = Ember.View.extend({});
