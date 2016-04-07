@@ -80,7 +80,7 @@ FLOW.DataMapView = FLOW.View.extend({
         }
         //restore the previous zoom level and map center
         self.map.setView(FLOW.selectedControl.get('mapCenter'), FLOW.selectedControl.get('mapZoomLevel'));
-        FLOW.selectedControl.set('polygons', [])
+        FLOW.selectedControl.set('polygons', []);
       }
     });
 
@@ -117,12 +117,19 @@ FLOW.DataMapView = FLOW.View.extend({
               var form_selector = $("<select></select>").attr("data-survey-id", keyId).attr("class", "form_selector");
               form_selector.append('<option value="">--' + Ember.String.loc('_choose_a_form') + '--</option>');
 
+              var formIds = [];
               for(var i=0; i<rows.length; i++) {
                 //append returned forms list to the firm selector element
                 form_selector.append(
                   $('<option></option>').val(rows[i]["id"]).html(rows[i]["name"]));
+                  formIds.push(rows[i]["id"]);
               }
               $("#survey_hierarchy").append(form_selector);
+
+              FLOW.selectedControl.set('questions', []);
+              for(var i=0; i<formIds.length; i++){
+                FLOW.loadQuestions(formIds[i]);
+              }
             }
           });
 
