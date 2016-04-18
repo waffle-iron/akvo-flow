@@ -1,6 +1,6 @@
 <section class="fullWidth" id="customMapEdit">
   <div id="dropdown-holder" style="padding-bottom: 5px">
-    <div class="drawHandle backToCustomMaps" style="float: left; position: static !important">&lsaquo; {{t _go_back}}</div>
+    <div class="drawHandle backToCustomMaps" style="float: left; position: static !important">&lsaquo; {{t _back_to_maps}}</div>
     <a id="saveCustomMap" class="standardBtn" style="float: right;">{{t _save}}</a>
   </div>
   <div id="mapDetails">
@@ -10,35 +10,35 @@
 
     <label for="mapDescription">{{t _map_description}}</label>
     <input type="text" id="mapDescription" placeholder="{{t _map_description}}" class="map_details">
-    
+
   </div>
   <div id="flowMap">
     <div id="customMapEditCanvas" class="flowMap"></div>
     <div id="customMapLegend"></div>
   </div>
   <div id="pointDetails">
-    <h2>Map Settings</h2>
+    <h2>{{t _map_settings}}</h2>
     <div id="survey_hierarchy" class="point-details-content">
       <h3>{{t _data}}</h3>
     </div>
     <div class="point-details-content">
-      <h3>Legend</h3>
+      <h3>{{t _legend}}</h3>
       <div class="point-details-content">
         <input class="legend-toggle" type="checkbox" name="show-legend" id="show-legend" style="float: left;">
-        <label for="show-legend" style="float: left;">Show legend</label>
+        <label for="show-legend" style="float: left;">{{t _show_legend}}</label>
       </div>
       <div class="point-details-content">
         <input class="legend-toggle" type="checkbox" name="show-title" id="show-title" style="float: left;" disabled>
-        <label for="show-title" style="float: left;">Title</label>
+        <label for="show-title" style="float: left;">{{t _title}}</label>
         <input type="text" name="custom-map-title" id="custom-map-title" placeholder="Legend - please change name" style="float: left; width: 95%" disabled>
       </div>
       <div class="point-details-content" id="legend-question-toggle" style="display: none">
         <input class="legend-toggle" type="checkbox" name="show-question" id="show-question" style="float: left;" disabled>
-        <label for="show-question" style="float: left;">Show question</label>
+        <label for="show-question" style="float: left;">{{t _show_question}}</label>
       </div>
       <div class="point-details-content" style="margin-bottom: 10px">
         <input class="legend-toggle" type="checkbox" name="show-points-number" id="show-points-number" style="float: left;" disabled>
-        <label for="show-points-number" style="float: left;">Show the total number of data points</label>
+        <label for="show-points-number" style="float: left;">{{t _show_total_number_of_points}}</label>
       </div>
     </div>
   </div>

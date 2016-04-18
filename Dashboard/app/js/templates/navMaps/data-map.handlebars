@@ -21,6 +21,7 @@
 (function(){
 
   var dropDown = document.querySelector('#dropdown-holder');
+  var navTabs = document.querySelector('.tabNav');
   var header = document.querySelector('header');
   var footer = document.querySelector('footer');
 
@@ -36,6 +37,7 @@
     var newHeight = totalHeight;
 
     newHeight -= dropDown.offsetHeight;
+    newHeight -= navTabs.offsetHeight;
     newHeight -= header.offsetHeight;
     newHeight -= footer.offsetHeight;
     newHeight = newHeight * 0.95;

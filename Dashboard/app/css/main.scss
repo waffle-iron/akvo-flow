@@ -6365,6 +6365,7 @@ html.navMaps {
     }
     .mapFlow.middleSection {
         padding-top: 97px;
+        padding-bottom: 0 !important;
     }
     footer {
         padding-bottom: 15px;
@@ -6377,6 +6378,21 @@ html.navMaps {
     }
     .tabNav {
         margin-top: -14px !important;
+    }
+    #customMapsList {
+      .customMapsControls {
+        background-color: white;
+        border-bottom: 1px solid #202024;
+        height: 40px;
+        left: 0;
+        position: fixed;
+        right: 0;
+        top: 120px;
+        z-index: 1;
+        + .dataTable {
+            margin-top: 38px;
+        }
+      }
     }
     #customMap {
         #customMapViewCanvas {

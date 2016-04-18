@@ -14,6 +14,7 @@ FLOW.DataMapView = FLOW.View.extend({
       ", .placeMarkBasicInfo" +
       ", .noDetails");
     FLOW.selectedControl.set('detailsPaneVisible', false);
+    FLOW.selectedControl.set('questions', {});
   },
 
   /**
@@ -32,16 +33,24 @@ FLOW.DataMapView = FLOW.View.extend({
     FLOW.drawLeafletMap(map);
     this.map = map;
 
-    //onetime get survey groups
-    $.get('/rest/survey_groups'/*place survey_groups endpoint here*/
-    , function(surveyGroupsData, status){
-      FLOW.selectedControl.set('cartodbMapsSurveyGroups', surveyGroupsData);
-
+    //if survey groups have previously been retrieved, proceed to load map
+    if(typeof FLOW.selectedControl.get('cartodbMapsSurveyGroups') !== 'undefined'){
       self.insertCartodbMap();
 
       // add scale indication to map
       L.control.scale({position:'topleft', maxWidth:150}).addTo(self.map);
-    });
+    }else{
+      //onetime get survey groups
+      $.get('/rest/survey_groups'/*place survey_groups endpoint here*/
+      , function(surveyGroupsData, status){
+        FLOW.selectedControl.set('cartodbMapsSurveyGroups', surveyGroupsData);
+
+        self.insertCartodbMap();
+
+        // add scale indication to map
+        L.control.scale({position:'topleft', maxWidth:150}).addTo(self.map);
+      });
+    }
 
     this.$('#mapDetailsHideShow').click(function () {
       FLOW.handleShowHideDetails();
@@ -68,20 +77,7 @@ FLOW.DataMapView = FLOW.View.extend({
     FLOW.selectedControl.set('polygons', []);
 
     self.map.on('click', function(e) {
-      if(FLOW.selectedControl.get('marker') != null){
-        self.map.removeLayer(FLOW.selectedControl.get('marker'));
-        FLOW.hideDetailsPane();
-        $('#pointDetails').html('<p class="noDetails">'+Ember.String.loc('_no_details') +'</p>');
-      }
-
-      if(FLOW.selectedControl.get('polygons').length > 0){
-        for(var i=0; i<FLOW.selectedControl.get('polygons').length; i++){
-          self.map.removeLayer(FLOW.selectedControl.get('polygons')[i])
-        }
-        //restore the previous zoom level and map center
-        self.map.setView(FLOW.selectedControl.get('mapCenter'), FLOW.selectedControl.get('mapZoomLevel'));
-        FLOW.selectedControl.set('polygons', []);
-      }
+      FLOW.clearMap(self.map); //remove any previously loaded point data
     });
 
     self.map.on('zoomend', function() {
@@ -92,7 +88,7 @@ FLOW.DataMapView = FLOW.View.extend({
     FLOW.manageHierarchy(0);
 
     $(document).off('change', '.folder_survey_selector').on('change', '.folder_survey_selector',function(e) {
-
+      FLOW.clearMap(self.map); //remove any previously loaded point data
       $('#form_selector option[value!=""]').remove();
 
       //remove all 'folder_survey_selector's after current
@@ -126,9 +122,10 @@ FLOW.DataMapView = FLOW.View.extend({
               }
               $("#survey_hierarchy").append(form_selector);
 
-              FLOW.selectedControl.set('questions', []);
               for(var i=0; i<formIds.length; i++){
-                FLOW.loadQuestions(formIds[i]);
+                if(!(formIds[i] in FLOW.selectedControl.get('questions'))){
+                  FLOW.loadQuestions(formIds[i]);
+                }
               }
             }
           });
@@ -159,6 +156,8 @@ FLOW.DataMapView = FLOW.View.extend({
     });
 
     $(document).off('change', '.form_selector').on('change', '.form_selector',function(e) {
+      FLOW.clearMap(self.map); //remove any previously loaded point data
+
       //remove all 'folder_survey_selector's after current
       FLOW.cleanSurveyGroupHierarchy($(this));
 
@@ -266,7 +265,7 @@ FLOW.CustomMapsListView = FLOW.View.extend({
     });
 
     this.$(document).off('click', '.deleteCustomMap').on('click', '.deleteCustomMap', function(){
-      if(confirm("Are you sure you want to delete this map?")){ //TODO create translation
+      if(confirm(Ember.String.loc('_delete_map_confirm'))){ //TODO create translation
         $.get(
           '/rest/cartodb/delete_custom_map?map_name='+$(this).data('customMap') ,
           function(response, status){
@@ -981,20 +980,7 @@ FLOW.CustomMapView = FLOW.View.extend({
     });
 
     map.on('click', function(e) {
-      if(FLOW.selectedControl.get('marker') != null){
-        map.removeLayer(FLOW.selectedControl.get('marker'));
-        FLOW.hideDetailsPane();
-        $('#pointDetails').html('<p class="noDetails">'+Ember.String.loc('_no_details') +'</p>');
-      }
-
-      if(FLOW.selectedControl.get('polygons').length > 0){
-        for(var i=0; i<FLOW.selectedControl.get('polygons').length; i++){
-          map.removeLayer(FLOW.selectedControl.get('polygons')[i]);
-        }
-        //restore the previous zoom level and map center
-        map.setView(FLOW.selectedControl.get('mapCenter'), FLOW.selectedControl.get('mapZoomLevel'));
-        FLOW.selectedControl.set('polygons', []);
-      }
+      FLOW.clearMap(map); //remove any previously loaded point data
     });
 
     map.on('zoomend', function() {
@@ -1007,7 +993,7 @@ FLOW.CustomMapView = FLOW.View.extend({
     });
 
     this.$(document).off('click', '.deleteCustomMap').on('click', '.deleteCustomMap', function(){
-      if(confirm("Are you sure you want to delete this map?")){ //TODO create translation
+      if(confirm(Ember.String.loc('_delete_map_confirm'))){ //TODO create translation
         $.get(
           '/rest/cartodb/delete_custom_map?map_name='+$(this).data('customMap') ,
           function(response, status){

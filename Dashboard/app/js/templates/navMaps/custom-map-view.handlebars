@@ -1,8 +1,8 @@
 <section class="fullWidth" id="customMap">
-  <div style="margin: 2px; width:100%; float: left">
+  <div style="margin: 2px; width:100%; min-height: 35px; float: left" id="mapInfo">
     <div style="width: 70%; float: left" id="customMapDetails"></div>
     <div style="width: 30%; float: left; position: relative">
-      <div {{action doCustomMapsList}} class="drawHandle" style="float: left; position: static !important">&lsaquo; {{t _go_back}}</div>
+      <div {{action doCustomMapsList}} class="drawHandle" style="float: left; position: static !important">&lsaquo; {{t _back_to_maps}}</div>
       <div style="position: absolute; right: 15px; bottom: 0" class="action" id="customMapEditOptions"></div>
     </div>
   </div>
@@ -20,6 +20,8 @@
 <script type="text/javascript">
 (function(){
 
+  var navTabs = document.querySelector('.tabNav');
+  var mapInfo = document.querySelector('#mapInfo');
   var header = document.querySelector('header');
   var footer = document.querySelector('footer');
 
@@ -34,6 +36,8 @@
     var totalHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
     var newHeight = totalHeight;
 
+    newHeight -= navTabs.offsetHeight;
+    newHeight -= mapInfo.offsetHeight;
     newHeight -= header.offsetHeight;
     newHeight -= footer.offsetHeight;
     newHeight = newHeight * 0.95;
