@@ -226,7 +226,7 @@ public class CartodbRestService {
           +"custom_map_view varchar"
           +")"));
 
-        response.put("custom_maps", queryCartodb(String.format("SELECT * FROM custom_maps")));
+        response.put("custom_maps", queryCartodb(String.format("SELECT * FROM custom_maps ORDER BY modify_date DESC")));
 
         return response;
       } catch (IOException e) {

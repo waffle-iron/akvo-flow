@@ -110,7 +110,9 @@ FLOW.cleanSurveyGroupHierarchy = function(element){
 FLOW.ajaxCall = function(callback, ajaxObject){
   $.ajax({
     type: ajaxObject.call,
-    //contentType: "application/json",
+    headers: {
+      'Content-Type': 'application/json; charset=utf-8'
+    },
     url: ajaxObject.url,
     data: ajaxObject.data, //turns out you need to stringify the payload before sending it
     dataType: 'json',
@@ -370,7 +372,6 @@ FLOW.clearCartodbLayer = function(mapObject, layer){
 /*this function overlays a named map on the cartodb map*/
 FLOW.createLayer = function(mapObject, mapName){
   var pointDataUrl, returnObject = {};
-  console.log("here ye "+mapName);
 
   //first clear any currently overlayed cartodb layer
   FLOW.clearCartodbLayer(mapObject, FLOW.selectedControl.get('cartodbLayer'));
@@ -403,6 +404,8 @@ FLOW.createLayer = function(mapObject, mapName){
     current_layer.setInteraction(true);
 
     current_layer.on('featureClick', function(e, latlng, pos, data) {
+      $('#mapDetailsHideShow').show();
+
       var dataPointObject = {};
       dataPointObject['pointDetailsPane'] = 'pointDetails';
       if(FLOW.selectedControl.get('marker') != null){

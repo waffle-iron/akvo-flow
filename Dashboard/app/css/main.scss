@@ -6379,6 +6379,11 @@ html.navMaps {
     .tabNav {
         margin-top: -14px !important;
     }
+    #dataMap {
+      #mapDetailsHideShow {
+        display: none;
+      }
+    }
     #customMapsList {
       .customMapsControls {
         background-color: white;
@@ -6392,6 +6397,10 @@ html.navMaps {
         + .dataTable {
             margin-top: 38px;
         }
+      }
+
+      table.dataTable td, th {
+        text-align: left !important;
       }
     }
     #customMap {

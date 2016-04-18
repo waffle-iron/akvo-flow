@@ -77,6 +77,7 @@ FLOW.DataMapView = FLOW.View.extend({
     FLOW.selectedControl.set('polygons', []);
 
     self.map.on('click', function(e) {
+      $('#mapDetailsHideShow').hide(); //hide the detail panel toggle
       FLOW.clearMap(self.map); //remove any previously loaded point data
     });
 
@@ -88,6 +89,7 @@ FLOW.DataMapView = FLOW.View.extend({
     FLOW.manageHierarchy(0);
 
     $(document).off('change', '.folder_survey_selector').on('change', '.folder_survey_selector',function(e) {
+      $('#mapDetailsHideShow').hide(); //hide the detail panel toggle
       FLOW.clearMap(self.map); //remove any previously loaded point data
       $('#form_selector option[value!=""]').remove();
 
@@ -156,6 +158,7 @@ FLOW.DataMapView = FLOW.View.extend({
     });
 
     $(document).off('change', '.form_selector').on('change', '.form_selector',function(e) {
+      $('#mapDetailsHideShow').hide(); //hide the detail panel toggle
       FLOW.clearMap(self.map); //remove any previously loaded point data
 
       //remove all 'folder_survey_selector's after current
@@ -621,13 +624,14 @@ FLOW.CustomMapEditView = FLOW.View.extend({
             if(optionsData.distinct_values){
               for(var i=0; i<optionsData.distinct_values.length; i++){
                 var cascadeString = "", cascadeJson;
-                if (optionsData.distinct_values[i][$('.question_selector').val()].charAt(0) === '[') {
-                  cascadeJson = JSON.parse(optionsData.distinct_values[i][$('.question_selector').val()]);
-                  cascadeString = cascadeJson.map(function(item){
-                    return item.text;
-                  }).join("|");
-                } else {
+                if (!!optionsData.distinct_values[i][$('.question_selector').val()]) {
                   cascadeString = optionsData.distinct_values[i][$('.question_selector').val()];
+                  if(optionsData.distinct_values[i][$('.question_selector').val()].charAt(0) === '['){
+                    cascadeJson = JSON.parse(optionsData.distinct_values[i][$('.question_selector').val()]);
+                    cascadeString = cascadeJson.map(function(item){
+                      return item.text;
+                    }).join("|");
+                  }
                 }
 
                 var colourPicker = $('<div class="form-group"><label id="option_'+i+'_text" for="option_'+i+'">'
