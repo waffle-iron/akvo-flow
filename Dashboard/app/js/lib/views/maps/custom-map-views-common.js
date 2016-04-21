@@ -421,17 +421,13 @@ FLOW.CustomMapEditView = FLOW.View.extend({
     //first assume that we're creating a new map
     FLOW.selectedControl.set('newMap', true);
 
+    //initially do not allow map to be saved unless a change is made
+    FLOW.selectedControl.set('mapChanged', false);
+
     //if a new custom map, get a server timestamp to serve as part of the custom map name
     if(FLOW.selectedControl.get('selectedCustomMap') === null){
       $.get('/rest/cartodb/timestamp', function(timestampData){
         FLOW.selectedControl.set('customMapName', 'custom_map_'+timestampData.timestamp);
-        //automatically create a named map that's to me customised
-        var queryObject = {};
-        queryObject['table'] = 'data_point';
-        queryObject['column'] = '';
-        queryObject['value'] = '';
-        FLOW.createNamedMapObject(map, queryObject, ''); //TODO: only create named map object of surveys set as public
-        FLOW.selectedControl.set('newMap', false); //immediately set newMap to false because a named map will have a already been created
 
         //manage folder and/or survey selection hierarchy
         FLOW.manageHierarchy(0);
@@ -613,6 +609,10 @@ FLOW.CustomMapEditView = FLOW.View.extend({
     this.$(document).off('change', '.question_selector').on('change', '.question_selector',function(e) {
       //remove all 'folder_survey_selector's after current
       FLOW.cleanSurveyGroupHierarchy($(this));
+
+      //allow changed map to be saved
+      FLOW.selectedControl.set('mapChanged', true);
+
       if ($(this).val() !== "") {
         self.customMapData['questionId'] = $(this).val().substring(1, $(this).val().length);
 
@@ -658,7 +658,7 @@ FLOW.CustomMapEditView = FLOW.View.extend({
     });
 
     this.$(document).off('click', '#saveCustomMap').on('click', '#saveCustomMap',function(e){
-      if($('#mapTitle').val() !== "" && $('#mapDescription').val() !== ""){
+      if(self.customMapComplete()) {
         self.mapSaved = true;
 
         var cartocss = [], current_cartocss = '';
@@ -731,9 +731,6 @@ FLOW.CustomMapEditView = FLOW.View.extend({
             FLOW.selectedControl.set('selectedCustomMap', FLOW.selectedControl.get('customMapName'));
           }
         }, ajaxObject);
-      }else{
-        //prompt user to enter a map title and/or description
-        alert("Please enter a title and/or description"); //TODO add translation
       }
     });
 
@@ -768,6 +765,26 @@ FLOW.CustomMapEditView = FLOW.View.extend({
         default:
       }
     });
+  },
+
+  customMapComplete: function(){
+    if(!FLOW.selectedControl.get('mapChanged')) {
+      FLOW.dialogControl.set('activeAction', 'ignore');
+      FLOW.dialogControl.set('header', Ember.String.loc('_custom_maps_no_changes'));
+      FLOW.dialogControl.set('message', Ember.String.loc('_custom_man_make_changes'));
+      FLOW.dialogControl.set('showCANCEL', false);
+      FLOW.dialogControl.set('showDialog', true);
+      return false;
+    }
+    if($('#mapTitle').val() === ""){
+      FLOW.dialogControl.set('activeAction', 'ignore');
+      FLOW.dialogControl.set('header', Ember.String.loc('_custom_maps_incomplete_map'));
+      FLOW.dialogControl.set('message', Ember.String.loc('_custom_maps_enter_map_name'));
+      FLOW.dialogControl.set('showCANCEL', false);
+      FLOW.dialogControl.set('showDialog', true);
+      return false;
+    }
+    return true;
   },
 
   preLoadSurveySelection: function(data){

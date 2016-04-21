@@ -603,6 +603,14 @@ FLOW.createNamedMapObject = function(mapObject, queryObject, cartocss){
       }
     }
     FLOW.customNamedMaps(mapObject, namedMapObject);
+
+    //no longer a new map
+    if (FLOW.selectedControl.get('newMap')) {
+      FLOW.selectedControl.set('newMap', false);
+    }
+
+    //allow changed map to be saved
+    FLOW.selectedControl.set('mapChanged', true);
   });
 
   //get points count

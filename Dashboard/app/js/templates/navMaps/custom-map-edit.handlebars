@@ -1,15 +1,15 @@
 <section class="fullWidth" id="customMapEdit">
   <div id="dropdown-holder" style="padding-bottom: 5px">
     <div class="drawHandle backToCustomMaps" style="float: left; position: static !important">&lsaquo; {{t _back_to_maps}}</div>
-    <a id="saveCustomMap" class="standardBtn" style="float: right;">{{t _save}}</a>
+    <a id="saveCustomMap" class="standardBtn" style="float: right;" disabled="true">{{t _save}}</a>
   </div>
   <div id="mapDetails">
 
-    <label for="mapTitle">{{t _map_title}}</label>
-    <input type="text" id="mapTitle" placeholder="{{t _map_title}}" class="map_details">
+    <label for="mapTitle">{{t _map_name}}</label>
+    <input type="text" id="mapTitle" placeholder="{{t _map_name}}" class="map-details">
 
     <label for="mapDescription">{{t _map_description}}</label>
-    <input type="text" id="mapDescription" placeholder="{{t _map_description}}" class="map_details">
+    <input type="text" id="mapDescription" placeholder="{{t _map_description}}" class="map-details">
 
   </div>
   <div id="flowMap">
@@ -45,7 +45,9 @@
 </section>
 <script type="text/javascript">
 (function(){
+  var navTabs = document.querySelector('.tabNav');
   var dropDown = document.querySelector('#dropdown-holder');
+  var mapDetails = document.querySelector('#mapDetails');
   var header = document.querySelector('header');
   var footer = document.querySelector('footer');
 
@@ -60,7 +62,9 @@
     var totalHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
     var newHeight = totalHeight;
 
+    newHeight -= navTabs.offsetHeight;
     newHeight -= dropDown.offsetHeight;
+    newHeight -= mapDetails.offsetHeight;
     newHeight -= header.offsetHeight;
     newHeight -= footer.offsetHeight;
     newHeight = newHeight * 0.95;

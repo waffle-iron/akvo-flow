@@ -20,8 +20,8 @@
 <script type="text/javascript">
 (function(){
 
-  var dropDown = document.querySelector('#dropdown-holder');
   var navTabs = document.querySelector('.tabNav');
+  var dropDown = document.querySelector('#dropdown-holder');
   var header = document.querySelector('header');
   var footer = document.querySelector('footer');
 
@@ -36,8 +36,8 @@
     var totalHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
     var newHeight = totalHeight;
 
-    newHeight -= dropDown.offsetHeight;
     newHeight -= navTabs.offsetHeight;
+    newHeight -= dropDown.offsetHeight;
     newHeight -= header.offsetHeight;
     newHeight -= footer.offsetHeight;
     newHeight = newHeight * 0.95;
