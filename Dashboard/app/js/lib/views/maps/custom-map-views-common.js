@@ -489,6 +489,10 @@ FLOW.CustomMapEditView = FLOW.View.extend({
       self.customMapData['questionId'] = 0;
       self.selectedTable = '';
 
+      //clear legend
+      $('#legendOptions').html('');
+      $('#legendQuestion').html('');
+
       if($(this).val() !== ""){
         var surveyGroupKeyId = $(this).val();
         //if a survey is selected, load forms to form selector element.
@@ -552,6 +556,10 @@ FLOW.CustomMapEditView = FLOW.View.extend({
       self.customMapData['questionId'] = 0;
       self.selectedTable = '';
 
+      //clear legend
+      $('#legendOptions').html('');
+      $('#legendQuestion').html('');
+
       if ($(this).val() !== "") {
         var formId = $(this).val();
         self.customMapData['formId'] = formId;
@@ -603,7 +611,7 @@ FLOW.CustomMapEditView = FLOW.View.extend({
 
       //hide legend question toggle
       $('#legend-question-toggle').css({display: 'none'});
-      $('#legend-question-toggle').data('question', '');
+      $('#show-question').data('question', '');
     });
 
     this.$(document).off('change', '.question_selector').on('change', '.question_selector',function(e) {
@@ -612,6 +620,10 @@ FLOW.CustomMapEditView = FLOW.View.extend({
 
       //allow changed map to be saved
       FLOW.selectedControl.set('mapChanged', true);
+
+      //clear legend
+      $('#legendOptions').html('');
+      $('#legendQuestion').html('');
 
       if ($(this).val() !== "") {
         self.customMapData['questionId'] = $(this).val().substring(1, $(this).val().length);
@@ -634,26 +646,32 @@ FLOW.CustomMapEditView = FLOW.View.extend({
                   }
                 }
 
-                var colourPicker = $('<div class="form-group"><label id="option_'+i+'_text" for="option_'+i+'">'
-                  +cascadeString+'</label></div>');
-                var colourPickerInput = $('<input class="question_options" id="option_'+i+'" data-column="'
+                var randomColour = (Math.random()*0xFFFFFF<<0).toString(16);
+
+                var colourPicker = $('<div class="question-option-div point-details-content"><input class="question-option-color-code" data-column="'
                   +columnName+'" data-option=\''+optionsData.distinct_values[i][$(".question_selector").val()]
-                  +'\' type="color" value="#'+(Math.random()*0xFFFFFF<<0).toString(16)+'" style="padding: 2px !important">');
-                colourPicker.append(colourPickerInput);
+                  +'\' type="color" value="#'+randomColour+'" style="padding: 2px !important">'+cascadeString+'</div>');
                 $('#survey_hierarchy').append(colourPicker);
+
+                $('#legendOptions').append('<div class="legend-option"><div class="bullet" style="background: #'
+                  +randomColour+'; border-radius: 0 !important"></div>'
+                  +cascadeString+'</div>');
               }
             }
           });
 
           //display legend question toggle
           $('#legend-question-toggle').css({display: 'block'});
-          $('#legend-question-toggle').data('question', $(this).find('option:selected').text());
+          $('#show-question').data('question', $(this).find('option:selected').text());
+          if($('#show-question').is(':checked')) {
+            $('#legendQuestion').html($(this).find('option:selected').text());
+          }
       }else{
         self.customMapData['questionId'] = 0;
 
         //hide legend question toggle
         $('#legend-question-toggle').css({display: 'none'});
-        $('#legend-question-toggle').data('question', '');
+        $('#show-question').data('question', '');
       }
     });
 
@@ -670,8 +688,8 @@ FLOW.CustomMapEditView = FLOW.View.extend({
         self.presetMapStyle['queryObject']['table'] = ''
         self.presetMapStyle['queryObject']['column'] = '';
         self.presetMapStyle['queryObject']['value'] = '';
-        if ($('.question_options').length) {
-          $('.question_options').each( function(index) {
+        if ($('.question-option-color-code').length) {
+          $('.question-option-color-code').each( function(index) {
             var currentColour = {};
             currentColour['title'] = JSON.stringify($(this).data('option'));
             currentColour['colour'] = $(this).val();
@@ -742,28 +760,58 @@ FLOW.CustomMapEditView = FLOW.View.extend({
       FLOW.router.transitionTo('navMaps.customMapsList');
     });
 
-    this.$(document).off('change', '.legend-toggle').on('change', '.legend-toggle', function(){
+    this.$(document).off('change', '.legend-toggle').on('change', '.legend-toggle', function() {
+      //allow changed map to be saved
+      FLOW.selectedControl.set('mapChanged', true);
+
       switch ($(this).attr('id')) {
         case 'show-legend':
-          if($(this).is(':checked')){//enable the rest of the legend toggles
+          if($(this).is(':checked')) {//enable the rest of the legend toggles
+            $('#customMapLegend').show();
             $('#show-title').attr('disabled', false);
+            $('#custom-map-title').attr('disabled', false);
             $('#show-question').attr('disabled', false);
             $('#show-points-number').attr('disabled', false);
-          }else{//disable the rest of the legend toggles
+          } else {//disable the rest of the legend toggles
+            $('#customMapLegend').hide();
             $('#show-title').attr('disabled', true);
+            $('#custom-map-title').attr('disabled', true);
             $('#show-question').attr('disabled', true);
             $('#show-points-number').attr('disabled', true);
           }
           break;
         case 'show-title':
-          if($(this).is(':checked')){
+          if($(this).is(':checked')) {
             $('#custom-map-title').attr('disabled', false);
-          }else{
+            $('#legendTitle').html($('#custom-map-title').val());
+          } else {
+            $('#custom-map-title').val('');
+            $('#legendTitle').html('');
             $('#custom-map-title').attr('disabled', true);
+          }
+          break;
+        case 'show-question':
+          if($(this).is(':checked')) {
+            $('#legendQuestion').html($('#show-question').data('question'));
+          } else {
+            $('#legendQuestion').html('');
           }
           break;
         default:
       }
+    });
+
+    this.$(document).off('change', '#custom-map-title').on('change', '#custom-map-title',function(e) {
+      $('#legendTitle').html($(this).val());
+    });
+
+    this.$(document).off('change', '.question-option-color-code').on('change', '.question-option-color-code',function(e) {
+      $('#legendOptions').html('');
+      $('.question-option-color-code').each( function(index) {
+        $('#legendOptions').append('<div class="legend-option"><div class="bullet" style="background: '
+          +$(this).val()+'; border-radius: 0 !important"></div>'
+          +$(this).data('option')+'</div>');
+      });
     });
   },
 
@@ -878,13 +926,15 @@ FLOW.CustomMapEditView = FLOW.View.extend({
                                 cascadeString = cartocssData[n]['title'];
                               }
 
-                              var colourPicker = $('<div class="form-group"><label for="option_'+n+'">'
-                                +cascadeString+'</label></div>');
-                              var colourPickerInput = $('<input class="question_options" id="option_'+n+'" data-column="q'
+                              var colourPicker = $('<div class="question-option-div point-details-content"><input class="question-option-color-code" data-column="q'
                                 +data.question_id+'" type="color" data-option=\''+cartocssData[n]['title']
-                                +'\' type="text" value="'+cartocssData[n]['colour']+'" style="padding: 2px !important">');
-                              colourPicker.append(colourPickerInput);
+                                +'\' type="text" value="'+cartocssData[n]['colour']+'" style="padding: 2px !important">'
+                                +cascadeString+'</div>');
                               $('#survey_hierarchy').append(colourPicker);
+
+                              $('#legendOptions').append('<div class="legend-option"><div class="bullet" style="background: '
+                                +cartocssData[n]['colour']+'; border-radius: 0 !important"></div>'
+                                +cascadeString+'</div>');
                             }
 
                             //display legend question toggle
@@ -907,16 +957,23 @@ FLOW.CustomMapEditView = FLOW.View.extend({
     if(data.legend != ""){
       var legend = JSON.parse(data.legend);
       $('#show-legend').prop('checked', true);
+      $('#customMapLegend').show();
       if(legend.title != ""){
         $('#show-title').prop('checked', true);
         $('#custom-map-title').val(legend.title);
+        $('#legendTitle').html(legend.title);
+        $('#show-title').attr('disabled', false);
+        $('#custom-map-title').attr('disabled', false);
       }
       if(legend.question != ""){
         $('#show-question').prop('checked', true);
+        $('#show-question').attr('disabled', false);
         $('#show-question').data('question', legend.question);
+        $('#legendQuestion').html(legend.question);
       }
       if(legend.points != "" || legend.points != 0){
         $('#show-points-number').prop('checked', true);
+        $('#show-points-number').attr('disabled', false);
         $('#show-points-number').data('count', legend.points);
       }
     }
@@ -991,6 +1048,34 @@ FLOW.CustomMapView = FLOW.View.extend({
                       +'<a class="remove deleteCustomMap"  data-custom-map="'
                       +data.custom_map_details[0]['named_map']
                       +'">'+Ember.String.loc('_remove')+'</a>');
+              }
+            }
+          }
+
+          //display legend if available
+          if(data.custom_map_details[0]['legend'] != "") {
+            var legend = JSON.parse(data.custom_map_details[0]['legend']);
+
+            $('#customMapLegend').show();
+            $('#legendTitle').html(legend.title);
+            $('#legendQuestion').html(legend.question);
+
+            if(data.custom_map_details[0]['cartocss'] != "") {
+              var style = JSON.parse(data.custom_map_details[0]['cartocss']);
+              for(var n=0; n<style.length; n++){
+                var cascadeString = "", cascadeJson;
+                if (style[n]['title'].charAt(0) === '[') {
+                  cascadeJson = JSON.parse(style[n]['title']);
+                  cascadeString = cascadeJson.map(function(item){
+                    return item.text;
+                  }).join("|");
+                } else {
+                  cascadeString = style[n]['title'];
+                }
+
+                $('#legendOptions').append('<div class="legend-option"><div class="bullet" style="background: '
+                  +style[n]['colour']+'; border-radius: 0 !important"></div>'
+                  +cascadeString+'</div>');
               }
             }
           }

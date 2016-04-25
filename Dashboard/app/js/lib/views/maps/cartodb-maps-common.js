@@ -241,7 +241,7 @@ FLOW.displayPointData = function(dataPointObject, pointData){
                 if(geoshapeObject !== null){
                   geoshapeCheck = true;
                   //create a container for each feature in geoshape object
-                  clickedPointContent += '<div id="geoShapeMap" style="width:100%; height: 100px; float: left"></div>';
+                  clickedPointContent += '<div id="geoShapeMap"></div>';
                   for(var j=0; j<geoshapeObject['features'].length; j++){
                     clickedPointContent += '<label style="font-weight: bold; color: black">'+geoshapeObject['features'][j]['geometry']['type']+'</label>';
                     if(geoshapeObject['features'][j]['geometry']['type'] === 'Polygon'
@@ -267,11 +267,11 @@ FLOW.displayPointData = function(dataPointObject, pointData){
                 clickedPointContent += dateQuestion.toUTCString().slice(0, -13); //remove last 13 x-ters so only date displays
                 break;
               case "SIGNATURE":
-                clickedPointContent += '<img src="';
+                clickedPointContent += '<div class="signatureImage"><img src="';
                 var srcAttr = 'data:image/png;base64,', signatureJson;
                 signatureJson = JSON.parse(questionAnswer);
-                clickedPointContent += srcAttr + signatureJson.image +'"/>';
-                clickedPointContent += Ember.String.loc('_signed_by') +': '+signatureJson.name;
+                clickedPointContent += srcAttr + signatureJson.image +'"/></div>';
+                clickedPointContent += '<div class="signedBySection">'+Ember.String.loc('_signed_by') +': '+signatureJson.name+'</div>';
                 break;
               case "CASCADE":
               case "OPTION":
@@ -613,11 +613,16 @@ FLOW.createNamedMapObject = function(mapObject, queryObject, cartocss){
     FLOW.selectedControl.set('mapChanged', true);
   });
 
-  //get points count
+  FLOW.getPointsCount(queryObject.table, queryObject.column, queryObject.value);
+};
+
+FLOW.getPointsCount = function(table, column, value){
   $.get(
-    '/rest/cartodb/points_count?table='+queryObject.table+'&column='+queryObject.column+'&value='+queryObject.value,
+    '/rest/cartodb/points_count?table='+table+'&column='+column+'&value='+value,
     function(response, status) {
-      $('#show-points-number').data('count', response.count[0].count);
+      if(typeof response.count != "undefined"){
+        $('#show-points-number').data('count', response.count[0].count);
+      }
   });
 };
 

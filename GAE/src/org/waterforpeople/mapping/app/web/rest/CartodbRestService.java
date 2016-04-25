@@ -295,7 +295,6 @@ public class CartodbRestService {
           +" WHERE named_map = '"+payload.getNamedMap()+"'";
         }
 
-        response.put("query", query);
         response.put("custom_map", queryCartodb(query));
 
         return response;
