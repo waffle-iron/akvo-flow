@@ -24,6 +24,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -32,8 +33,13 @@ import org.waterforpeople.mapping.app.web.rest.security.user.GaeUser;
 
 import com.gallatinsystems.survey.domain.SurveyGroup;
 import com.gallatinsystems.survey.domain.SurveyGroup.PrivacyLevel;
+import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.Entity;
+import com.google.appengine.api.datastore.EntityNotFoundException;
+import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.api.datastore.Text;
+import com.google.appengine.api.datastore.Transaction;
+import com.google.appengine.api.datastore.TransactionOptions;
 
 public class EventUtils {
 
@@ -149,6 +155,20 @@ public class EventUtils {
 
     public static final String SURVEY_GROUP_TYPE_SURVEY = "SURVEY";
     public static final String SURVEY_GROUP_TYPE_FOLDER = "FOLDER";
+
+    public static final String LOCK_KIND = "Lock";
+    public static final String LOCK_KEY_NAME = "EventPushLock";
+    public static final String REQ_ID = "requestId";
+    public static final String LOCK_AT = "lockAt";
+    public static final long DEFAULT_LOCK_TTL = 3 * 60 * 1000;
+    public static long LOCK_TTL = 0;
+
+    static {
+        try {
+            LOCK_TTL = Long.parseLong(System.getProperties().getProperty("pushLockTtl"));
+        } catch (NumberFormatException e) { // noop
+        }
+    }
 
     public static class EventTypes {
         public final EntityType type;
@@ -352,5 +372,105 @@ public class EventUtils {
         writer.close();
         connection.disconnect();
 
+    }
+
+    public static com.google.appengine.api.datastore.Key getLockKey() {
+        return KeyFactory.createKey(LOCK_KIND, LOCK_KEY_NAME);
+    }
+
+    public static Entity getCurrentLock(DatastoreService ds) {
+        Entity current = null;
+
+        try {
+            current = ds.get(getLockKey());
+        } catch (EntityNotFoundException e) {
+            return null;
+        }
+
+        Date lockAt = getLockAt(current);
+        long now = new Date().getTime();
+        long lockTtl = LOCK_TTL == 0 ? DEFAULT_LOCK_TTL : LOCK_TTL;
+
+        if (lockAt != null && ((now - lockAt.getTime()) > lockTtl)) {
+            return null;
+        }
+
+        return current;
+    }
+
+    public static String getReqId(Entity lock) {
+        if (lock == null) {
+            return null;
+        }
+        return (String) lock.getProperty(REQ_ID);
+    }
+
+    public static Date getLockAt(Entity lock) {
+        if (lock == null) {
+            return null;
+        }
+        return (Date) lock.getProperty(LOCK_AT);
+    }
+
+    public static boolean newLock(DatastoreService ds, String reqId) {
+
+        Transaction t = ds.beginTransaction(TransactionOptions.Builder.withXG(true));
+        try {
+            Entity lock = new Entity(getLockKey());
+            lock.setProperty(LOCK_AT, new Date());
+            lock.setProperty(REQ_ID, reqId);
+            ds.put(lock);
+            t.commit();
+            debug("New lock in ds - reqId: " + reqId);
+            return true;
+        } catch (Exception e) {
+            debug("New lock attempt failed");
+        } finally {
+            if (t.isActive()) {
+                t.rollback();
+            }
+        }
+        return false;
+    }
+
+    public static void releaseLock(DatastoreService ds) {
+        Transaction t = ds.beginTransaction(TransactionOptions.Builder.withXG(true));
+        String reqId = "";
+        try {
+            Entity lock = ds.get(getLockKey());
+            reqId = (String) lock.getProperty(REQ_ID);
+            lock.setProperty(LOCK_AT, null);
+            lock.setProperty(REQ_ID, null);
+            ds.put(lock);
+            t.commit();
+            debug("Lock release from ds - reqId: " + reqId);
+        } catch (Exception e) {
+            debug(e.getMessage());
+        } finally {
+            if (t.isActive()) {
+                t.rollback();
+            }
+        }
+    }
+
+    public static void push(DatastoreService ds, String reqId) {
+        Random r = new Random();
+        long wait = r.nextInt(1000 * 30) + 1;
+        debug("Waiting " + wait + "ms");
+        try {
+            Thread.sleep(wait);
+            releaseLock(ds);
+        } catch (InterruptedException e) {
+            debug(e.getMessage());
+        }
+
+        if (wait % 3 == 0) {
+            throw new RuntimeException("Fail!!!");
+        }
+    }
+
+    // FIXME: Remove me
+    public static void debug(String msg) {
+        log.log(Level.INFO, Thread.currentThread().getName() + " - " + msg);
     }
 }

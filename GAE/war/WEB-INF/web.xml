@@ -472,6 +472,14 @@
 		<servlet-name>DataBackoutApi</servlet-name>
 		<url-pattern>/databackout</url-pattern>
 	</servlet-mapping>
+		<servlet>
+		<servlet-name>EventPush</servlet-name>
+		<servlet-class>org.akvo.flow.events.EventPushServlet</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>EventPush</servlet-name>
+		<url-pattern>/app_worker/eventpush</url-pattern>
+	</servlet-mapping>
 	<servlet>
 		<servlet-name>RemoteApi</servlet-name>
 		<servlet-class>com.google.apphosting.utils.remoteapi.RemoteApiServlet</servlet-class>

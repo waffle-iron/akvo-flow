@@ -21,7 +21,6 @@ import static com.gallatinsystems.common.util.MemCacheUtils.initCache;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -49,7 +48,6 @@ import org.waterforpeople.mapping.domain.SurveyInstance;
 
 import com.beoui.geocell.GeocellManager;
 import com.beoui.geocell.model.Point;
-import com.gallatinsystems.common.Constants;
 import com.gallatinsystems.framework.dao.BaseDAO;
 import com.gallatinsystems.gis.map.dao.OGRFeatureDao;
 import com.gallatinsystems.gis.map.domain.Geometry;
@@ -60,14 +58,11 @@ import com.gallatinsystems.survey.dao.QuestionDao;
 import com.gallatinsystems.survey.dao.QuestionGroupDao;
 import com.gallatinsystems.survey.dao.SurveyDAO;
 import com.gallatinsystems.survey.dao.SurveyGroupDAO;
-import com.gallatinsystems.survey.dao.SurveyUtils;
 import com.gallatinsystems.survey.domain.CascadeResource;
 import com.gallatinsystems.survey.domain.Question;
 import com.gallatinsystems.survey.domain.QuestionGroup;
 import com.gallatinsystems.survey.domain.Survey;
 import com.gallatinsystems.survey.domain.SurveyGroup;
-import com.gallatinsystems.survey.domain.SurveyGroup.PrivacyLevel;
-import com.gallatinsystems.survey.domain.SurveyGroup.ProjectType;
 import com.gallatinsystems.surveyal.app.web.SurveyalRestRequest;
 import com.gallatinsystems.surveyal.dao.SurveyedLocaleClusterDao;
 import com.gallatinsystems.surveyal.domain.SurveyedLocaleCluster;
@@ -77,6 +72,7 @@ import com.google.appengine.api.backends.BackendServiceFactory;
 import com.google.appengine.api.taskqueue.Queue;
 import com.google.appengine.api.taskqueue.QueueFactory;
 import com.google.appengine.api.taskqueue.TaskOptions;
+import com.google.appengine.api.taskqueue.TaskOptions.Method;
 
 public class TestHarnessServlet extends HttpServlet {
     private static Logger log = Logger.getLogger(TestHarnessServlet.class.getName());
@@ -453,6 +449,8 @@ public class TestHarnessServlet extends HttpServlet {
             }
         } else if ("createCascadeData".equals(action)) {
             createCascadeData(resp);
+        } else if ("testLock".equals(action)) {
+            testLock(req, resp);
         }
     }
 
@@ -538,5 +536,37 @@ public class TestHarnessServlet extends HttpServlet {
             e.printStackTrace();
         }
 
+    }
+
+    @SuppressWarnings("deprecation")
+    private void testLock(HttpServletRequest req, HttpServletResponse resp) {
+
+        int iterations = Integer.parseInt(req.getParameter("iterations"));
+        int size = Integer.parseInt(req.getParameter("size"));
+
+        try {
+            Queue q = QueueFactory.getQueue("background-processing");
+
+            for (int x = 1; x <= iterations; x++) {
+
+                for (int i = 0; i < size; i++) {
+                    TaskOptions to = TaskOptions.Builder.withUrl("/app_worker/eventpush")
+                            .method(Method.GET)
+                            .param("requestId", UUID.randomUUID().toString())
+                            .header("host",
+                                    BackendServiceFactory.getBackendService().getBackendAddress(
+                                            "dataprocessor"));
+                    q.add(to);
+                }
+
+                Thread.sleep(5 * 1000);
+            }
+
+
+            Writer w = resp.getWriter();
+            w.write("OK");
+            w.close();
+        } catch (Exception e) { // noop
+        }
     }
 }
