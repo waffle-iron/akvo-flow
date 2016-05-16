@@ -21,14 +21,17 @@ import static org.akvo.flow.events.EventUtils.debug;
 import static org.akvo.flow.events.EventUtils.getCurrentLock;
 import static org.akvo.flow.events.EventUtils.getReqId;
 import static org.akvo.flow.events.EventUtils.newLock;
-import static org.akvo.flow.events.EventUtils.push;
+import static org.akvo.flow.events.EventUtils.pushEvents;
 
 import java.io.IOException;
+import java.util.logging.Logger;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import org.akvo.flow.events.EventUtils.Prop;
 
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
@@ -37,17 +40,25 @@ public class EventPushServlet extends HttpServlet {
 
 
     private static final long serialVersionUID = -2863143139609299513L;
-
+    private static final Logger log = Logger.getLogger(EventPushServlet.class.getName());
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException,
             IOException {
 
         String reqId = req.getParameter(REQ_ID);
+        String urlPath = System.getProperties().getProperty(Prop.EVENT_NOTIFICATION);
 
-        if (reqId == null) {
+        if (urlPath == null) {
+            log.warning("No event notification URL configured");
             return;
         }
+
+        if (reqId == null) {
+            log.warning("No requestId parameter present in request");
+            return;
+        }
+
 
         DatastoreService ds = DatastoreServiceFactory.getDatastoreService();
 
@@ -61,7 +72,7 @@ public class EventPushServlet extends HttpServlet {
         }
 
         if (currentReqId == null && newLock(ds, reqId)) {
-            push(ds, reqId);
+            pushEvents(ds, reqId, urlPath);
         }
 
     }

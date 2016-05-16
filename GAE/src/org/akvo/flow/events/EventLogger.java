@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2015 Stichting Akvo (Akvo Foundation)
+ *  Copyright (C) 2015-2016 Stichting Akvo (Akvo Foundation)
  *
  *  This file is part of Akvo FLOW.
  *
@@ -22,15 +22,10 @@ import static org.akvo.flow.events.EventUtils.newContext;
 import static org.akvo.flow.events.EventUtils.newEvent;
 import static org.akvo.flow.events.EventUtils.newSource;
 
-import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.io.StringWriter;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -38,7 +33,6 @@ import net.sf.jsr107cache.Cache;
 
 import org.akvo.flow.events.EventUtils.Action;
 import org.akvo.flow.events.EventUtils.EventTypes;
-import org.akvo.flow.events.EventUtils.Key;
 import org.akvo.flow.events.EventUtils.Prop;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.springframework.security.core.Authentication;
@@ -46,6 +40,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.gallatinsystems.common.Constants;
 import com.gallatinsystems.common.util.PropertyUtil;
+import com.google.appengine.api.backends.BackendServiceFactory;
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.DeleteContext;
@@ -54,62 +49,25 @@ import com.google.appengine.api.datastore.PostDelete;
 import com.google.appengine.api.datastore.PostPut;
 import com.google.appengine.api.datastore.PutContext;
 import com.google.appengine.api.datastore.Text;
+import com.google.appengine.api.taskqueue.Queue;
+import com.google.appengine.api.taskqueue.QueueFactory;
+import com.google.appengine.api.taskqueue.TaskOptions;
+import com.google.appengine.api.taskqueue.TaskOptions.Method;
 import com.google.appengine.api.utils.SystemProperty;
 
 public class EventLogger {
     private static Logger logger = Logger.getLogger(EventLogger.class.getName());
 
-    private static final long MIN_TIME_DIFF = 60000; // 60 seconds
+    private static final long MIN_TIME_DIFF = 1000 * 60; // 60 seconds
 
-    private void sendNotification() {
-        try {
-            String urlPath = PropertyUtil.getProperty(Prop.EVENT_NOTIFICATION);
-
-            if (urlPath == null || urlPath.trim().length() == 0) {
-                logger.log(Level.SEVERE, "Event notification URL not present in appengine-web.xml");
-                return;
-            }
-
-            URL url = new URL(urlPath.trim());
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setDoOutput(true);
-            connection.setRequestMethod("POST");
-            connection.setRequestProperty("Content-Type", "application/json");
-
-            Map<String, String> messageMap = new HashMap<String, String>();
-            String appId = SystemProperty.applicationId.get();
-            messageMap.put(Key.APP_ID, appId);
-            messageMap.put(Key.URL, appId + ".appspot.com");
-
-            ObjectMapper m = new ObjectMapper();
-            OutputStreamWriter writer = new OutputStreamWriter(connection.getOutputStream());
-            m.writeValue(writer, messageMap);
-            writer.close();
-            if (connection.getResponseCode() != HttpURLConnection.HTTP_NO_CONTENT) {
-                logger.log(Level.SEVERE, "Unified log notification failed with status code: "
-                        + connection.getResponseCode());
-            }
-        } catch (MalformedURLException e) {
-            logger.log(Level.SEVERE,
-                    "Unified log notification failed with malformed URL exception", e);
-        } catch (IOException e) {
-            logger.log(Level.SEVERE, "Unified log notification failed with IO exception", e);
-        } catch (Exception e) {
-            logger.log(Level.SEVERE, "Unified log notification failed with error", e);
-        }
-    }
-
-    /*
-     * Notify the log that a new event is ready to be downloaded.
-     */
-    private void notifyLog() {
+    private boolean shouldSchedule() {
         Cache cache = initCache(60 * 60); // 1 hour
         if (cache == null) {
             // cache is not accessible, so we will notify anyway
             logger.log(Level.WARNING,
                     "cache not accessible, but still sending notification to unified log");
-            sendNotification();
-            return;
+
+            return true;
         }
 
         if (cache.containsKey(Action.UNIFIED_LOG_NOTIFIED)) {
@@ -119,13 +77,29 @@ public class EventLogger {
             Long deltaMils = nowDate.getTime() - cacheDate.getTime();
             if (deltaMils < MIN_TIME_DIFF) {
                 // it is too soon, so don't send the notification
-                return;
+                return false;
             }
         }
         // if we are here, either the key is not in the cache, or it is too old
         // in both cases, we send the notification and add a fresh value to the cache
-        sendNotification();
         cache.put(Action.UNIFIED_LOG_NOTIFIED, new Date());
+        return true;
+    }
+
+    @SuppressWarnings("deprecation")
+    private void schedulePush() {
+
+        if (!shouldSchedule()) {
+            return;
+        }
+
+        TaskOptions to = TaskOptions.Builder.withUrl("/app_worker/eventpush").method(Method.GET)
+                .param(EventUtils.REQ_ID, UUID.randomUUID().toString())
+                .header("host",
+                        BackendServiceFactory.getBackendService()
+                                .getBackendAddress("dataprocessor"));
+        Queue q = QueueFactory.getQueue("background-processing");
+        q.add(to);
     }
 
     private void storeEvent(Map<String, Object> event, Date timestamp) {
@@ -148,7 +122,7 @@ public class EventLogger {
             }
 
             datastore.put(entity);
-            notifyLog();
+            schedulePush();
         } catch (Exception e) {
             logger.log(Level.SEVERE, "could not store " + event.get("eventType")
                     + " event. Error: " + e.toString(), e);

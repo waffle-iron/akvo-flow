@@ -304,7 +304,7 @@ public class EventUtils {
         }
     }
 
-    public static void push(DatastoreService ds, String reqId) {
+    public static void pushEvents(DatastoreService ds, String reqId, String url) {
         Random r = new Random();
         long wait = r.nextInt(1000 * 30) + 1;
         debug("Waiting " + wait + "ms");
