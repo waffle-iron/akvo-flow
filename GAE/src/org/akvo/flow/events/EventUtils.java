@@ -85,69 +85,20 @@ public class EventUtils {
     static class Key {
         public static final String ID = "id";
         public static final String EMAIL = "email";
-        public static final String DISPLAY_TEXT = "displayText";
-        public static final String NAME = "name";
-        public static final String DESCRIPTION = "description";
         public static final String TIMESTAMP = "timestamp";
         public static final String SOURCE = "source";
         public static final String TYPE = "type";
-        public static final String ORDER = "order";
-        public static final String LAT = "lat";
-        public static final String LON = "lon";
         public static final String ORG_ID = "orgId";
-        public static final String SURVEY_ID = "surveyId";
-        public static final String QUESTION_TYPE = "questionType";
-        public static final String ANSWER_TYPE = "answerType";
-        public static final String PARENT_ID = "parentId";
-        public static final String FORM_ID = "formId";
-        public static final String QUESTION_GROUP_ID = "questionGroupId";
-        public static final String QUESTION_ID = "questionId";
-        public static final String FORM_INSTANCE_ID = "formInstanceId";
-        public static final String ANSWER_ID = "answerId";
-        public static final String DATA_POINT_ID = "dataPointId";
-        public static final String SUBMITTER_NAME = "submitterName";
-        public static final String COLLECTION_DATE = "collectionDate";
-        public static final String SURVEYAL_TIME = "surveyalTime";
-        public static final String PUBLIC = "public";
-        public static final String VALUE = "value";
-        public static final String IDENTIFIER = "identifier";
-        public static final String SURVEY_GROUP_TYPE = "surveyGroupType";
         public static final String APP_ID = "orgId";
         public static final String URL = "url";
-        public static final String ITERATION = "iteration";
+
     }
 
     static class Prop {
-        public static final String SURVEY_INSTANCE_ID = "surveyInstanceId";
-        public static final String TYPE = "type";
-        public static final String VALUE = "value";
-        public static final String VALUE_TEXT = "valueText";
-        public static final String SURVEY_ID = "surveyId";
-        public static final String SURVEYED_LOCALE_ID = "surveyedLocaleId";
-        public static final String COLLECTION_DATE = "collectionDate";
-        public static final String SURVEYAL_TIME = "surveyalTime";
-        public static final String IDENTIFIER = "identifier";
-        public static final String LATITUDE = "latitude";
-        public static final String LONGITUDE = "longitude";
-        public static final String DISPLAY_NAME = "displayName";
-        public static final String NAME = "name";
-        public static final String PARENT_ID = "parentId";
-        public static final String DESCRIPTION = "description";
-        public static final String PRIVACY_LEVEL = "privacyLevel";
-        public static final String DESC = "desc";
-        public static final String SURVEY_GROUP_ID = "surveyGroupId";
-        public static final String ORDER = "order";
-        public static final String TEXT = "text";
-        public static final String QUESTION_ID = "questionID";
-        public static final String QUESTION_IDENTIFIER = "questionId";
-        public static final String QUESTION_GROUP_ID = "questionGroupId";
-        public static final String PROJECT_TYPE = "projectType";
         public static final String LAST_UPDATE_DATE_TIME = "lastUpdateDateTime";
         public static final String CREATED_DATE_TIME = "createdDateTime";
-        public static final String ALIAS = "alias";
         public static final String EVENT_NOTIFICATION = "eventNotification";
         public static final String ENABLE_CHANGE_EVENTS = "enableChangeEvents";
-        public static final String ITERATION = "iteration";
     }
 
     public static final String SURVEY_GROUP_TYPE_SURVEY = "SURVEY";
