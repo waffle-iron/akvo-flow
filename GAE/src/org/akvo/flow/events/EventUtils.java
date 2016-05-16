@@ -133,7 +133,7 @@ public class EventUtils {
     public static final String LOCK_KEY_NAME = "EventPushLock";
     public static final String REQ_ID = "requestId";
     public static final String LOCK_AT = "lockAt";
-    public static final long DEFAULT_LOCK_TTL = 3 * 60 * 1000;
+    public static final long DEFAULT_LOCK_TTL = 2 * 60 * 1000;
     public static long LOCK_TTL = 0;
     public static final double HTTP_DEADLINE = 60d;
 
@@ -367,7 +367,7 @@ public class EventUtils {
     }
 
     private static void markAsSynced(DatastoreService ds, List<Entity> events) {
-        Transaction t = ds.beginTransaction();
+        Transaction t = ds.beginTransaction(TransactionOptions.Builder.withXG(true));
         Date now = new Date();
         try {
             for (Entity e : events) {
