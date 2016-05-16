@@ -19,10 +19,8 @@ package org.akvo.flow.events;
 import static com.gallatinsystems.common.util.MemCacheUtils.initCache;
 import static org.akvo.flow.events.EventUtils.getEventAndActionType;
 import static org.akvo.flow.events.EventUtils.newContext;
-import static org.akvo.flow.events.EventUtils.newEntity;
 import static org.akvo.flow.events.EventUtils.newEvent;
 import static org.akvo.flow.events.EventUtils.newSource;
-import static org.akvo.flow.events.EventUtils.populateEntityProperties;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -192,15 +190,9 @@ public class EventLogger {
             // create event context map
             Map<String, Object> eventContext = newContext(timestamp, eventSource);
 
-            // create event entity
-            Map<String, Object> eventEntity = newEntity(types.type, context
-                    .getCurrentElement().getKey().getId());
-
-            populateEntityProperties(types.type, context.getCurrentElement(), eventEntity);
-
             // create event
             Map<String, Object> event = newEvent(SystemProperty.applicationId.get(),
-                    types.action + actionType, eventEntity, eventContext);
+                    types.action + actionType, current, eventContext);
 
             // store it
             storeEvent(event, timestamp);
@@ -238,12 +230,11 @@ public class EventLogger {
             Map<String, Object> eventContext = newContext(timestamp, eventSource);
 
             // create event entity
-            Map<String, Object> eventEntity = newEntity(types.type, context
-                    .getCurrentElement().getId());
+            Entity deleted = new Entity(context.getCurrentElement());
 
             // create event
             Map<String, Object> event = newEvent(SystemProperty.applicationId.get(),
-                    types.action + Action.DELETED, eventEntity, eventContext);
+                    types.action + Action.DELETED, deleted, eventContext);
 
             // store it
             storeEvent(event, timestamp);

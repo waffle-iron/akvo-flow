@@ -31,13 +31,10 @@ import java.util.logging.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.waterforpeople.mapping.app.web.rest.security.user.GaeUser;
 
-import com.gallatinsystems.survey.domain.SurveyGroup;
-import com.gallatinsystems.survey.domain.SurveyGroup.PrivacyLevel;
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.EntityNotFoundException;
 import com.google.appengine.api.datastore.KeyFactory;
-import com.google.appengine.api.datastore.Text;
 import com.google.appengine.api.datastore.Transaction;
 import com.google.appengine.api.datastore.TransactionOptions;
 
@@ -202,106 +199,9 @@ public class EventUtils {
         return null;
     }
 
-    private static Map<String, Object> addProperty(String key, Object val,
-            Map<String, Object> data) {
-        if (val != null) {
-            data.put(key, val);
-        }
-        return data;
-    }
-
-    private static Map<String, Object> addProperty(String key, Object val,
-            Object defaultVal, Map<String, Object> data) {
-        if (val != null) {
-            data.put(key, val);
-        } else {
-            data.put(key, defaultVal);
-        }
-        return data;
-    }
-
-    public static Map<String, Object> populateEntityProperties(EntityType type, Entity e,
-            Map<String, Object> data) {
-        switch (type) {
-            case ANSWER:
-                addProperty(Key.FORM_INSTANCE_ID, e.getProperty(Prop.SURVEY_INSTANCE_ID), data);
-                addProperty(Key.ANSWER_TYPE, e.getProperty(Prop.TYPE), data);
-                addProperty(Key.QUESTION_ID,
-                        Long.valueOf((String) e.getProperty(Prop.QUESTION_ID)), data);
-
-                Object value = e.getProperty(Prop.VALUE);
-                if (value == null) {
-                    Object text = e.getProperty(Prop.VALUE_TEXT);
-                    if (text != null && text instanceof Text) {
-                        value = ((Text) text).getValue();
-                    }
-                }
-
-                addProperty(Key.VALUE, value, data);
-                addProperty(Key.FORM_ID, e.getProperty(Prop.SURVEY_ID), data);
-                addProperty(Key.ITERATION, e.getProperty(Prop.ITERATION), data);
-                break;
-            case FORM_INSTANCE:
-                addProperty(Key.FORM_ID, e.getProperty(Prop.SURVEY_ID), data);
-                addProperty(Key.DATA_POINT_ID, e.getProperty(Prop.SURVEYED_LOCALE_ID), data);
-                addProperty(Key.COLLECTION_DATE, e.getProperty(Prop.COLLECTION_DATE), data);
-                addProperty(Key.SURVEYAL_TIME, e.getProperty(Prop.SURVEYAL_TIME), data);
-                break;
-            case DATA_POINT:
-                addProperty(Key.IDENTIFIER, e.getProperty(Prop.IDENTIFIER), data);
-                addProperty(Key.LAT, e.getProperty(Prop.LATITUDE), data);
-                addProperty(Key.LON, e.getProperty(Prop.LONGITUDE), data);
-                addProperty(Key.NAME, e.getProperty(Prop.DISPLAY_NAME), data);
-                addProperty(Key.SURVEY_ID, e.getProperty(Prop.SURVEY_GROUP_ID), data);
-                break;
-            case SURVEY_GROUP:
-                addProperty(Key.NAME, e.getProperty(Prop.NAME), "<name missing>", data);
-                addProperty(Key.PARENT_ID, e.getProperty(Prop.PARENT_ID), data);
-
-                if (e.getProperty(Prop.PROJECT_TYPE).toString()
-                        .equals(SurveyGroup.ProjectType.PROJECT.toString())) {
-                    data.put(Key.SURVEY_GROUP_TYPE, SURVEY_GROUP_TYPE_SURVEY);
-                } else if (e.getProperty(Prop.PROJECT_TYPE).toString()
-                        .equals(SurveyGroup.ProjectType.PROJECT_FOLDER.toString())) {
-                    data.put(Key.SURVEY_GROUP_TYPE, SURVEY_GROUP_TYPE_FOLDER);
-                }
-
-                addProperty(Key.DESCRIPTION, e.getProperty(Prop.DESCRIPTION), data);
-                addProperty(Key.PUBLIC, String.valueOf(e.getProperty(Prop.PRIVACY_LEVEL))
-                        .equals(PrivacyLevel.PUBLIC.toString()), data);
-                break;
-            case FORM:
-                addProperty(Key.NAME, e.getProperty(Prop.NAME), data);
-                addProperty(Key.DESCRIPTION, e.getProperty(Prop.DESC), data);
-                addProperty(Key.SURVEY_ID, e.getProperty(Prop.SURVEY_GROUP_ID), data);
-                break;
-            case QUESTION_GROUP:
-                addProperty(Key.NAME, e.getProperty(Prop.NAME), "<name missing>", data);
-                addProperty(Key.ORDER, e.getProperty(Prop.ORDER), data);
-                addProperty(Key.FORM_ID, e.getProperty(Prop.SURVEY_ID), data);
-                break;
-            case QUESTION:
-                addProperty(Key.DISPLAY_TEXT, e.getProperty(Prop.TEXT), data);
-                addProperty(Key.IDENTIFIER, e.getProperty(Prop.QUESTION_IDENTIFIER), data);
-                addProperty(Key.QUESTION_GROUP_ID, e.getProperty(Prop.QUESTION_GROUP_ID),
-                        data);
-                addProperty(Key.FORM_ID, e.getProperty(Prop.SURVEY_ID), data);
-                addProperty(Key.QUESTION_TYPE, e.getProperty(Prop.TYPE), data);
-                break;
-            case DEVICE_FILE:
-                // FIXME move those keys to the proper place
-                addProperty("uri", e.getProperty("URI"), data);
-                addProperty("checksum", e.getProperty("checksum"), data);
-                addProperty("phoneNumber", e.getProperty("phoneNumber"), data);
-                addProperty("imei", e.getProperty("imei"), data);
-                break;
-        }
-        return data;
-    }
 
     public static Map<String, Object> newEvent(String orgId, String eventType,
-            Map<String, Object> entity,
-            Map<String, Object> context) throws AssertionError {
+            Entity entity, Map<String, Object> context) throws AssertionError {
 
         assert orgId != null : "orgId is required";
         assert eventType != null : "eventType is required";
