@@ -123,6 +123,7 @@ public class EventUtils {
         public static final String CREATED_DATE_TIME = "createdDateTime";
         public static final String EVENT_NOTIFICATION = "eventNotification";
         public static final String ENABLE_CHANGE_EVENTS = "enableChangeEvents";
+        public static final String SYNCED = "synced";
     }
 
     public static final String SURVEY_GROUP_TYPE_SURVEY = "SURVEY";
@@ -347,7 +348,7 @@ public class EventUtils {
     }
 
     private static Filter getFilter() {
-        Filter notSynced = new FilterPredicate("synced", FilterOperator.EQUAL, false);
+        Filter notSynced = new FilterPredicate(Prop.SYNCED, FilterOperator.EQUAL, false);
         Filter beforeNow = new FilterPredicate(Prop.CREATED_DATE_TIME, FilterOperator.LESS_THAN,
                 new Date());
         return new CompositeFilter(CompositeFilterOperator.AND, Arrays.asList(notSynced,
@@ -363,6 +364,25 @@ public class EventUtils {
         // questions - the limit of the payload size is 10MB
         return pq.asList(com.google.appengine.api.datastore.FetchOptions.Builder
                 .withChunkSize(EVENTS_CHUNK_SIZE));
+    }
+
+    private static void markAsSynced(DatastoreService ds, List<Entity> events) {
+        Transaction t = ds.beginTransaction();
+        Date now = new Date();
+        try {
+            for (Entity e : events) {
+                e.setProperty(Prop.SYNCED, true);
+                e.setProperty(Prop.LAST_UPDATE_DATE_TIME, now);
+            }
+            ds.put(events);
+            t.commit();
+        } catch (Exception e) {
+            throw new RuntimeException("Error saving events " + e.getMessage());
+        } finally {
+            if (t.isActive()) {
+                t.rollback();
+            }
+        }
     }
 
     public static void pushEvents(DatastoreService ds, String reqId, String serviceURL)
@@ -395,6 +415,8 @@ public class EventUtils {
             log.severe("Error from event server: " + new String(resp.getContent()));
             throw new RuntimeException("Rescheduling event push");
         }
+
+        markAsSynced(ds, events);
 
         if (events.size() == EVENTS_CHUNK_SIZE) {
             // Continue processing events with the same reqId

@@ -100,8 +100,9 @@ public class EventLogger {
             m.writeValue(w, event);
 
             Entity entity = new Entity("EventQueue");
-            entity.setProperty("createdDateTime", timestamp);
-            entity.setProperty("lastUpdateDateTime", timestamp);
+            entity.setProperty(Prop.CREATED_DATE_TIME, timestamp);
+            entity.setProperty(Prop.LAST_UPDATE_DATE_TIME, timestamp);
+            entity.setProperty(Prop.SYNCED, false);
 
             String payload = w.toString();
             if (payload.length() > Constants.MAX_LENGTH) {
