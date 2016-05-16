@@ -267,11 +267,11 @@ FLOW.displayPointData = function(dataPointObject, pointData){
                 clickedPointContent += dateQuestion.toUTCString().slice(0, -13); //remove last 13 x-ters so only date displays
                 break;
               case "SIGNATURE":
-                clickedPointContent += '<div class="signatureImage"><img src="';
+                clickedPointContent += '<img src="';
                 var srcAttr = 'data:image/png;base64,', signatureJson;
                 signatureJson = JSON.parse(questionAnswer);
-                clickedPointContent += srcAttr + signatureJson.image +'"/></div>';
-                clickedPointContent += '<div class="signedBySection">'+Ember.String.loc('_signed_by') +': '+signatureJson.name+'</div>';
+                clickedPointContent += srcAttr + signatureJson.image +'"/>';
+                clickedPointContent += Ember.String.loc('_signed_by') +': '+signatureJson.name;
                 break;
               case "CASCADE":
               case "OPTION":
@@ -613,6 +613,12 @@ FLOW.createNamedMapObject = function(mapObject, queryObject, cartocss){
     FLOW.selectedControl.set('mapChanged', true);
   });
 
+  //get points count
+  $.get(
+    '/rest/cartodb/points_count?table='+queryObject.table+'&column='+queryObject.column+'&value='+queryObject.value,
+    function(response, status) {
+      $('#show-points-number').data('count', response.count[0].count);
+  });
   FLOW.getPointsCount(queryObject.table, queryObject.column, queryObject.value);
 };
 
