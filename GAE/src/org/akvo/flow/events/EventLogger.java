@@ -21,11 +21,11 @@ import static org.akvo.flow.events.EventUtils.getEventAndActionType;
 import static org.akvo.flow.events.EventUtils.newContext;
 import static org.akvo.flow.events.EventUtils.newEvent;
 import static org.akvo.flow.events.EventUtils.newSource;
+import static org.akvo.flow.events.EventUtils.schedulePush;
 
 import java.io.StringWriter;
 import java.util.Date;
 import java.util.Map;
-import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -40,7 +40,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.gallatinsystems.common.Constants;
 import com.gallatinsystems.common.util.PropertyUtil;
-import com.google.appengine.api.backends.BackendServiceFactory;
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.DeleteContext;
@@ -49,10 +48,6 @@ import com.google.appengine.api.datastore.PostDelete;
 import com.google.appengine.api.datastore.PostPut;
 import com.google.appengine.api.datastore.PutContext;
 import com.google.appengine.api.datastore.Text;
-import com.google.appengine.api.taskqueue.Queue;
-import com.google.appengine.api.taskqueue.QueueFactory;
-import com.google.appengine.api.taskqueue.TaskOptions;
-import com.google.appengine.api.taskqueue.TaskOptions.Method;
 import com.google.appengine.api.utils.SystemProperty;
 
 public class EventLogger {
@@ -86,20 +81,14 @@ public class EventLogger {
         return true;
     }
 
-    @SuppressWarnings("deprecation")
-    private void schedulePush() {
+
+    private void checkAndSchedule() {
 
         if (!shouldSchedule()) {
             return;
         }
 
-        TaskOptions to = TaskOptions.Builder.withUrl("/app_worker/eventpush").method(Method.GET)
-                .param(EventUtils.REQ_ID, UUID.randomUUID().toString())
-                .header("host",
-                        BackendServiceFactory.getBackendService()
-                                .getBackendAddress("dataprocessor"));
-        Queue q = QueueFactory.getQueue("background-processing");
-        q.add(to);
+        schedulePush(null);
     }
 
     private void storeEvent(Map<String, Object> event, Date timestamp) {
@@ -122,7 +111,8 @@ public class EventLogger {
             }
 
             datastore.put(entity);
-            schedulePush();
+
+            checkAndSchedule();
         } catch (Exception e) {
             logger.log(Level.SEVERE, "could not store " + event.get("eventType")
                     + " event. Error: " + e.toString(), e);
