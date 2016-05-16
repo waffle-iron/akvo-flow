@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2015 Stichting Akvo (Akvo Foundation)
+ *  Copyright (C) 2015-2016 Stichting Akvo (Akvo Foundation)
  *
  *  This file is part of Akvo FLOW.
  *
@@ -20,10 +20,9 @@ import static javax.servlet.http.HttpServletResponse.SC_CREATED;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
 
 import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -33,7 +32,7 @@ import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.codehaus.jackson.map.ObjectMapper;
+import org.apache.commons.lang.StringUtils;
 import org.waterforpeople.mapping.app.web.rest.security.user.GaeUser;
 
 import com.google.appengine.api.backends.BackendServiceFactory;
@@ -49,6 +48,7 @@ import com.google.appengine.api.datastore.Query.Filter;
 import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.google.appengine.api.datastore.Query.FilterPredicate;
 import com.google.appengine.api.datastore.Query.SortDirection;
+import com.google.appengine.api.datastore.Text;
 import com.google.appengine.api.datastore.Transaction;
 import com.google.appengine.api.datastore.TransactionOptions;
 import com.google.appengine.api.taskqueue.Queue;
@@ -65,7 +65,6 @@ import com.google.appengine.api.urlfetch.URLFetchServiceFactory;
 public class EventUtils {
 
     private static Logger log = Logger.getLogger(EventUtils.class.getName());
-    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     public enum EventSourceType {
         USER, DEVICE, SENSOR, WEBFORM, API, UNKNOWN, SYSTEM
@@ -232,28 +231,6 @@ public class EventUtils {
         return entity;
     }
 
-    public static void sendEvents(String urlString, List<Map<String, Object>> events)
-            throws IOException {
-        URL url = new URL(urlString);
-        HttpURLConnection connection = (HttpURLConnection) url
-                .openConnection();
-
-        connection.setDoOutput(true);
-        connection.setRequestMethod("POST");
-        connection.setRequestProperty("Content-Type",
-                "application/json");
-
-        OutputStreamWriter writer = new OutputStreamWriter(
-                connection.getOutputStream());
-        objectMapper.writeValue(writer, events);
-
-        System.out.println("    " + connection.getResponseCode());
-
-        writer.close();
-        connection.disconnect();
-
-    }
-
     public static com.google.appengine.api.datastore.Key getLockKey() {
         return KeyFactory.createKey(LOCK_KIND, LOCK_KEY_NAME);
     }
@@ -385,6 +362,22 @@ public class EventUtils {
         }
     }
 
+    private static String getPayload(Entity e) {
+        if (e.getProperty("payloadText") != null) {
+            Text val = (Text) e.getProperty("payloadText");
+            return val.getValue();
+        }
+        return (String) e.getProperty("payload");
+    }
+
+    private static String getPayload(List<Entity> events) {
+        List<String> payloads = new ArrayList<String>();
+        for (Entity e : events) {
+            payloads.add(getPayload(e));
+        }
+        return "[" + StringUtils.join(payloads, ",") + "]";
+    }
+
     public static void pushEvents(DatastoreService ds, String reqId, String serviceURL)
             throws IOException {
 
@@ -401,12 +394,13 @@ public class EventUtils {
 
         List<Entity> events = getUnsyncedEvents(ds);
 
+
         URLFetchService urlfetch = URLFetchServiceFactory.getURLFetchService();
         FetchOptions options = FetchOptions.Builder.followRedirects().setDeadline(HTTP_DEADLINE)
                 .validateCertificate();
 
         HTTPRequest req = new HTTPRequest(url, HTTPMethod.POST, options);
-        req.setPayload(objectMapper.writeValueAsBytes(events));
+        req.setPayload(getPayload(events).getBytes());
 
 
         HTTPResponse resp = urlfetch.fetch(req);
@@ -421,6 +415,8 @@ public class EventUtils {
         if (events.size() == EVENTS_CHUNK_SIZE) {
             // Continue processing events with the same reqId
             schedulePush(reqId);
+        } else {
+            releaseLock(ds);
         }
     }
 
