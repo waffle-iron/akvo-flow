@@ -226,13 +226,12 @@ FLOW.displayPointData = function(dataPointObject, pointData){
                   imageString = questionAnswer;
                 }
 
-                var image = '<div class=":imgContainer photoUrl:shown:hidden">';
-                var imageFilename = FLOW.Env.photo_url_root+imageString.substring(imageString.lastIndexOf("/")+1);
-                image += '<a href="'+imageFilename+'" target="_blank">'
-                +'<img src="'+imageFilename+'" alt=""/></a>';
+                var imageFileUrl = FLOW.Env.photo_url_root+imageString.substring(imageString.lastIndexOf("/")+1);
+                var imageContent = '<div class=":imgContainer photoUrl:shown:hidden">'
+                +'<a href="'+imageFileUrl+'" target="_blank"><img src="'+imageFileUrl+'" alt=""/></a>'
+                +'</div>';
 
-                image += '</div>';
-                clickedPointContent += image;
+                clickedPointContent += imageContent;
                 break;
               case "GEOSHAPE":
                 geoshapeObject = FLOW.parseGeoshape(questionAnswer);
@@ -272,6 +271,20 @@ FLOW.displayPointData = function(dataPointObject, pointData){
                 signatureJson = JSON.parse(questionAnswer);
                 clickedPointContent += srcAttr + signatureJson.image +'"/></div>';
                 clickedPointContent += '<div class="signedBySection">'+Ember.String.loc('_signed_by') +': '+signatureJson.name+'</div>';
+                break;
+              case "VIDEO":
+                var videoString = "", videoJson;
+                if (questionAnswer.charAt(0) === '{') {
+                  videoJson = JSON.parse(questionAnswer);
+                  videoString = videoJson.filename
+                } else {
+                  videoString = questionAnswer;
+                }
+
+                var videoFileUrl = FLOW.Env.photo_url_root+videoString.substring(videoString.lastIndexOf("/")+1);
+                var videoContent = videoFileUrl+' <a href="'+videoFileUrl+'" target="_blank">'+Ember.String.loc('_open_video')+'</a>';
+
+                clickedPointContent += videoContent;
                 break;
               case "CASCADE":
               case "OPTION":
@@ -766,6 +779,7 @@ FLOW.hideDetailsPane = function (delay) {
   });
 };
 
+//returns an escapee string when fed one that had double quotes in it
 FLOW.addSlashes = function ( str ) {
   return (str + '').replace(/[\\"']/g, '\\$&').replace(/\u0000/g, '\\0');
 };

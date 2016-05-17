@@ -332,35 +332,16 @@ FLOW.CustomMapsListView = FLOW.View.extend({
         }
         customMapsList += '</td>';
         customMapsList += '<td  class="action">';
-        if(customMapsData.custom_maps[i].form_id !== 0){
-          //only allow users who have access to specified form to edit or delete custom map
+        if(customMapsData.custom_maps[i].survey_id !== 0){
+          //only allow users who have access to specified survey to edit or delete custom map
           for(var j=0; j<surveyGroupsData['survey_groups'].length; j++){
-            if(surveyGroupsData['survey_groups'][j]['surveyList'] !== null){
-              if(surveyGroupsData['survey_groups'][j]['surveyList'][0].keyId === customMapsData.custom_maps[i].form_id){
-                customMapsList += '<a class="edit editCustomMap" data-custom-map="'+customMapsData.custom_maps[i].named_map+'">'
-                  +Ember.String.loc('_edit')
-                  +'</a>'
-                  +'<a class="remove deleteCustomMap" data-custom-map="'+customMapsData.custom_maps[i].named_map+'">'
-                  +Ember.String.loc('_remove')+'</a>';
-              }
+            if(surveyGroupsData['survey_groups'][j].keyId === customMapsData.custom_maps[i].survey_id){
+              customMapsList += '<a class="edit editCustomMap" data-custom-map="'+customMapsData.custom_maps[i].named_map+'">'
+                +Ember.String.loc('_edit')
+                +'</a>'
+                +'<a class="remove deleteCustomMap" data-custom-map="'+customMapsData.custom_maps[i].named_map+'">'
+                +Ember.String.loc('_remove')+'</a>';
             }
-          }
-        }else{
-          if(customMapsData.custom_maps[i].survey_id !== 0){
-            //only allow users who have access to specified survey to edit or delete custom map
-            for(var j=0; j<surveyGroupsData['survey_groups'].length; j++){
-              if(surveyGroupsData['survey_groups'][j]['surveyList'] !== null){
-                if(surveyGroupsData['survey_groups'][j].keyId === customMapsData.custom_maps[i].survey_id){
-                  customMapsList += '<a class="edit editCustomMap" data-custom-map="'+customMapsData.custom_maps[i].named_map+'">'
-                    +Ember.String.loc('_edit')
-                    +'</a>'
-                    +'<a class="remove">'+Ember.String.loc('_remove')+'</a>';
-                }
-              }
-            }
-          }else{
-            // TODO:
-            //only allow dashboard administrators to be able to delete a custom map of all data points
           }
         }
         customMapsList += '</td></tr>';
@@ -679,7 +660,7 @@ FLOW.CustomMapEditView = FLOW.View.extend({
       if(self.customMapComplete()) {
         self.mapSaved = true;
 
-        var cartocss = [], current_cartocss = '';
+        var cartocss = [], currentCartocss = '';
         self.customMapData['customMapTitle'] = $('#mapTitle').val();
         self.customMapData['customMapDescription'] = $('#mapDescription').val();
         self.customMapData['namedMap'] = FLOW.selectedControl.get('customMapName');
@@ -696,20 +677,26 @@ FLOW.CustomMapEditView = FLOW.View.extend({
             currentColour['column'] = $(this).data('column');
             cartocss.push(currentColour);
 
-            current_cartocss += '#'+self.selectedTable+'['+$(this).data('column')+'="'+FLOW.addSlashes(JSON.stringify($(this).data('option')))+'"]';
-    				current_cartocss += '{';
-    				current_cartocss += 'marker-fill: '+$(this).val()+';';
-    				current_cartocss += '}';
+            currentCartocss += '#'+self.selectedTable+'['+$(this).data('column')+'='
+              +(($(this).data('option') == null || $(this).data('option') == "")
+                ? ($(this).data('option') == "")
+                  ? ""
+                    : 'null'
+                    : '"'+FLOW.addSlashes(JSON.stringify($(this).data('option')))+'"')
+              +']';
+            currentCartocss += '{';
+    				currentCartocss += 'marker-fill: '+$(this).val()+';';
+    				currentCartocss += '}';
           });
           self.customMapData['cartocss'] = JSON.stringify(cartocss);
-          self.presetMapStyle['cartocss'] = current_cartocss;
+          self.presetMapStyle['cartocss'] = currentCartocss;
 
           //first update the named map before uploading it to cartodb
           var queryObject = {};
           queryObject['table'] = self.selectedTable;
           queryObject['column'] = '';
           queryObject['value'] = '';
-          FLOW.createNamedMapObject(map, queryObject, current_cartocss);
+          FLOW.createNamedMapObject(map, queryObject, currentCartocss);
         }
 
         self.presetMapStyle['queryObject']['table'] = self.selectedTable;
@@ -1039,15 +1026,14 @@ FLOW.CustomMapView = FLOW.View.extend({
           //only allow users who have access to specified survey to edit or delete custom map
           for(var j=0; j<surveyGroupsData['survey_groups'].length; j++){
             if(surveyGroupsData['survey_groups'][j]['surveyList'] !== null){
-              if(surveyGroupsData['survey_groups'][j].keyId === data.custom_map_details[0].survey_id
-                  || surveyGroupsData['survey_groups'][j].keyId === data.custom_map_details[0].form_id){
-                    $('#customMapEditOptions').html('<a class="edit editCustomMap" data-custom-map="'
-                      +data.custom_map_details[0]['named_map']+'">'
-                      +Ember.String.loc('_edit')
-                      +'</a>'
-                      +'<a class="remove deleteCustomMap"  data-custom-map="'
-                      +data.custom_map_details[0]['named_map']
-                      +'">'+Ember.String.loc('_remove')+'</a>');
+              if(surveyGroupsData['survey_groups'][j].keyId === data.custom_map_details[0].survey_id){
+                $('#customMapEditOptions').html('<a class="edit editCustomMap" data-custom-map="'
+                  +data.custom_map_details[0]['named_map']+'">'
+                  +Ember.String.loc('_edit')
+                  +'</a>'
+                  +'<a class="remove deleteCustomMap"  data-custom-map="'
+                  +data.custom_map_details[0]['named_map']
+                  +'">'+Ember.String.loc('_remove')+'</a>');
               }
             }
           }
