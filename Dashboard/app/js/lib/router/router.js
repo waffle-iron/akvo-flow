@@ -439,7 +439,7 @@ FLOW.Router = Ember.Router.extend({
         route: '/customized-maps',
         connectOutlets: function (router, context) {
           router.get('navCartodbMapsController').connectOutlet('customMapsList');
-          router.set('mapsSubnavController.selected', 'customMapsList');
+          router.set('mapsSubnavController.selected', 'customMaps');
           router.resetState();
         }
       }),
@@ -448,7 +448,7 @@ FLOW.Router = Ember.Router.extend({
         route: '/custom-map-edit',
         connectOutlets: function (router, context) {
           router.get('navCartodbMapsController').connectOutlet('customMapEdit');
-          router.set('mapsSubnavController.selected', 'customMapEdit');
+          router.set('mapsSubnavController.selected', 'customMaps');
           router.resetState();
         }
       }),
@@ -457,7 +457,7 @@ FLOW.Router = Ember.Router.extend({
         route: '/custom-map-view',
         connectOutlets: function (router, context) {
           router.get('navCartodbMapsController').connectOutlet('customMap');
-          router.set('mapsSubnavController.selected', 'customMap');
+          router.set('mapsSubnavController.selected', 'customMaps');
           router.resetState();
         }
       })

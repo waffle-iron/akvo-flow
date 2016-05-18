@@ -454,7 +454,9 @@ FLOW.CustomMapEditView = FLOW.View.extend({
     self.customMapData['cartocss'] = '';
     self.customMapData['legend'] = {};
     self.customMapData['legend']['title'] = '';
-    self.customMapData['legend']['question'] = '';
+    self.customMapData['legend']['question'] = {};
+    self.customMapData['legend']['question']['text'] = '';
+    self.customMapData['legend']['question']['column'] = '';
     self.customMapData['legend']['points'] = '';
     self.customMapData['permission'] = '';
     self.customMapData['newMap'] = '';
@@ -506,6 +508,10 @@ FLOW.CustomMapEditView = FLOW.View.extend({
           queryObject['column'] = 'survey_id';
           queryObject['value'] = surveyGroupKeyId;
           FLOW.createNamedMapObject(map, queryObject, '');
+
+          //load generic data point style
+          $('#legendOptions').append('<div class="legend-option"><div class="bullet" style="background: #FF6600; border-radius: 0 !important"></div>'
+            +Ember.String.loc('_custom_maps_data_point')+'</div>');
         }else{ //if a folder is selected, load the folder's children on a new 'folder_survey_selector'
           //first clear any currently overlayed cartodb layer (if any)
           FLOW.selectedControl.set('layerExistsCheck', FLOW.clearCartodbLayer(map, FLOW.selectedControl.get('cartodbLayer')));
@@ -590,9 +596,13 @@ FLOW.CustomMapEditView = FLOW.View.extend({
         FLOW.createLayer(map, FLOW.selectedControl.get('customMapName'));
       }
 
+      //load generic data point style
+      $('#legendOptions').append('<div class="legend-option"><div class="bullet" style="background: #FF6600; border-radius: 0 !important"></div>'
+        +Ember.String.loc('_custom_maps_data_point')+'</div>');
+
       //hide legend question toggle
       $('#legend-question-toggle').css({display: 'none'});
-      $('#show-question').data('question', '');
+      $('#show-question').data('text', '');
     });
 
     this.$(document).off('change', '.question_selector').on('change', '.question_selector',function(e) {
@@ -643,7 +653,8 @@ FLOW.CustomMapEditView = FLOW.View.extend({
 
           //display legend question toggle
           $('#legend-question-toggle').css({display: 'block'});
-          $('#show-question').data('question', $(this).find('option:selected').text());
+          $('#show-question').data('text', $(this).find('option:selected').text());
+          $('#show-question').data('column', $(this).val());
           if($('#show-question').is(':checked')) {
             $('#legendQuestion').html($(this).find('option:selected').text());
           }
@@ -652,7 +663,7 @@ FLOW.CustomMapEditView = FLOW.View.extend({
 
         //hide legend question toggle
         $('#legend-question-toggle').css({display: 'none'});
-        $('#show-question').data('question', '');
+        $('#show-question').data('text', '');
       }
     });
 
@@ -719,8 +730,9 @@ FLOW.CustomMapEditView = FLOW.View.extend({
         //if show legend is checked, populate the legend object
         if($('#show-legend').is(':checked')){
           self.customMapData['legend']['title'] = ($('#show-title').is(':checked')) ? $('#custom-map-title').val() : '';
-          self.customMapData['legend']['question'] = ($('#show-question').is(':checked')) ? $('#show-question').data('question') : '';
-          self.customMapData['legend']['points'] = ($('#show-points-number').is(':checked')) ? $('#show-points-number').data('count') : '';
+          self.customMapData['legend']['question']['text'] = ($('#show-question').is(':checked')) ? $('#show-question').data('text') : '';
+          self.customMapData['legend']['question']['column'] = ($('#show-question').is(':checked')) ? $('#show-question').data('column') : '';
+          self.customMapData['legend']['points'] = ($('#show-points-number').is(':checked')) ? 'true' : 'false';
           self.customMapData['legend'] = JSON.stringify(self.customMapData['legend']);
         }else{
           self.customMapData['legend'] = '';
@@ -756,30 +768,27 @@ FLOW.CustomMapEditView = FLOW.View.extend({
           if($(this).is(':checked')) {//enable the rest of the legend toggles
             $('#customMapLegend').show();
             $('#show-title').attr('disabled', false);
-            $('#custom-map-title').attr('disabled', false);
             $('#show-question').attr('disabled', false);
             $('#show-points-number').attr('disabled', false);
           } else {//disable the rest of the legend toggles
             $('#customMapLegend').hide();
             $('#show-title').attr('disabled', true);
-            $('#custom-map-title').attr('disabled', true);
             $('#show-question').attr('disabled', true);
             $('#show-points-number').attr('disabled', true);
           }
           break;
         case 'show-title':
           if($(this).is(':checked')) {
-            $('#custom-map-title').attr('disabled', false);
+            $('#custom-map-title').show();
             $('#legendTitle').html($('#custom-map-title').val());
           } else {
-            $('#custom-map-title').val('');
+            $('#custom-map-title').val('').hide();
             $('#legendTitle').html('');
-            $('#custom-map-title').attr('disabled', true);
           }
           break;
         case 'show-question':
           if($(this).is(':checked')) {
-            $('#legendQuestion').html($('#show-question').data('question'));
+            $('#legendQuestion').html($('#show-question').data('text'));
           } else {
             $('#legendQuestion').html('');
           }
@@ -859,8 +868,15 @@ FLOW.CustomMapEditView = FLOW.View.extend({
                 }
                 $("#survey_hierarchy").append(form_selector);
 
+                //load generic data point style
+                $('#legendOptions').append('<div class="legend-option"><div class="bullet" style="background: #FF6600; border-radius: 0 !important"></div>'
+                  +Ember.String.loc('_custom_maps_data_point')+'</div>');
+
                 //if a form ID was set when building the custom map, select it
                 if(data.form_id != 0){
+                  //clear legend options div
+                  $('#legendOptions').html('');
+
                   form_selector.val(data.form_id);
                   self.customMapData['formId'] = data.form_id;
                   self.selectedTable = 'raw_data_'+data.form_id;
@@ -896,8 +912,15 @@ FLOW.CustomMapEditView = FLOW.View.extend({
                           }
                           $("#survey_hierarchy").append(questionSelector);
 
+                          //load generic data point style
+                          $('#legendOptions').append('<div class="legend-option"><div class="bullet" style="background: #FF6600; border-radius: 0 !important"></div>'
+                            +Ember.String.loc('_custom_maps_data_point')+'</div>');
+
                           //if question ID was set, select it
                           if(data.question_id !=0){
+                            //clear legend options div
+                            $('#legendOptions').html('');
+
                             questionSelector.val('q'+data.question_id);
                             self.customMapData['questionId'] = data.question_id;
                             //create a list of options and styles based on selected question
@@ -944,24 +967,22 @@ FLOW.CustomMapEditView = FLOW.View.extend({
     if(data.legend != ""){
       var legend = JSON.parse(data.legend);
       $('#show-legend').prop('checked', true);
+      $('#show-title').attr('disabled', false);
+      $('#show-question').attr('disabled', false);
+      $('#show-points-number').attr('disabled', false);
       $('#customMapLegend').show();
       if(legend.title != ""){
         $('#show-title').prop('checked', true);
-        $('#custom-map-title').val(legend.title);
+        $('#custom-map-title').show().val(legend.title);
         $('#legendTitle').html(legend.title);
-        $('#show-title').attr('disabled', false);
-        $('#custom-map-title').attr('disabled', false);
       }
       if(legend.question != ""){
         $('#show-question').prop('checked', true);
-        $('#show-question').attr('disabled', false);
-        $('#show-question').data('question', legend.question);
+        $('#show-question').data('text', legend.question.text);
         $('#legendQuestion').html(legend.question);
       }
-      if(legend.points != "" || legend.points != 0){
+      if(legend.points == "true"){
         $('#show-points-number').prop('checked', true);
-        $('#show-points-number').attr('disabled', false);
-        $('#show-points-number').data('count', legend.points);
       }
     }
   }
@@ -1044,7 +1065,7 @@ FLOW.CustomMapView = FLOW.View.extend({
 
             $('#customMapLegend').show();
             $('#legendTitle').html(legend.title);
-            $('#legendQuestion').html(legend.question);
+            $('#legendQuestion').html(legend.question.text);
 
             if(data.custom_map_details[0]['cartocss'] != "") {
               var style = JSON.parse(data.custom_map_details[0]['cartocss']);
@@ -1059,9 +1080,67 @@ FLOW.CustomMapView = FLOW.View.extend({
                   cascadeString = style[n]['title'];
                 }
 
-                $('#legendOptions').append('<div class="legend-option"><div class="bullet" style="background: '
+                $('#legendOptions').append('<div class="legend-option" data-option=\''+style[n]['title']+'\'><div class="bullet" style="background: '
                   +style[n]['colour']+'; border-radius: 0 !important"></div>'
                   +cascadeString+'</div>');
+              }
+            } else {
+              //load generic data point style
+              $('#legendOptions').append('<div class="legend-option"><div class="bullet" style="background: #FF6600; border-radius: 0 !important"></div>'
+                +Ember.String.loc('_custom_maps_data_point')+'</div>');
+            }
+
+            //if points count toggle was checked, get and show number of points
+            if(legend.points == "true"){
+              if(legend.question.column != "") {//if a map is styled by question
+                var ajaxObject = {};
+                ajaxObject['call'] = "GET";
+                ajaxObject['url'] = '/rest/cartodb/points_count?table=raw_data_'+data.custom_map_details[0]['form_id']+'&column='+legend.question.column+'&value=';
+                ajaxObject['data'] = '';
+
+                FLOW.ajaxCall(function(pointsCountResponse){
+                  if(pointsCountResponse){
+                    var response = pointsCountResponse.response;
+                    for (var i = 0; i < response.length; i++) {
+                      $('.legend-option').each( function(index) {
+                        var currentOption = (($(this).data('option') == null || $(this).data('option') == "")
+                          ? ($(this).data('option') == "")
+                            ? ""
+                              : 'null'
+                              : JSON.stringify($(this).data('option')));
+                        if(currentOption == response[i][legend.question.column]){
+                          $(this).append('('+response[i]['count']+')');
+                        }
+                      });
+                    }
+                  }
+                }, ajaxObject);
+              } else {
+                if(data.custom_map_details[0]['form_id'] != 0) {//if map is based on a form
+                  var ajaxObject = {};
+                  ajaxObject['call'] = "GET";
+                  ajaxObject['url'] = '/rest/cartodb/points_count?table=raw_data_'+data.custom_map_details[0]['form_id']+'&column=&value=';
+                  ajaxObject['data'] = '';
+
+                  FLOW.ajaxCall(function(pointsCountResponse){
+                    if(pointsCountResponse){
+                      var response = pointsCountResponse.response;
+                    }
+                  }, ajaxObject);
+                } else {
+                  if(data.custom_map_details[0]['survey_id'] != 0) {
+                    var ajaxObject = {};
+                    ajaxObject['call'] = "GET";
+                    ajaxObject['url'] = '/rest/cartodb/points_count?table=data_point&column=survey_id&value='+data.custom_map_details[0]['survey_id'];
+                    ajaxObject['data'] = '';
+
+                    FLOW.ajaxCall(function(pointsCountResponse){
+                      if(pointsCountResponse){
+                        var response = pointsCountResponse.response;
+                      }
+                    }, ajaxObject);
+                  }
+                }
               }
             }
           }

@@ -625,14 +625,6 @@ FLOW.createNamedMapObject = function(mapObject, queryObject, cartocss){
     //allow changed map to be saved
     FLOW.selectedControl.set('mapChanged', true);
   });
-
-  //get points count
-  $.get(
-    '/rest/cartodb/points_count?table='+queryObject.table+'&column='+queryObject.column+'&value='+queryObject.value,
-    function(response, status) {
-      $('#show-points-number').data('count', response.count[0].count);
-  });
-  FLOW.getPointsCount(queryObject.table, queryObject.column, queryObject.value);
 };
 
 FLOW.getPointsCount = function(table, column, value){

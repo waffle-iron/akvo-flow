@@ -6471,6 +6471,11 @@ html.navMaps {
         label {
           display: inline;
         }
+        #custom-map-title {
+          display: none;
+          float: left;
+          width: 95%
+        }
     }
 
     #customMapLegend {

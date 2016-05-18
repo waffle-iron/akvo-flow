@@ -254,13 +254,20 @@ public class CartodbRestService {
     public Map<String, Object> getPointsCount(
             @RequestParam("table") String table, @RequestParam("column") String column, @RequestParam("value") String value) {
         Map<String, Object> response = new HashMap<>();
-        String query = String.format("SELECT COUNT(*) FROM %s", table);
-        if(!column.isEmpty()){
-          query = String.format("%s WHERE %s = '%s'", query, column, value);
+        String query = "";
+        if(!value.isEmpty()){
+          //get count of points from data_point table for provided survey
+          query = String.format("SELECT COUNT(*) FROM %s WHERE %s = '%s'", table, column, value);
+        }else{
+          if(column.isEmpty()){
+            query = String.format("SELECT COUNT(*) FROM %s", table);
+          }else{
+            query = String.format("SELECT %s, COUNT(*) FROM %s GROUP BY %s", column, table, column);
+          }
         }
-        response.put("count", null);
+        response.put("response", null);
         try {
-            response.put("count",
+            response.put("response",
                     queryCartodb(query));
             return response;
         } catch (IOException e) {
