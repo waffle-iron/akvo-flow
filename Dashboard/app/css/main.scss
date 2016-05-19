@@ -6384,6 +6384,11 @@ html.navMaps {
         display: none;
       }
     }
+    #geoShapeMap {
+      width:100%;
+      height: 150px;
+      float: left
+    }
     #customMapsList {
       .customMapsControls {
         background-color: white;
@@ -6462,11 +6467,6 @@ html.navMaps {
                 width: 100%;
                 margin: 0px auto 15px;
             }
-        }
-        #geoshapemap {
-          width:100%;
-          height: 150px;
-          float: left
         }
         label {
           display: inline;

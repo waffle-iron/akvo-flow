@@ -452,12 +452,7 @@ FLOW.CustomMapEditView = FLOW.View.extend({
     self.customMapData['customMapDescription'] = '';
     self.customMapData['namedMap'] = '';
     self.customMapData['cartocss'] = '';
-    self.customMapData['legend'] = {};
-    self.customMapData['legend']['title'] = '';
-    self.customMapData['legend']['question'] = {};
-    self.customMapData['legend']['question']['text'] = '';
-    self.customMapData['legend']['question']['column'] = '';
-    self.customMapData['legend']['points'] = '';
+    self.customMapData['legend'] = '';
     self.customMapData['permission'] = '';
     self.customMapData['newMap'] = '';
 
@@ -605,7 +600,7 @@ FLOW.CustomMapEditView = FLOW.View.extend({
       $('#show-question').data('text', '');
     });
 
-    this.$(document).off('change', '.question_selector').on('change', '.question_selector',function(e) {
+    this.$(document).off('change', '.question_selector').on('change', '.question_selector', function(e) {
       //remove all 'folder_survey_selector's after current
       FLOW.cleanSurveyGroupHierarchy($(this));
 
@@ -633,7 +628,7 @@ FLOW.CustomMapEditView = FLOW.View.extend({
                     cascadeJson = JSON.parse(optionsData.distinct_values[i][$('.question_selector').val()]);
                     cascadeString = cascadeJson.map(function(item){
                       return item.text;
-                    }).join("|");
+                    }).join(" | ");
                   }
                 }
 
@@ -682,18 +677,19 @@ FLOW.CustomMapEditView = FLOW.View.extend({
         self.presetMapStyle['queryObject']['value'] = '';
         if ($('.question-option-color-code').length) {
           $('.question-option-color-code').each( function(index) {
-            var currentColour = {};
-            currentColour['title'] = JSON.stringify($(this).data('option'));
+            var currentColour = {}, currentOption = $(this).data('option');
+            currentOption = (typeof currentOption === 'object') ? JSON.stringify(currentOption) : currentOption;
+            currentColour['title'] = currentOption;
             currentColour['colour'] = $(this).val();
             currentColour['column'] = $(this).data('column');
             cartocss.push(currentColour);
 
             currentCartocss += '#'+self.selectedTable+'['+$(this).data('column')+'='
-              +(($(this).data('option') == null || $(this).data('option') == "")
-                ? ($(this).data('option') == "")
-                  ? ""
+              +((currentOption == null || currentOption == '')
+                ? (currentOption == '')
+                  ? ''
                     : 'null'
-                    : '"'+FLOW.addSlashes(JSON.stringify($(this).data('option')))+'"')
+                      : '"'+((currentOption.charAt(0) === '[') ? FLOW.addSlashes(currentOption) : currentOption)+'"')
               +']';
             currentCartocss += '{';
     				currentCartocss += 'marker-fill: '+$(this).val()+';';
@@ -729,12 +725,14 @@ FLOW.CustomMapEditView = FLOW.View.extend({
 
         //if show legend is checked, populate the legend object
         if($('#show-legend').is(':checked')){
+          self.customMapData['legend'] = {};
           self.customMapData['legend']['title'] = ($('#show-title').is(':checked')) ? $('#custom-map-title').val() : '';
+          self.customMapData['legend']['question'] = {};
           self.customMapData['legend']['question']['text'] = ($('#show-question').is(':checked')) ? $('#show-question').data('text') : '';
           self.customMapData['legend']['question']['column'] = ($('#show-question').is(':checked')) ? $('#show-question').data('column') : '';
           self.customMapData['legend']['points'] = ($('#show-points-number').is(':checked')) ? 'true' : 'false';
           self.customMapData['legend'] = JSON.stringify(self.customMapData['legend']);
-        }else{
+        } else {
           self.customMapData['legend'] = '';
         }
 
@@ -802,33 +800,24 @@ FLOW.CustomMapEditView = FLOW.View.extend({
     });
 
     this.$(document).off('change', '.question-option-color-code').on('change', '.question-option-color-code',function(e) {
+      //allow changed map to be saved
+      FLOW.selectedControl.set('mapChanged', true);
+
       $('#legendOptions').html('');
       $('.question-option-color-code').each( function(index) {
+        var option = $(this).data('option'), optionJson;
+        if (typeof option === 'object') {
+          if(JSON.stringify(option).charAt(0) === '['){
+            option = $(this).data('option').map(function(item){
+              return item.text;
+            }).join(" | ");
+          }
+        }
         $('#legendOptions').append('<div class="legend-option"><div class="bullet" style="background: '
           +$(this).val()+'; border-radius: 0 !important"></div>'
-          +$(this).data('option')+'</div>');
+          +option+'</div>');
       });
     });
-  },
-
-  customMapComplete: function(){
-    if(!FLOW.selectedControl.get('mapChanged')) {
-      FLOW.dialogControl.set('activeAction', 'ignore');
-      FLOW.dialogControl.set('header', Ember.String.loc('_custom_maps_no_changes'));
-      FLOW.dialogControl.set('message', Ember.String.loc('_custom_man_make_changes'));
-      FLOW.dialogControl.set('showCANCEL', false);
-      FLOW.dialogControl.set('showDialog', true);
-      return false;
-    }
-    if($('#mapTitle').val() === ""){
-      FLOW.dialogControl.set('activeAction', 'ignore');
-      FLOW.dialogControl.set('header', Ember.String.loc('_custom_maps_incomplete_map'));
-      FLOW.dialogControl.set('message', Ember.String.loc('_custom_maps_enter_map_name'));
-      FLOW.dialogControl.set('showCANCEL', false);
-      FLOW.dialogControl.set('showDialog', true);
-      return false;
-    }
-    return true;
   },
 
   preLoadSurveySelection: function(data){
@@ -931,7 +920,7 @@ FLOW.CustomMapEditView = FLOW.View.extend({
                                 cascadeJson = JSON.parse(cartocssData[n]['title']);
                                 cascadeString = cascadeJson.map(function(item){
                                   return item.text;
-                                }).join("|");
+                                }).join(" | ");
                               } else {
                                 cascadeString = cartocssData[n]['title'];
                               }
@@ -979,12 +968,32 @@ FLOW.CustomMapEditView = FLOW.View.extend({
       if(legend.question != ""){
         $('#show-question').prop('checked', true);
         $('#show-question').data('text', legend.question.text);
-        $('#legendQuestion').html(legend.question);
+        $('#legendQuestion').html(legend.question.text);
       }
       if(legend.points == "true"){
         $('#show-points-number').prop('checked', true);
       }
     }
+  },
+
+  customMapComplete: function(){
+    if(!FLOW.selectedControl.get('mapChanged')) {
+      FLOW.dialogControl.set('activeAction', 'ignore');
+      FLOW.dialogControl.set('header', Ember.String.loc('_custom_maps_no_changes'));
+      FLOW.dialogControl.set('message', Ember.String.loc('_custom_man_make_changes'));
+      FLOW.dialogControl.set('showCANCEL', false);
+      FLOW.dialogControl.set('showDialog', true);
+      return false;
+    }
+    if($('#mapTitle').val() === ""){
+      FLOW.dialogControl.set('activeAction', 'ignore');
+      FLOW.dialogControl.set('header', Ember.String.loc('_custom_maps_incomplete_map'));
+      FLOW.dialogControl.set('message', Ember.String.loc('_custom_maps_enter_map_name'));
+      FLOW.dialogControl.set('showCANCEL', false);
+      FLOW.dialogControl.set('showDialog', true);
+      return false;
+    }
+    return true;
   }
 });
 
@@ -1075,7 +1084,7 @@ FLOW.CustomMapView = FLOW.View.extend({
                   cascadeJson = JSON.parse(style[n]['title']);
                   cascadeString = cascadeJson.map(function(item){
                     return item.text;
-                  }).join("|");
+                  }).join(" | ");
                 } else {
                   cascadeString = style[n]['title'];
                 }
@@ -1103,43 +1112,35 @@ FLOW.CustomMapView = FLOW.View.extend({
                     var response = pointsCountResponse.response;
                     for (var i = 0; i < response.length; i++) {
                       $('.legend-option').each( function(index) {
-                        var currentOption = (($(this).data('option') == null || $(this).data('option') == "")
-                          ? ($(this).data('option') == "")
-                            ? ""
-                              : 'null'
-                              : JSON.stringify($(this).data('option')));
+                        var currentOption = (($(this).data('option') == null || $(this).data('option') == 'null' || $(this).data('option') == '')
+                          ? null
+                            : JSON.stringify($(this).data('option')));
                         if(currentOption == response[i][legend.question.column]){
-                          $(this).append('('+response[i]['count']+')');
+                          $(this).append(' ('+response[i]['count']+')');
                         }
                       });
                     }
                   }
                 }, ajaxObject);
               } else {
+                var ajaxObject = {};
+                ajaxObject['call'] = "GET";
+                ajaxObject['url'] = '';
                 if(data.custom_map_details[0]['form_id'] != 0) {//if map is based on a form
-                  var ajaxObject = {};
-                  ajaxObject['call'] = "GET";
                   ajaxObject['url'] = '/rest/cartodb/points_count?table=raw_data_'+data.custom_map_details[0]['form_id']+'&column=&value=';
-                  ajaxObject['data'] = '';
+                } else if (data.custom_map_details[0]['survey_id'] != 0) {
+                  ajaxObject['url'] = '/rest/cartodb/points_count?table=data_point&column=survey_id&value='+data.custom_map_details[0]['survey_id'];
+                }
+                ajaxObject['data'] = '';
 
+                if (ajaxObject['url'] != '') {
                   FLOW.ajaxCall(function(pointsCountResponse){
                     if(pointsCountResponse){
                       var response = pointsCountResponse.response;
+
+                      $('.legend-option').append(' ('+response[0].count+')');
                     }
                   }, ajaxObject);
-                } else {
-                  if(data.custom_map_details[0]['survey_id'] != 0) {
-                    var ajaxObject = {};
-                    ajaxObject['call'] = "GET";
-                    ajaxObject['url'] = '/rest/cartodb/points_count?table=data_point&column=survey_id&value='+data.custom_map_details[0]['survey_id'];
-                    ajaxObject['data'] = '';
-
-                    FLOW.ajaxCall(function(pointsCountResponse){
-                      if(pointsCountResponse){
-                        var response = pointsCountResponse.response;
-                      }
-                    }, ajaxObject);
-                  }
                 }
               }
             }

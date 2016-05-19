@@ -38,7 +38,7 @@ FLOW.drawLeafletMap = function(mapObject){
 		"Satellite": satellite
 	};
 
-  L.control.layers(null, baseLayers, {position: 'topleft'}).addTo(mapObject);
+  L.control.layers(baseLayers, null, {position: 'topleft'}).addTo(mapObject);
 };
 
 FLOW.parseGeoshape = function(geoshapeString) {
@@ -293,7 +293,7 @@ FLOW.displayPointData = function(dataPointObject, pointData){
                   cascadeJson = JSON.parse(questionAnswer);
                   cascadeString = cascadeJson.map(function(item){
                     return (questions[i].questionType == "CASCADE") ? item.name : item.text;
-                  }).join("|");
+                  }).join(" | ");
                 } else {
                   cascadeString = questionAnswer;
                 }
