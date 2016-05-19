@@ -662,6 +662,68 @@ FLOW.CustomMapEditView = FLOW.View.extend({
       }
     });
 
+    this.$(document).off('change', '.question-option-color-code').on('change', '.question-option-color-code',function(e) {
+      //allow changed map to be saved
+      FLOW.selectedControl.set('mapChanged', true);
+
+      $('#legendOptions').html('');
+      $('.question-option-color-code').each( function(index) {
+        var option = $(this).data('option'), optionJson;
+        if (typeof option === 'object') {
+          if(JSON.stringify(option).charAt(0) === '['){
+            option = $(this).data('option').map(function(item){
+              return item.text;
+            }).join(" | ");
+          }
+        }
+        $('#legendOptions').append('<div class="legend-option"><div class="bullet" style="background: '
+          +$(this).val()+'; border-radius: 0 !important"></div>'
+          +option+'</div>');
+      });
+    });
+
+    this.$(document).off('change', '.legend-toggle').on('change', '.legend-toggle', function() {
+      //allow changed map to be saved
+      FLOW.selectedControl.set('mapChanged', true);
+
+      switch ($(this).attr('id')) {
+        case 'show-legend':
+          if($(this).is(':checked')) {//enable the rest of the legend toggles
+            $('#customMapLegend').show();
+            $('#show-title').attr('disabled', false);
+            $('#show-question').attr('disabled', false);
+            $('#show-points-number').attr('disabled', false);
+          } else {//disable the rest of the legend toggles
+            $('#customMapLegend').hide();
+            $('#show-title').attr('disabled', true);
+            $('#show-question').attr('disabled', true);
+            $('#show-points-number').attr('disabled', true);
+          }
+          break;
+        case 'show-title':
+          if($(this).is(':checked')) {
+            $('#custom-map-title').show();
+            $('#legendTitle').html($('#custom-map-title').val());
+          } else {
+            $('#custom-map-title').val('').hide();
+            $('#legendTitle').html('');
+          }
+          break;
+        case 'show-question':
+          if($(this).is(':checked')) {
+            $('#legendQuestion').html($('#show-question').data('text'));
+          } else {
+            $('#legendQuestion').html('');
+          }
+          break;
+        default:
+      }
+    });
+
+    this.$(document).off('change', '#custom-map-title').on('change', '#custom-map-title',function(e) {
+      $('#legendTitle').html($(this).val());
+    });
+
     this.$(document).off('click', '#saveCustomMap').on('click', '#saveCustomMap',function(e){
       if(self.customMapComplete()) {
         self.mapSaved = true;
@@ -755,68 +817,6 @@ FLOW.CustomMapEditView = FLOW.View.extend({
         FLOW.createNamedMapObject(map, self.presetMapStyle['queryObject'], self.presetMapStyle['cartocss']);
       }
       FLOW.router.transitionTo('navMaps.customMapsList');
-    });
-
-    this.$(document).off('change', '.legend-toggle').on('change', '.legend-toggle', function() {
-      //allow changed map to be saved
-      FLOW.selectedControl.set('mapChanged', true);
-
-      switch ($(this).attr('id')) {
-        case 'show-legend':
-          if($(this).is(':checked')) {//enable the rest of the legend toggles
-            $('#customMapLegend').show();
-            $('#show-title').attr('disabled', false);
-            $('#show-question').attr('disabled', false);
-            $('#show-points-number').attr('disabled', false);
-          } else {//disable the rest of the legend toggles
-            $('#customMapLegend').hide();
-            $('#show-title').attr('disabled', true);
-            $('#show-question').attr('disabled', true);
-            $('#show-points-number').attr('disabled', true);
-          }
-          break;
-        case 'show-title':
-          if($(this).is(':checked')) {
-            $('#custom-map-title').show();
-            $('#legendTitle').html($('#custom-map-title').val());
-          } else {
-            $('#custom-map-title').val('').hide();
-            $('#legendTitle').html('');
-          }
-          break;
-        case 'show-question':
-          if($(this).is(':checked')) {
-            $('#legendQuestion').html($('#show-question').data('text'));
-          } else {
-            $('#legendQuestion').html('');
-          }
-          break;
-        default:
-      }
-    });
-
-    this.$(document).off('change', '#custom-map-title').on('change', '#custom-map-title',function(e) {
-      $('#legendTitle').html($(this).val());
-    });
-
-    this.$(document).off('change', '.question-option-color-code').on('change', '.question-option-color-code',function(e) {
-      //allow changed map to be saved
-      FLOW.selectedControl.set('mapChanged', true);
-
-      $('#legendOptions').html('');
-      $('.question-option-color-code').each( function(index) {
-        var option = $(this).data('option'), optionJson;
-        if (typeof option === 'object') {
-          if(JSON.stringify(option).charAt(0) === '['){
-            option = $(this).data('option').map(function(item){
-              return item.text;
-            }).join(" | ");
-          }
-        }
-        $('#legendOptions').append('<div class="legend-option"><div class="bullet" style="background: '
-          +$(this).val()+'; border-radius: 0 !important"></div>'
-          +option+'</div>');
-      });
     });
   },
 
@@ -968,6 +968,7 @@ FLOW.CustomMapEditView = FLOW.View.extend({
       if(legend.question != ""){
         $('#show-question').prop('checked', true);
         $('#show-question').data('text', legend.question.text);
+        $('#show-question').data('column', legend.question.column);
         $('#legendQuestion').html(legend.question.text);
       }
       if(legend.points == "true"){
