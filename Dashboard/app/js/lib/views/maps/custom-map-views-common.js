@@ -1115,7 +1115,7 @@ FLOW.CustomMapView = FLOW.View.extend({
                       $('.legend-option').each( function(index) {
                         var currentOption = (($(this).data('option') == null || $(this).data('option') == 'null' || $(this).data('option') == '')
                           ? null
-                            : JSON.stringify($(this).data('option')));
+                            : (typeof $(this).data('option') === 'object') ? JSON.stringify($(this).data('option')) : $(this).data('option'));
                         if(currentOption == response[i][legend.question.column]){
                           $(this).append(' ('+response[i]['count']+')');
                         }
