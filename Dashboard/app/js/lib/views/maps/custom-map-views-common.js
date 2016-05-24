@@ -41,15 +41,16 @@ FLOW.DataMapView = FLOW.View.extend({
       L.control.scale({position:'topleft', maxWidth:150}).addTo(self.map);
     }else{
       //onetime get survey groups
-      $.get('/rest/survey_groups'/*place survey_groups endpoint here*/
-      , function(surveyGroupsData, status){
-        FLOW.selectedControl.set('cartodbMapsSurveyGroups', surveyGroupsData);
+      $.get(
+        '/rest/survey_groups', /*place survey_groups endpoint here*/
+        function(surveyGroupsData, status){
+          FLOW.selectedControl.set('cartodbMapsSurveyGroups', surveyGroupsData);
 
-        self.insertCartodbMap();
+          self.insertCartodbMap();
 
-        // add scale indication to map
-        L.control.scale({position:'topleft', maxWidth:150}).addTo(self.map);
-      });
+          // add scale indication to map
+          L.control.scale({position:'topleft', maxWidth:150}).addTo(self.map);
+        });
     }
 
     this.$('#mapDetailsHideShow').click(function () {
@@ -103,33 +104,35 @@ FLOW.DataMapView = FLOW.View.extend({
         var keyId = $(this).val();
         //if a survey is selected, load forms to form selector element.
         if($(this).find("option:selected").data('type') === 'PROJECT'){
-          $.get('/rest/cartodb/forms?surveyId='+keyId, function(data, status) {
-            var rows = [];
-            if(data['forms'] && data['forms'].length > 0) {
-              rows = data['forms'];
-              rows.sort(function(el1, el2) {
-                return FLOW.compare(el1, el2, 'name')
-              });
+          $.get(
+            '/rest/surveys?surveyGroupId='+keyId,
+            function(data, status) {
+              var rows = [];
+              if(data['surveys'] && data['surveys'].length > 0) {
+                rows = data['surveys'];
+                rows.sort(function(el1, el2) {
+                  return FLOW.compare(el1, el2, 'name')
+                });
 
-              //create folder and/or survey select element
-              var form_selector = $("<select></select>").attr("data-survey-id", keyId).attr("class", "form_selector");
-              form_selector.append('<option value="">--' + Ember.String.loc('_choose_a_form') + '--</option>');
+                //create folder and/or survey select element
+                var form_selector = $("<select></select>").attr("data-survey-id", keyId).attr("class", "form_selector");
+                form_selector.append('<option value="">--' + Ember.String.loc('_choose_a_form') + '--</option>');
 
-              var formIds = [];
-              for(var i=0; i<rows.length; i++) {
-                //append returned forms list to the firm selector element
-                form_selector.append(
-                  $('<option></option>').val(rows[i]["id"]).html(rows[i]["name"]));
-                  formIds.push(rows[i]["id"]);
-              }
-              $("#survey_hierarchy").append(form_selector);
+                var formIds = [];
+                for(var i=0; i<rows.length; i++) {
+                  //append returned forms list to the firm selector element
+                  form_selector.append(
+                    $('<option></option>').val(rows[i]["keyId"]).html(rows[i]["name"]));
+                    formIds.push(rows[i]["keyId"]);
+                }
+                $("#survey_hierarchy").append(form_selector);
 
-              for(var i=0; i<formIds.length; i++){
-                if(!(formIds[i] in FLOW.selectedControl.get('questions'))){
-                  FLOW.loadQuestions(formIds[i]);
+                for(var i=0; i<formIds.length; i++){
+                  if(!(formIds[i] in FLOW.selectedControl.get('questions'))){
+                    FLOW.loadQuestions(formIds[i]);
+                  }
                 }
               }
-            }
           });
 
           var namedMapObject = {};
@@ -477,25 +480,27 @@ FLOW.CustomMapEditView = FLOW.View.extend({
         if($(this).find("option:selected").data('type') === 'PROJECT'){
           self.selectedTable = 'data_point';
           self.customMapData['surveyId'] = $(this).find("option:selected").val();
-          $.get('/rest/cartodb/forms?surveyId='+surveyGroupKeyId, function(data, status) {
-            var rows = [];
-            if(data['forms'] && data['forms'].length > 0) {
-              rows = data['forms'];
-              rows.sort(function(el1, el2) {
-                return FLOW.compare(el1, el2, 'name')
-              });
+          $.get(
+            '/rest/surveys?surveyGroupId='+surveyGroupKeyId,
+            function(data, status) {
+              var rows = [];
+              if(data['surveys'] && data['surveys'].length > 0) {
+                rows = data['surveys'];
+                rows.sort(function(el1, el2) {
+                  return FLOW.compare(el1, el2, 'name')
+                });
 
-              //create folder and/or survey select element
-              var form_selector = $('<select></select>').attr("data-survey-id", surveyGroupKeyId).attr("class", "form_selector");
-              form_selector.append('<option value="">--' + Ember.String.loc('_choose_a_form') + '--</option>');
+                //create folder and/or survey select element
+                var form_selector = $('<select></select>').attr("data-survey-id", surveyGroupKeyId).attr("class", "form_selector");
+                form_selector.append('<option value="">--' + Ember.String.loc('_choose_a_form') + '--</option>');
 
-              for(var i=0; i<rows.length; i++) {
-                //append returned forms list to the firm selector element
-                form_selector.append(
-                  $('<option></option>').val(rows[i]["id"]).html(rows[i]["name"]));
+                for(var i=0; i<rows.length; i++) {
+                  //append returned forms list to the firm selector element
+                  form_selector.append(
+                    $('<option></option>').val(rows[i]["keyId"]).html(rows[i]["name"]));
+                }
+                $("#survey_hierarchy").append(form_selector);
               }
-              $("#survey_hierarchy").append(form_selector);
-            }
           });
 
           var queryObject = {};
@@ -838,113 +843,115 @@ FLOW.CustomMapEditView = FLOW.View.extend({
             $('#selector_'+surveyGroups[i]['ancestorIds'][j]).val(data.survey_id);
             self.customMapData['surveyId'] = data.survey_id;
             self.selectedTable = 'data_point';
-            $.get('/rest/cartodb/forms?surveyId='+data.survey_id, function(formsData, status) {
-              var rows = [];
-              if(formsData['forms'] && formsData['forms'].length > 0) {
-                rows = formsData['forms'];
-                rows.sort(function(el1, el2) {
-                  return FLOW.compare(el1, el2, 'name')
-                });
+            $.get(
+              '/rest/surveys?surveyGroupId='+data.survey_id,
+              function(formsData, status) {
+                var rows = [];
+                if(formsData['surveys'] && formsData['surveys'].length > 0) {
+                  rows = formsData['surveys'];
+                  rows.sort(function(el1, el2) {
+                    return FLOW.compare(el1, el2, 'name')
+                  });
 
-                //create folder and/or survey select element
-                var form_selector = $('<select></select>').attr("data-survey-id", data.survey_id).attr("class", "form_selector");
-                form_selector.append('<option value="">--' + Ember.String.loc('_choose_a_form') + '--</option>');
+                  //create folder and/or survey select element
+                  var form_selector = $('<select></select>').attr("data-survey-id", data.survey_id).attr("class", "form_selector");
+                  form_selector.append('<option value="">--' + Ember.String.loc('_choose_a_form') + '--</option>');
 
-                for(var k=0; k<rows.length; k++) {
-                  //append returned forms list to the firm selector element
-                  form_selector.append(
-                    $('<option></option>').val(rows[k]["id"]).html(rows[k]["name"]));
-                }
-                $("#survey_hierarchy").append(form_selector);
+                  for(var k=0; k<rows.length; k++) {
+                    //append returned forms list to the firm selector element
+                    form_selector.append(
+                      $('<option></option>').val(rows[k]["keyId"]).html(rows[k]["name"]));
+                  }
+                  $("#survey_hierarchy").append(form_selector);
 
-                //load generic data point style
-                $('#legendOptions').append('<div class="legend-option"><div class="bullet" style="background: #FF6600; border-radius: 0 !important"></div>'
-                  +Ember.String.loc('_custom_maps_data_point')+'</div>');
+                  //load generic data point style
+                  $('#legendOptions').append('<div class="legend-option"><div class="bullet" style="background: #FF6600; border-radius: 0 !important"></div>'
+                    +Ember.String.loc('_custom_maps_data_point')+'</div>');
 
-                //if a form ID was set when building the custom map, select it
-                if(data.form_id != 0){
-                  //clear legend options div
-                  $('#legendOptions').html('');
+                  //if a form ID was set when building the custom map, select it
+                  if(data.form_id != 0){
+                    //clear legend options div
+                    $('#legendOptions').html('');
 
-                  form_selector.val(data.form_id);
-                  self.customMapData['formId'] = data.form_id;
-                  self.selectedTable = 'raw_data_'+data.form_id;
-                  //create a question selector element
-                  var questionSelector = $('<select></select>').attr("class", "question_selector");
-                  questionSelector.append('<option value="">--' + Ember.String.loc('_select_option_question') + '--</option>');
+                    form_selector.val(data.form_id);
+                    self.customMapData['formId'] = data.form_id;
+                    self.selectedTable = 'raw_data_'+data.form_id;
+                    //create a question selector element
+                    var questionSelector = $('<select></select>').attr("class", "question_selector");
+                    questionSelector.append('<option value="">--' + Ember.String.loc('_select_option_question') + '--</option>');
 
-                  var ajaxObject = {};
-                  ajaxObject['call'] = "GET";
-                  ajaxObject['url'] = "/rest/cartodb/columns?table_name=raw_data_"+data.form_id;
-                  ajaxObject['data'] = "";
-                  FLOW.ajaxCall(function(columnsData){
-                    if(columnsData.column_names){
-                      var selectedFormColumns = columnsData.column_names;
+                    var ajaxObject = {};
+                    ajaxObject['call'] = "GET";
+                    ajaxObject['url'] = "/rest/cartodb/columns?table_name=raw_data_"+data.form_id;
+                    ajaxObject['data'] = "";
+                    FLOW.ajaxCall(function(columnsData){
+                      if(columnsData.column_names){
+                        var selectedFormColumns = columnsData.column_names;
 
-                      //get a list of questions from the selected form
-                      $.get(
-                        "/rest/cartodb/questions?form_id="+data.form_id,
-                        function(questionsData, questionsQueryStatus){
-                          //only list questions which are of type "option"
-                          for(var l=0; l<questionsData['questions'].length; l++){
-                            if(questionsData['questions'][l].type === "OPTION"){
-                              //first pull a list of column names from the cartodb table then set the option values to the column names
-                              for(var m=0; m<selectedFormColumns.length; m++){
-                                if(selectedFormColumns[m]['column_name'].match(questionsData['questions'][l].id)){
-                                  questionSelector.append('<option value="'
-                                    + selectedFormColumns[m]['column_name'] + '">'
-                                    + questionsData['questions'][l].display_text
-                                    + '</option>');
+                        //get a list of questions from the selected form
+                        $.get(
+                          "/rest/cartodb/questions?form_id="+data.form_id,
+                          function(questionsData, questionsQueryStatus){
+                            //only list questions which are of type "option"
+                            for(var l=0; l<questionsData['questions'].length; l++){
+                              if(questionsData['questions'][l].type === "OPTION"){
+                                //first pull a list of column names from the cartodb table then set the option values to the column names
+                                for(var m=0; m<selectedFormColumns.length; m++){
+                                  if(selectedFormColumns[m]['column_name'].match(questionsData['questions'][l].id)){
+                                    questionSelector.append('<option value="'
+                                      + selectedFormColumns[m]['column_name'] + '">'
+                                      + questionsData['questions'][l].display_text
+                                      + '</option>');
+                                  }
                                 }
                               }
                             }
-                          }
-                          $("#survey_hierarchy").append(questionSelector);
+                            $("#survey_hierarchy").append(questionSelector);
 
-                          //load generic data point style
-                          $('#legendOptions').append('<div class="legend-option"><div class="bullet" style="background: #FF6600; border-radius: 0 !important"></div>'
-                            +Ember.String.loc('_custom_maps_data_point')+'</div>');
+                            //load generic data point style
+                            $('#legendOptions').append('<div class="legend-option"><div class="bullet" style="background: #FF6600; border-radius: 0 !important"></div>'
+                              +Ember.String.loc('_custom_maps_data_point')+'</div>');
 
-                          //if question ID was set, select it
-                          if(data.question_id !=0){
-                            //clear legend options div
-                            $('#legendOptions').html('');
+                            //if question ID was set, select it
+                            if(data.question_id !=0){
+                              //clear legend options div
+                              $('#legendOptions').html('');
 
-                            questionSelector.val('q'+data.question_id);
-                            self.customMapData['questionId'] = data.question_id;
-                            //create a list of options and styles based on selected question
-                            var cartocssData = JSON.parse(data.cartocss);
-                            for(var n=0; n<cartocssData.length; n++){
-                              var cascadeString = "", cascadeJson;
-                              if (cartocssData[n]['title'].charAt(0) === '[') {
-                                cascadeJson = JSON.parse(cartocssData[n]['title']);
-                                cascadeString = cascadeJson.map(function(item){
-                                  return item.text;
-                                }).join(" | ");
-                              } else {
-                                cascadeString = cartocssData[n]['title'];
+                              questionSelector.val('q'+data.question_id);
+                              self.customMapData['questionId'] = data.question_id;
+                              //create a list of options and styles based on selected question
+                              var cartocssData = JSON.parse(data.cartocss);
+                              for(var n=0; n<cartocssData.length; n++){
+                                var cascadeString = "", cascadeJson;
+                                if (cartocssData[n]['title'].charAt(0) === '[') {
+                                  cascadeJson = JSON.parse(cartocssData[n]['title']);
+                                  cascadeString = cascadeJson.map(function(item){
+                                    return item.text;
+                                  }).join(" | ");
+                                } else {
+                                  cascadeString = cartocssData[n]['title'];
+                                }
+
+                                var colourPicker = $('<div class="question-option-div point-details-content"><input class="question-option-color-code" data-column="q'
+                                  +data.question_id+'" type="color" data-option=\''+cartocssData[n]['title']
+                                  +'\' type="text" value="'+cartocssData[n]['colour']+'" style="padding: 2px !important">'
+                                  +cascadeString+'</div>');
+                                $('#survey_hierarchy').append(colourPicker);
+
+                                $('#legendOptions').append('<div class="legend-option"><div class="bullet" style="background: '
+                                  +cartocssData[n]['colour']+'; border-radius: 0 !important"></div>'
+                                  +cascadeString+'</div>');
                               }
 
-                              var colourPicker = $('<div class="question-option-div point-details-content"><input class="question-option-color-code" data-column="q'
-                                +data.question_id+'" type="color" data-option=\''+cartocssData[n]['title']
-                                +'\' type="text" value="'+cartocssData[n]['colour']+'" style="padding: 2px !important">'
-                                +cascadeString+'</div>');
-                              $('#survey_hierarchy').append(colourPicker);
-
-                              $('#legendOptions').append('<div class="legend-option"><div class="bullet" style="background: '
-                                +cartocssData[n]['colour']+'; border-radius: 0 !important"></div>'
-                                +cascadeString+'</div>');
+                              //display legend question toggle
+                              $('#legend-question-toggle').css({display: 'block'});
+                              $('#legend-question-toggle').data('question', $('.question_selector').find('option:selected').text());
                             }
-
-                            //display legend question toggle
-                            $('#legend-question-toggle').css({display: 'block'});
-                            $('#legend-question-toggle').data('question', $('.question_selector').find('option:selected').text());
-                          }
-                        });
-                    }
-                  }, ajaxObject);
+                          });
+                      }
+                    }, ajaxObject);
+                  }
                 }
-              }
             });
           }else{
             $('#selector_'+surveyGroups[i]['ancestorIds'][j]).val(surveyGroups[i]['ancestorIds'][j+1]);

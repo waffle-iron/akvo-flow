@@ -443,7 +443,8 @@ FLOW.createLayer = function(mapObject, mapName){
               clearInterval(refreshIntervalId);
               FLOW.getCartodbPointData(dataPointObject);
             }else{
-              pointDataUrl = '/rest/cartodb/raw_data?dataPointId='+data.data_point_id+'&formId='+FLOW.selectedControl.get('selectedCustomMapFormId');
+              pointDataUrl = '/rest/cartodb/raw_data?dataPointId='+data.data_point_id+'&formId='
+              +($(('.form_selector').length) ? $('.form_selector').val() : FLOW.selectedControl.get('selectedCustomMapFormId'));
               $.get('/rest/cartodb/data_point?id='+data.data_point_id, function(pointData, status){
                 dataPointObject['url'] = pointDataUrl;
                 dataPointObject['dataPointName'] = pointData['row']['name'];
@@ -463,7 +464,8 @@ FLOW.createLayer = function(mapObject, mapName){
           dataPointObject['dataPointIdentifier'] = data.identifier;
           FLOW.getCartodbPointData(dataPointObject);
         }else{
-          pointDataUrl = '/rest/cartodb/raw_data?dataPointId='+data.data_point_id+'&formId='+FLOW.selectedControl.get('selectedCustomMapFormId');
+          pointDataUrl = '/rest/cartodb/raw_data?dataPointId='+data.data_point_id+'&formId='
+          +(($('.form_selector').length) ? $('.form_selector').val() : FLOW.selectedControl.get('selectedCustomMapFormId'));
           $.get('/rest/cartodb/data_point?id='+data.data_point_id, function(pointData, status){
             dataPointObject['url'] = pointDataUrl;
             dataPointObject['dataPointName'] = pointData['row']['name'];
