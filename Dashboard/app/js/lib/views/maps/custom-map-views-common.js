@@ -443,7 +443,7 @@ FLOW.CustomMapEditView = FLOW.View.extend({
             self.presetMapStyle = FLOW.namedMapPresetStyle(data.custom_map_details[0]);
           }
       });
-      FLOW.createLayer( map, FLOW.selectedControl.get('customMapName')); //load selected map
+      FLOW.createCustomMapLayer( map, FLOW.selectedControl.get('customMapName')); //load selected map
     }
 
     //initialise map payloads structures as follows
@@ -593,7 +593,7 @@ FLOW.CustomMapEditView = FLOW.View.extend({
         queryObject['value'] = '';
         FLOW.createNamedMapObject(map, queryObject, '');
       } else {
-        FLOW.createLayer(map, FLOW.selectedControl.get('customMapName'));
+        FLOW.createCustomMapLayer(map, FLOW.selectedControl.get('customMapName'));
       }
 
       //load generic data point style
@@ -727,6 +727,11 @@ FLOW.CustomMapEditView = FLOW.View.extend({
 
     this.$(document).off('change', '#custom-map-title').on('change', '#custom-map-title',function(e) {
       $('#legendTitle').html($(this).val());
+    });
+
+    this.$(document).off('change', '.map-details').on('change', '.map-details',function(e) {
+      //allow changed map to be saved
+      FLOW.selectedControl.set('mapChanged', true);
     });
 
     this.$(document).off('click', '#saveCustomMap').on('click', '#saveCustomMap',function(e){
