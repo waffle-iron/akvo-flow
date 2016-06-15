@@ -191,7 +191,7 @@ FLOW.DataMapView = FLOW.View.extend({
       }
     });
 
-    $(document).off('click', '.projectGeoshape').on('click', '.projectGeoshape', function(){
+    $(document).off('click', '.project-geoshape').on('click', '.project-geoshape', function(){
       if(FLOW.selectedControl.get('polygons').length > 0){
         $(this).html(Ember.String.loc('_project_geoshape_onto_main_map'));
         for(var i=0; i<FLOW.selectedControl.get('polygons').length; i++){
@@ -206,7 +206,7 @@ FLOW.DataMapView = FLOW.View.extend({
         FLOW.selectedControl.set('polygons', []);
       }else{
         $(this).html(Ember.String.loc('_clear_geoshape_from_main_map'));
-        FLOW.projectGeoshape(self.map, FLOW.selectedControl.get('geoshapeCoordinates'));
+        FLOW.projectGeoshape(self.map, $(this).data('geoshape-object'));
       }
     });
   }
@@ -1205,7 +1205,7 @@ FLOW.CustomMapView = FLOW.View.extend({
       FLOW.handleShowHideDetails();
     });
 
-    this.$(document).off('click', '.projectGeoshape').on('click', '.projectGeoshape', function(){
+    this.$(document).off('click', '.project-geoshape').on('click', '.project-geoshape', function(){
       if(FLOW.selectedControl.get('polygons').length > 0){
         $(this).html(Ember.String.loc('_project_geoshape_onto_main_map'));
         for(var i=0; i<FLOW.selectedControl.get('polygons').length; i++){
@@ -1218,7 +1218,7 @@ FLOW.CustomMapView = FLOW.View.extend({
         FLOW.selectedControl.set('polygons', []);
       }else{
         $(this).html(Ember.String.loc('_clear_geoshape_from_main_map'));
-        FLOW.projectGeoshape(map, FLOW.selectedControl.get('geoshapeCoordinates'));
+        FLOW.projectGeoshape(map, $(this).data('geoshape-object'));
       }
     });
 
