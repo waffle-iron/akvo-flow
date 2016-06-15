@@ -146,36 +146,30 @@ public class EventUtils {
         }
     }
 
-    public static class EventTypes {
-        public final EntityType type;
-        public final String action;
-
-        public EventTypes(EntityType type, String action) {
-            this.type = type;
-            this.action = action;
-        }
+    public static String toActionName(String kindName) {
+        return kindName.substring(0, 1).toLowerCase() + kindName.substring(1);
     }
 
-    public static EventTypes getEventAndActionType(String kindName) {
+    public static String getAction(String kindName) {
         switch (kindName) {
             case Kind.ANSWER:
-                return new EventTypes(EntityType.ANSWER, Action.ANSWER);
+                return Action.ANSWER;
             case Kind.FORM_INSTANCE:
-                return new EventTypes(EntityType.FORM_INSTANCE, Action.FORM_INSTANCE);
+                return Action.FORM_INSTANCE;
             case Kind.DATA_POINT:
-                return new EventTypes(EntityType.DATA_POINT, Action.DATA_POINT);
+                return Action.DATA_POINT;
             case Kind.SURVEY_GROUP:
-                return new EventTypes(EntityType.SURVEY_GROUP, Action.SURVEY_GROUP);
+                return Action.SURVEY_GROUP;
             case Kind.FORM:
-                return new EventTypes(EntityType.FORM, Action.FORM);
+                return Action.FORM;
             case Kind.QUESTION_GROUP:
-                return new EventTypes(EntityType.QUESTION_GROUP, Action.QUESTION_GROUP);
+                return Action.QUESTION_GROUP;
             case Kind.QUESTION:
-                return new EventTypes(EntityType.QUESTION, Action.QUESTION);
+                return Action.QUESTION;
             case Kind.DEVICE_FILE:
-                return new EventTypes(EntityType.DEVICE_FILE, Action.DEVICE_FILE);
+                return Action.DEVICE_FILE;
         }
-        return null;
+        return toActionName(kindName);
     }
 
 

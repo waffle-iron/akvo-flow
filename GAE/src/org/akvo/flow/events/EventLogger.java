@@ -17,7 +17,7 @@
 package org.akvo.flow.events;
 
 import static com.gallatinsystems.common.util.MemCacheUtils.initCache;
-import static org.akvo.flow.events.EventUtils.getEventAndActionType;
+import static org.akvo.flow.events.EventUtils.getAction;
 import static org.akvo.flow.events.EventUtils.newContext;
 import static org.akvo.flow.events.EventUtils.newEvent;
 import static org.akvo.flow.events.EventUtils.newSource;
@@ -34,7 +34,6 @@ import java.util.logging.Logger;
 import net.sf.jsr107cache.Cache;
 
 import org.akvo.flow.events.EventUtils.Action;
-import org.akvo.flow.events.EventUtils.EventTypes;
 import org.akvo.flow.events.EventUtils.Prop;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.springframework.security.core.Authentication;
@@ -79,6 +78,10 @@ public class EventLogger {
         EXCLUDED_KINDS.add("AccessPointStatusSummary");
         EXCLUDED_KINDS.add("SurveyInstanceSummary");
         EXCLUDED_KINDS.add("SurveyQuestionSummary");
+
+        // System kinds
+        EXCLUDED_KINDS.add("_ah_SESSION");
+        EXCLUDED_KINDS.add("Lock");
     }
 
     private boolean shouldSchedule() {
@@ -160,8 +163,8 @@ public class EventLogger {
 
             Entity current = context.getCurrentElement();
 
-            // determine type of event and type of action
-            EventTypes types = getEventAndActionType(current.getKey().getKind());
+            // determine type of action
+            String action = getAction(current.getKey().getKind());
 
             // determine if this entity was created or updated
             Date lastUpdateDatetime = (Date) current.getProperty(Prop.LAST_UPDATE_DATE_TIME);
@@ -184,7 +187,7 @@ public class EventLogger {
 
             // create event
             Map<String, Object> event = newEvent(SystemProperty.applicationId.get(),
-                    types.action + actionType, current, eventContext);
+                    action + actionType, current, eventContext);
 
             // store it
             storeEvent(event, timestamp);
@@ -206,8 +209,8 @@ public class EventLogger {
                 return;
             }
 
-            // determine type of event and type of action
-            EventTypes types = getEventAndActionType(context.getCurrentElement().getKind());
+            // determine type of action
+            String action = getAction(context.getCurrentElement().getKind());
 
             // create event source
             // get the authentication information. This seems to contain the userId, but
@@ -228,7 +231,7 @@ public class EventLogger {
 
             // create event
             Map<String, Object> event = newEvent(SystemProperty.applicationId.get(),
-                    types.action + Action.DELETED, deleted, eventContext);
+                    action + Action.DELETED, deleted, eventContext);
 
             // store it
             storeEvent(event, timestamp);
