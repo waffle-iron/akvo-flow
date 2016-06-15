@@ -1012,6 +1012,14 @@ FLOW.CustomMapEditView = FLOW.View.extend({
       FLOW.dialogControl.set('showDialog', true);
       return false;
     }
+    if(this.customMapData['surveyId'] == 0) {
+      FLOW.dialogControl.set('activeAction', 'ignore');
+      FLOW.dialogControl.set('header', Ember.String.loc('_custom_maps_incomplete_map'));
+      FLOW.dialogControl.set('message', Ember.String.loc('_custom_maps_select_survey'));
+      FLOW.dialogControl.set('showCANCEL', false);
+      FLOW.dialogControl.set('showDialog', true);
+      return false;
+    }
     return true;
   }
 });
