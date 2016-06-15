@@ -494,12 +494,21 @@ FLOW.CustomMapEditView = FLOW.View.extend({
                 var form_selector = $('<select></select>').attr("data-survey-id", surveyGroupKeyId).attr("class", "form_selector");
                 form_selector.append('<option value="">--' + Ember.String.loc('_choose_a_form') + '--</option>');
 
+                var formIds = [];
+
                 for(var i=0; i<rows.length; i++) {
                   //append returned forms list to the firm selector element
                   form_selector.append(
                     $('<option></option>').val(rows[i]["keyId"]).html(rows[i]["name"]));
+                    formIds.push(rows[i]["keyId"]);
                 }
                 $("#survey_hierarchy").append(form_selector);
+
+                for(var i=0; i<formIds.length; i++){
+                  if(!(formIds[i] in FLOW.selectedControl.get('questions'))){
+                    FLOW.loadQuestions(formIds[i]);
+                  }
+                }
               }
           });
 
@@ -564,27 +573,24 @@ FLOW.CustomMapEditView = FLOW.View.extend({
           if(response.column_names){
             var selectedFormColumns = response.column_names;
 
-            //get a list of questions from the selected form
-            $.get(
-              "/rest/cartodb/questions?form_id="+formId,
-              function(questionsData, questionsQueryStatus){
-                //only list questions which are of type "option"
-                for(var i=0; i<questionsData['questions'].length; i++){
-                  if(questionsData['questions'][i].type === "OPTION"){
-                    //first pull a list of column names from the cartodb table then set the option values to the column names
-                    for(var j=0; j<selectedFormColumns.length; j++){
-                      if(selectedFormColumns[j]['column_name'].match(questionsData['questions'][i].id)){
-                        questionSelector.append('<option value="'
-                          + selectedFormColumns[j]['column_name'] + '" data-question-id="'
-                          + questionsData['questions'][i].id+'">'
-                          + questionsData['questions'][i].display_text
-                          + '</option>');
-                      }
-                    }
+            //get the questions from the selected form
+            var questions = FLOW.selectedControl.get('questions')[formId];
+            for(var i=0; i<questions.length; i++){
+              //only list questions which are type option and single select
+              if(questions[i].type === "OPTION" && !questions[i]['allowMultipleFlag']){
+                //first pull a list of column names from the cartodb table then set the option values to the column names
+                for(var j=0; j<selectedFormColumns.length; j++){
+                  if(selectedFormColumns[j]['column_name'].match(questions[i].keyId)){
+                    questionSelector.append('<option value="'
+                      + selectedFormColumns[j]['column_name'] + '" data-question-id="'
+                      + questions[i].keyId+'">'
+                      + questions[i].text
+                      + '</option>');
                   }
                 }
-                $("#survey_hierarchy").append(questionSelector);
-              });
+              }
+            }
+            $("#survey_hierarchy").append(questionSelector);
           }
         }, ajaxObject);
         var queryObject = {};
