@@ -25,7 +25,9 @@ import static org.akvo.flow.events.EventUtils.schedulePush;
 
 import java.io.StringWriter;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -54,6 +56,30 @@ public class EventLogger {
     private static Logger logger = Logger.getLogger(EventLogger.class.getName());
 
     private static final long MIN_TIME_DIFF = 1000 * 60; // 60 seconds
+
+    private static final Set<String> EXCLUDED_KINDS = new HashSet<String>();
+
+    static {
+        // Avoid infinite loop
+        EXCLUDED_KINDS.add("EventQueue");
+
+        // Not in use
+        EXCLUDED_KINDS.add("WebActivityAuthorization");
+        EXCLUDED_KINDS.add("ColumnContainer");
+        EXCLUDED_KINDS.add("RowContainer");
+        EXCLUDED_KINDS.add("SpreadsheetContainer");
+        EXCLUDED_KINDS.add("EditorialPage");
+        EXCLUDED_KINDS.add("EditorialPageContent");
+        EXCLUDED_KINDS.add("SMSMessage");
+
+        // Views on existing data
+        EXCLUDED_KINDS.add("SurveyalValue");
+        EXCLUDED_KINDS.add("SurveyedLocaleCluster");
+        EXCLUDED_KINDS.add("AccessPointMetricSummary");
+        EXCLUDED_KINDS.add("AccessPointStatusSummary");
+        EXCLUDED_KINDS.add("SurveyInstanceSummary");
+        EXCLUDED_KINDS.add("SurveyQuestionSummary");
+    }
 
     private boolean shouldSchedule() {
         Cache cache = initCache(60 * 60); // 1 hour
@@ -120,11 +146,12 @@ public class EventLogger {
         }
     }
 
-    @PostPut(kinds = {
-            "SurveyGroup", "Survey", "QuestionGroup", "Question", "SurveyInstance",
-            "QuestionAnswerStore", "SurveyedLocale", "DeviceFiles"
-    })
+    @PostPut
     void logPut(PutContext context) {
+
+        if (EXCLUDED_KINDS.contains(context.getCurrentElement().getKind())) {
+            return;
+        }
 
         try {
             if (!"true".equals(PropertyUtil.getProperty(Prop.ENABLE_CHANGE_EVENTS))) {
@@ -167,11 +194,13 @@ public class EventLogger {
         }
     }
 
-    @PostDelete(kinds = {
-            "SurveyGroup", "Survey", "QuestionGroup", "Question", "SurveyInstance",
-            "QuestionAnswerStore", "SurveyedLocale", "DeviceFiles"
-    })
+    @PostDelete
     void logDelete(DeleteContext context) {
+
+        if (EXCLUDED_KINDS.contains(context.getCurrentElement().getKind())) {
+            return;
+        }
+
         try {
             if (!"true".equals(PropertyUtil.getProperty(Prop.ENABLE_CHANGE_EVENTS))) {
                 return;
