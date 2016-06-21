@@ -628,54 +628,9 @@ FLOW.createNamedMapObject = function(mapObject, mapName, queryObject, cartocss){
           }
         }
         FLOW.customNamedMaps(mapObject, namedMapObject);
-
-        //allow changed map to be saved
-        FLOW.selectedControl.set('mapChanged', true);
       });
     }
   });
-  /* Build a (temporary) named map based on currently selected survey/form */
-  /*var namedMapObject = {};
-  namedMapObject['name'] = FLOW.selectedControl.get('customMapName');
-  namedMapObject['interactivity'] = [];
-  namedMapObject['query'] = FLOW.buildQuery(queryObject.table, queryObject.column, queryObject.value);
-  namedMapObject['requestType'] = (FLOW.selectedControl.get('newMap')) ? "POST" : "PUT";
-
-  //if cartocss is not defined, create map using default style
-  namedMapObject['cartocss'] = "#"+queryObject.table+"{"
-    +"marker-fill-opacity: 0.9;"
-    +"marker-line-color: #FFF;"
-    +"marker-line-width: 1.5;"
-    +"marker-line-opacity: 1;"
-    +"marker-placement: point;"
-    +"marker-type: ellipse;"
-    +"marker-width: 10;"
-    +"marker-fill: #FF6600;"
-    +"marker-allow-overlap: true;"
-    +"}";
-
-  //if cartocss is defined, create map using specified style
-  if(cartocss !== ""){
-    namedMapObject['cartocss'] += cartocss;
-  }
-
-  //get list of columns to be added to new named map's interactivity
-  $.get('/rest/cartodb/columns?table_name='+queryObject.table, function(columnsData) {
-    if (columnsData.column_names) {
-      for (var j=0; j<columnsData['column_names'].length; j++) {
-        namedMapObject['interactivity'].push(columnsData['column_names'][j]['column_name']);
-      }
-    }
-    FLOW.customNamedMaps(mapObject, namedMapObject);
-
-    //no longer a new map
-    if (FLOW.selectedControl.get('newMap')) {
-      FLOW.selectedControl.set('newMap', false);
-    }
-
-    //allow changed map to be saved
-    FLOW.selectedControl.set('mapChanged', true);
-  });*/
 };
 
 FLOW.getPointsCount = function(table, column, value){

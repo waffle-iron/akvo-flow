@@ -6448,6 +6448,10 @@ html.navMaps {
         .question-option-color-code {
           margin-right: 5px
         }
+        .deactivate-save-button {
+          pointer-events: none;
+          background-color: #a3a375
+        }
         #customMapEditCanvas {
             float: left;
             height: 600px;
