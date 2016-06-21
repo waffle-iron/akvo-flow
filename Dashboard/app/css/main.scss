@@ -6389,21 +6389,20 @@ html.navMaps {
       height: 150px;
       float: left
     }
-    #customMapsList {
-      .customMapsControls {
-        background-color: white;
-        border-bottom: 1px solid #202024;
-        height: 40px;
-        left: 0;
-        position: fixed;
-        right: 0;
-        top: 120px;
-        z-index: 1;
-        + .dataTable {
-            margin-top: 38px;
-        }
+    .customMapsControls {
+      background-color: white;
+      border-bottom: 1px solid #202024;
+      min-height: 40px;
+      left: 0;
+      position: fixed;
+      right: 0;
+      top: 120px;
+      z-index: 1;
+      + .dataTable {
+          margin-top: 38px;
       }
-
+    }
+    #customMapsList {
       table.dataTable td, th {
         text-align: left !important;
       }
@@ -6450,7 +6449,7 @@ html.navMaps {
         }
         .deactivate-save-button {
           pointer-events: none;
-          background-color: #a3a375
+          background-color: #8f8f91
         }
         #customMapEditCanvas {
             float: left;

@@ -98,44 +98,37 @@ FLOW.CustomMapsListView = FLOW.View.extend({
     if(surveyGroupsData.survey_groups){
       $('#customMapsTable').html('');
       for(var i=0; i<customMapsData.custom_maps.length; i++){
-        var modifyDate = new Date(customMapsData.custom_maps[i].modify_date);
-        var customMapsList = '';
-        customMapsList += '<tr>'
-          +'<td>'
-          +'<a class="viewCustomMap" data-form-id="'+customMapsData.custom_maps[i].form_id
-          +'" data-custom-map="'+customMapsData.custom_maps[i].named_map+'">'
-          +customMapsData.custom_maps[i].custom_map_title
-          +'</a>'
-          +'<p>'
-          +customMapsData.custom_maps[i].custom_map_description
-          +'</p>'
-          +'</td>';
-        customMapsList += '<td>';
-        //if survey id is set, get its title from survey groups object else leave it empty
-        if(customMapsData.custom_maps[i].survey_id !== 0){
-          for(var j=0; j<surveyGroupsData['survey_groups'].length; j++){
-            if(surveyGroupsData['survey_groups'][j].keyId === customMapsData.custom_maps[i].survey_id){
-              customMapsList += surveyGroupsData['survey_groups'][j].name;
-            }
-          }
-        }
-        customMapsList += '</td>';
-        customMapsList += '<td  class="action">';
-        if(customMapsData.custom_maps[i].survey_id !== 0){
-          //only allow users who have access to specified survey to edit or delete custom map
-          for(var j=0; j<surveyGroupsData['survey_groups'].length; j++){
-            if(surveyGroupsData['survey_groups'][j].keyId === customMapsData.custom_maps[i].survey_id){
-              customMapsList += '<a class="edit editCustomMap" data-custom-map="'+customMapsData.custom_maps[i].named_map+'">'
-                +Ember.String.loc('_edit')
-                +'</a>'
-                +'<a class="remove deleteCustomMap" data-custom-map="'+customMapsData.custom_maps[i].named_map+'">'
-                +Ember.String.loc('_remove')+'</a>';
-            }
-          }
-        }
-        customMapsList += '</td></tr>';
+        for(var j=0; j<surveyGroupsData['survey_groups'].length; j++) {
+          //only list customs maps that the currently logged in user has access to
+          if(surveyGroupsData['survey_groups'][j].keyId === customMapsData.custom_maps[i].survey_id){
+            var modifyDate = new Date(customMapsData.custom_maps[i].modify_date);
+            var customMapsList = '';
+            customMapsList += '<tr>'
+              +'<td>'
+              +'<a class="viewCustomMap" data-form-id="'+customMapsData.custom_maps[i].form_id
+              +'" data-custom-map="'+customMapsData.custom_maps[i].named_map+'">'
+              +customMapsData.custom_maps[i].custom_map_title
+              +'</a>'
+              +'<p>'
+              +customMapsData.custom_maps[i].custom_map_description
+              +'</p>'
+              +'</td>';
 
-        $('#customMapsTable').append(customMapsList);
+            //get a survey's title from the survey groups object
+            customMapsList += '<td>'+surveyGroupsData['survey_groups'][j].name+'</td>';
+
+            customMapsList += '<td  class="action">';
+            //TODO only display the action icons if current user is allowed to edit custom maps
+            customMapsList += '<a class="edit editCustomMap" data-custom-map="'+customMapsData.custom_maps[i].named_map+'">'
+              +Ember.String.loc('_edit')
+              +'</a>'
+              +'<a class="remove deleteCustomMap" data-custom-map="'+customMapsData.custom_maps[i].named_map+'">'
+              +Ember.String.loc('_remove')+'</a>';
+            customMapsList += '</td></tr>';
+
+            $('#customMapsTable').append(customMapsList);
+          }
+        }
       }
     }
   }

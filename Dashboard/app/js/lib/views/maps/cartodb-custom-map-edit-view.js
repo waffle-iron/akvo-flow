@@ -63,12 +63,14 @@ FLOW.CustomMapEditView = FLOW.View.extend({
         self.tmpCustomMapName = 'tmp_custom_map_'+timestampData.timestamp;
 
         if(FLOW.selectedControl.get('selectedCustomMap') === null) {
+          $('#manageType').html('<h3>'+Ember.String.loc('_new_custom_map')+'</h3>');
           FLOW.selectedControl.set('customMapName', 'custom_map_'+timestampData.timestamp);
           self.customMapName = 'custom_map_'+timestampData.timestamp;
 
           //manage folder and/or survey selection hierarchy
           FLOW.manageHierarchy(0);
         } else {
+          $('#manageType').html('<h3>'+Ember.String.loc('_edit_custom_map')+'</h3>');
           FLOW.selectedControl.set('newMap', false);
           FLOW.selectedControl.set('customMapName', FLOW.selectedControl.get('selectedCustomMap'));
           self.customMapName = FLOW.selectedControl.get('selectedCustomMap');

@@ -1,5 +1,5 @@
 <section class="fullWidth" id="customMap">
-  <div style="margin: 2px; width:100%; min-height: 35px; float: left" id="mapInfo">
+  <div class="customMapsControls">
     <div style="width: 70%; float: left" id="customMapDetails"></div>
     <div style="width: 30%; float: left; position: relative">
       <div {{action doCustomMapsList}} class="drawHandle" style="float: left; position: static !important">&lsaquo; {{t _back_to_maps}}</div>
@@ -25,7 +25,9 @@
 (function(){
 
   var navTabs = document.querySelector('.tabNav');
-  var mapInfo = document.querySelector('#mapInfo');
+  var mapInfo = document.querySelector('.customMapsControls');
+  document.querySelector('#flowMap').style.marginTop = (mapInfo.offsetHeight - 2)+'px';
+  document.querySelector('#pointDetails').style.marginTop = (mapInfo.offsetHeight - 2)+'px';
   var header = document.querySelector('header');
   var footer = document.querySelector('footer');
 
