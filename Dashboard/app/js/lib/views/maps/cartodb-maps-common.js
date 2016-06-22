@@ -60,13 +60,13 @@ FLOW.drawGeoShape = function(containerNode, geoShapeObject){
   FLOW.drawLeafletMap(geoshapeMap);
 
   var featureGroup = new L.featureGroup; //create a leaflet featureGroup to hold all object features
-  for(var i=0; i<geoShapeObject.length; i++){
-    var geoshapeCoordinatesArray, geoShapeObjectType = geoShapeObject[i]["geometry"]["type"];
+  for(var i=0; i<geoShapeObject['features'].length; i++){
+    var geoshapeCoordinatesArray, geoShapeObjectType = geoShapeObject['features'][i]["geometry"]["type"];
     var points = [], geoShape;
     if(geoShapeObjectType === 'Polygon'){
-      geoshapeCoordinatesArray = geoShapeObject[i]["geometry"]['coordinates'][0];
+      geoshapeCoordinatesArray = geoShapeObject['features'][i]["geometry"]['coordinates'][0];
     } else {
-      geoshapeCoordinatesArray = geoShapeObject[i]["geometry"]['coordinates'];
+      geoshapeCoordinatesArray = geoShapeObject['features'][i]["geometry"]['coordinates'];
     }
 
     for(var j=0; j<geoshapeCoordinatesArray.length; j++){
@@ -194,8 +194,7 @@ FLOW.displayPointData = function(dataPointObject, pointData){
 
   //create a questions array with the correct order of questions as in the survey
   if(questions.length > 0){
-    var geoshapeObject, geoshapeCheck = false;
-    FLOW.selectedControl.set('geoshapeCoordinates', null);
+    var geoshapeObject, geoshapeQuestionsCount = 0;
 
     clickedPointContent += '<div class="mapInfoDetail" style="opacity: 1; display: inherit;">';
     for (column in pointData['answers']){
@@ -205,9 +204,11 @@ FLOW.displayPointData = function(dataPointObject, pointData){
           if(questions[i].type === "GEOSHAPE" && questionAnswer !== null){
             var geoshapeObject = FLOW.parseGeoshape(questionAnswer);
             if(geoshapeObject !== null){
+              geoshapeQuestionsCount++;
               clickedPointContent += '<h4><div style="float: left">'
               +questions[i].text
-              +'</div>&nbsp;<a style="float: right" class="projectGeoshape">'+Ember.String.loc('_project_geoshape_onto_main_map') +'</a></h4>';
+              +'</div>&nbsp;<a style="float: right" class="project-geoshape" data-geoshape-object=\''+questionAnswer+'\'>'
+              +Ember.String.loc('_project_geoshape_onto_main_map') +'</a></h4>';
             }
           } else {
             clickedPointContent += '<h4>'+questions[i].text+'&nbsp;</h4>';
@@ -235,12 +236,10 @@ FLOW.displayPointData = function(dataPointObject, pointData){
                 break;
               case "GEOSHAPE":
                 geoshapeObject = FLOW.parseGeoshape(questionAnswer);
-                FLOW.selectedControl.set('geoshapeCoordinates', geoshapeObject);
 
                 if(geoshapeObject !== null){
-                  geoshapeCheck = true;
                   //create a container for each feature in geoshape object
-                  clickedPointContent += '<div id="geoShapeMap"></div>';
+                  clickedPointContent += '<div class="geoshape-map" data-geoshape-object=\''+questionAnswer+'\'></div>';
                   for(var j=0; j<geoshapeObject['features'].length; j++){
                     clickedPointContent += '<label style="font-weight: bold; color: black">'+geoshapeObject['features'][j]['geometry']['type']+'</label>';
                     if(geoshapeObject['features'][j]['geometry']['type'] === 'Polygon'
@@ -312,9 +311,10 @@ FLOW.displayPointData = function(dataPointObject, pointData){
     $('hr').show();
 
     //if there's geoshape, draw it
-    if(geoshapeCheck){
-      //pass container node, object type, and object coordinates to drawGeoShape function
-      FLOW.drawGeoShape('geoShapeMap', geoshapeObject['features']);
+    if(geoshapeQuestionsCount > 0){
+      $('.geoshape-map').each(function(index){
+        FLOW.drawGeoShape($('.geoshape-map')[index], $(this).data('geoshape-object'));
+      });
     }
   }
 };
@@ -584,48 +584,52 @@ FLOW.manageHierarchy = function(parentFolderId){
   $("#survey_hierarchy").append(folderSurveySelector);
 };
 
-FLOW.createNamedMapObject = function(mapObject, queryObject, cartocss){
-  /* Build a (temporary) named map based on currently selected survey/form */
-  var namedMapObject = {};
-  namedMapObject['name'] = FLOW.selectedControl.get('customMapName');
-  namedMapObject['interactivity'] = [];
-  namedMapObject['query'] = FLOW.buildQuery(queryObject.table, queryObject.column, queryObject.value);
-  namedMapObject['requestType'] = (FLOW.selectedControl.get('newMap')) ? "POST" : "PUT";
-
-  //if cartocss is not defined, create map using default style
-  namedMapObject['cartocss'] = "#"+queryObject.table+"{"
-    +"marker-fill-opacity: 0.9;"
-    +"marker-line-color: #FFF;"
-    +"marker-line-width: 1.5;"
-    +"marker-line-opacity: 1;"
-    +"marker-placement: point;"
-    +"marker-type: ellipse;"
-    +"marker-width: 10;"
-    +"marker-fill: #FF6600;"
-    +"marker-allow-overlap: true;"
-    +"}";
-
-  //if cartocss is defined, create map using specified style
-  if(cartocss !== ""){
-    namedMapObject['cartocss'] += cartocss;
-  }
-
-  //get list of columns to be added to new named map's interactivity
-  $.get('/rest/cartodb/columns?table_name='+queryObject.table, function(columnsData) {
-    if (columnsData.column_names) {
-      for (var j=0; j<columnsData['column_names'].length; j++) {
-        namedMapObject['interactivity'].push(columnsData['column_names'][j]['column_name']);
+FLOW.createNamedMapObject = function(mapObject, mapName, queryObject, cartocss){
+  $.get('/rest/cartodb/named_maps', function(namedMaps, status) {
+    if (namedMaps.template_ids) {
+      var mapExists = false;
+      for (var i=0; i<namedMaps['template_ids'].length; i++) {
+        if(namedMaps['template_ids'][i] === mapName) {
+          //named map already exists
+          mapExists = true;
+          break;
+        }
       }
-    }
-    FLOW.customNamedMaps(mapObject, namedMapObject);
 
-    //no longer a new map
-    if (FLOW.selectedControl.get('newMap')) {
-      FLOW.selectedControl.set('newMap', false);
-    }
+      var namedMapObject = {};
+      namedMapObject['name'] = mapName;
+      namedMapObject['interactivity'] = [];
+      namedMapObject['query'] = FLOW.buildQuery(queryObject.table, queryObject.column, queryObject.value);
+      namedMapObject['requestType'] = (mapExists) ? "PUT" : "POST";
 
-    //allow changed map to be saved
-    FLOW.selectedControl.set('mapChanged', true);
+      //if cartocss is not defined, create map using default style
+      namedMapObject['cartocss'] = "#"+queryObject.table+"{"
+        +"marker-fill-opacity: 0.9;"
+        +"marker-line-color: #FFF;"
+        +"marker-line-width: 1.5;"
+        +"marker-line-opacity: 1;"
+        +"marker-placement: point;"
+        +"marker-type: ellipse;"
+        +"marker-width: 10;"
+        +"marker-fill: #FF6600;"
+        +"marker-allow-overlap: true;"
+        +"}";
+
+      //if cartocss is defined, create map using specified style
+      if(cartocss !== ""){
+        namedMapObject['cartocss'] += cartocss;
+      }
+
+      //get list of columns to be added to new named map's interactivity
+      $.get('/rest/cartodb/columns?table_name='+queryObject.table, function(columnsData) {
+        if (columnsData.column_names) {
+          for (var j=0; j<columnsData['column_names'].length; j++) {
+            namedMapObject['interactivity'].push(columnsData['column_names'][j]['column_name']);
+          }
+        }
+        FLOW.customNamedMaps(mapObject, namedMapObject);
+      });
+    }
   });
 };
 
