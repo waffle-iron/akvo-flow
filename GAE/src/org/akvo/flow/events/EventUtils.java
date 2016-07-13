@@ -32,6 +32,7 @@ import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.StringUtils;
 import org.waterforpeople.mapping.app.web.rest.security.user.GaeUser;
 
@@ -56,11 +57,13 @@ import com.google.appengine.api.taskqueue.QueueFactory;
 import com.google.appengine.api.taskqueue.TaskOptions;
 import com.google.appengine.api.taskqueue.TaskOptions.Method;
 import com.google.appengine.api.urlfetch.FetchOptions;
+import com.google.appengine.api.urlfetch.HTTPHeader;
 import com.google.appengine.api.urlfetch.HTTPMethod;
 import com.google.appengine.api.urlfetch.HTTPRequest;
 import com.google.appengine.api.urlfetch.HTTPResponse;
 import com.google.appengine.api.urlfetch.URLFetchService;
 import com.google.appengine.api.urlfetch.URLFetchServiceFactory;
+import com.google.appengine.api.utils.SystemProperty;
 
 public class EventUtils {
 
@@ -264,7 +267,6 @@ public class EventUtils {
     }
 
     public static boolean newLock(DatastoreService ds, String reqId) {
-
         Transaction t = ds.beginTransaction(TransactionOptions.Builder.withXG(true));
         try {
             Entity lock = new Entity(getLockKey());
@@ -364,12 +366,13 @@ public class EventUtils {
         return (String) e.getProperty("payload");
     }
 
-    private static String getPayload(List<Entity> events) {
+    private static String getPayload(String orgId, List<Entity> events) {
         List<String> payloads = new ArrayList<String>();
         for (Entity e : events) {
             payloads.add(getPayload(e));
         }
-        return "[" + StringUtils.join(payloads, ",") + "]";
+        return String.format("{\"orgId\": \"%s\", \"events\": [%s]}", orgId,
+                StringUtils.join(payloads, ","));
     }
 
     public static void pushEvents(DatastoreService ds, String reqId, String serviceURL)
@@ -393,8 +396,12 @@ public class EventUtils {
         FetchOptions options = FetchOptions.Builder.followRedirects().setDeadline(HTTP_DEADLINE)
                 .validateCertificate();
 
+        String orgId = SystemProperty.applicationId.get();
+        String auth = orgId + ":" + System.getProperty("restPrivateKey");
         HTTPRequest req = new HTTPRequest(url, HTTPMethod.POST, options);
-        req.setPayload(getPayload(events).getBytes());
+        req.addHeader(new HTTPHeader("Authorization", "Basic "
+                + Base64.encodeBase64String(auth.getBytes())));
+        req.setPayload(getPayload(orgId, events).getBytes());
 
 
         HTTPResponse resp = urlfetch.fetch(req);
