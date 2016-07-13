@@ -378,6 +378,11 @@ public class EventUtils {
     public static void pushEvents(DatastoreService ds, String reqId, String serviceURL)
             throws IOException {
 
+        if (!serviceURL.trim().startsWith("https://")) {
+            log.severe("Service URL " + serviceURL + " is not secure");
+            return;
+        }
+
         URL url = null;
         try {
             url = new URL(serviceURL.trim());
