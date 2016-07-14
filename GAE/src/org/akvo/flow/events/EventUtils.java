@@ -141,7 +141,6 @@ public class EventUtils {
 
     public static final int EVENTS_CHUNK_SIZE = 100;
 
-
     static {
         try {
             LOCK_TTL = Long.parseLong(System.getProperties().getProperty("pushLockTtl"));
@@ -174,7 +173,6 @@ public class EventUtils {
         }
         return toActionName(kindName);
     }
-
 
     public static Map<String, Object> newEvent(String orgId, String eventType,
             Entity entity, Map<String, Object> context) throws AssertionError {
@@ -378,11 +376,6 @@ public class EventUtils {
     public static void pushEvents(DatastoreService ds, String reqId, String serviceURL)
             throws IOException {
 
-        if (!serviceURL.trim().startsWith("https://")) {
-            log.severe("Service URL " + serviceURL + " is not secure");
-            return;
-        }
-
         URL url = null;
         try {
             url = new URL(serviceURL.trim());
@@ -396,18 +389,22 @@ public class EventUtils {
 
         List<Entity> events = getUnsyncedEvents(ds);
 
-
         URLFetchService urlfetch = URLFetchServiceFactory.getURLFetchService();
         FetchOptions options = FetchOptions.Builder.followRedirects().setDeadline(HTTP_DEADLINE)
                 .validateCertificate();
 
         String orgId = SystemProperty.applicationId.get();
-        String auth = orgId + ":" + System.getProperty("restPrivateKey");
-        HTTPRequest req = new HTTPRequest(url, HTTPMethod.POST, options);
-        req.addHeader(new HTTPHeader("Authorization", "Basic "
-                + Base64.encodeBase64String(auth.getBytes())));
-        req.setPayload(getPayload(orgId, events).getBytes());
+        String key = System.getProperty("restPrivateKey");
 
+        HTTPRequest req = new HTTPRequest(url, HTTPMethod.POST, options);
+
+        if (url.getProtocol().equalsIgnoreCase("https") && key != null) {
+            String auth = orgId + ":" + key;
+            req.addHeader(new HTTPHeader("Authorization", "Basic "
+                    + Base64.encodeBase64String(auth.getBytes())));
+        }
+
+        req.setPayload(getPayload(orgId, events).getBytes());
 
         HTTPResponse resp = urlfetch.fetch(req);
 
