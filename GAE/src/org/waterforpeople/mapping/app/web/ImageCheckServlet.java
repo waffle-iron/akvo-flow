@@ -62,7 +62,7 @@ public class ImageCheckServlet extends AbstractRestApiServlet {
             return new RestResponse();
         }
 
-        if (checkReq.getAttempt() == null || checkReq.getAttempt().equals("")) {
+        if (checkReq.getAttempt() == null) {
             log.log(Level.SEVERE,
                     "No attempt number was specified, aborting check");
             return new RestResponse();

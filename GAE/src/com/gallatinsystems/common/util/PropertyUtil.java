@@ -16,8 +16,8 @@
 
 package com.gallatinsystems.common.util;
 
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Properties;
 
 /**
@@ -27,20 +27,7 @@ import java.util.Properties;
  */
 public class PropertyUtil {
 
-    private static Properties props = null;
-
-    private PropertyUtil() {
-        initProperty();
-    }
-
-    /**
-     * initializes the static instance with the contents of System.properties
-     */
-    private void initProperty() {
-        if (props == null) {
-            props = System.getProperties();
-        }
-    }
+    private static Properties props = System.getProperties();
 
     /**
      * returns the value of a single property (or null if not found)
@@ -49,9 +36,6 @@ public class PropertyUtil {
      * @return
      */
     public static String getProperty(String propertyName) {
-        if (props == null) {
-            new PropertyUtil();
-        }
         return props.getProperty(propertyName);
     }
 
@@ -62,7 +46,7 @@ public class PropertyUtil {
      * @return
      */
     public static HashMap<String, String> getPropertiesMap(
-            ArrayList<String> keyList) {
+            List<String> keyList) {
         HashMap<String, String> propertyMap = new HashMap<String, String>();
         for (String key : keyList) {
             String value = props.getProperty(key);

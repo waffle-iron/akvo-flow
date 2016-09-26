@@ -33,16 +33,16 @@ public class DataUtils {
     public static String[] optionResponsesTextArray(String optionResponse) {
         String[] responseArray = null;
 
-        if (optionResponse == null || optionResponse.trim() == "") {
+        if (optionResponse == null || optionResponse.trim().equals("")) {
             return new String[0];
         }
-        
+
         List<Map<String, String>> optionNodes = jsonStringToList(optionResponse);
         if (optionNodes != null) {
             responseArray = new String[optionNodes.size()];
             for (int i = 0; i < responseArray.length; i++) {
                 String text = optionNodes.get(i).get("text");
-                if (text != null && text.trim() != "") {
+                if (text != null && !text.trim().equals("")) {
                     responseArray[i] = text.trim();
                 }
             }
@@ -52,20 +52,20 @@ public class DataUtils {
 
         return responseArray;
     }
-    
+
     public static String[] cascadeResponseValues(String data) {
         String[] values = null;
 
-        if (data == null || data.trim() == "") {
+        if (data == null || data.trim().equals("")) {
             return new String[0];
         }
-        
+
         List<Map<String, String>> nodes = jsonStringToList(data);
         if (nodes != null) {
             values = new String[nodes.size()];
             for (int i = 0; i < values.length; i++) {
                 String text = nodes.get(i).get("name");
-                if (text != null && text.trim() != "") {
+                if (text != null && !text.trim().equals("")) {
                     values[i] = text.trim();
                 }
             }
@@ -107,7 +107,8 @@ public class DataUtils {
     public static List<Map<String, String>> jsonStringToList(String data) {
         try {
             return JSON_OBJECT_MAPPER.readValue(data,
-                    new TypeReference<List<Map<String, String>>>() {});
+                    new TypeReference<List<Map<String, String>>>() {
+                    });
         } catch (IOException e) {
             // Data is not JSON-formatted
         }
