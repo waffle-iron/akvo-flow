@@ -33,6 +33,7 @@ import java.util.logging.Logger;
 
 import net.sf.jsr107cache.Cache;
 
+import org.akvo.flow.domain.RuntimeProperty;
 import org.akvo.flow.events.EventUtils.Action;
 import org.akvo.flow.events.EventUtils.Prop;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -110,7 +111,6 @@ public class EventLogger {
         return true;
     }
 
-
     private void checkAndSchedule() {
 
         if (!shouldSchedule()) {
@@ -122,16 +122,17 @@ public class EventLogger {
 
     private void storeEvent(Map<String, Object> event, Date timestamp) {
         try {
-            DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+            DatastoreService ds = DatastoreServiceFactory.getDatastoreService();
 
             ObjectMapper m = new ObjectMapper();
             StringWriter w = new StringWriter();
             m.writeValue(w, event);
 
             Entity entity = new Entity("EventQueue");
-            entity.setProperty(Prop.CREATED_DATE_TIME, timestamp);
-            entity.setProperty(Prop.LAST_UPDATE_DATE_TIME, timestamp);
-            entity.setProperty(Prop.SYNCED, false);
+            entity.setProperty(Prop.CREATED, timestamp);
+            entity.setProperty(Prop.UPDATED, timestamp);
+            entity.setProperty(Prop.SYNC_VERSION,
+                    RuntimeProperty.getProperty(ds, Prop.SYNC_VERSION));
 
             String payload = w.toString();
             if (payload.length() > Constants.MAX_LENGTH) {
@@ -140,7 +141,7 @@ public class EventLogger {
                 entity.setProperty("payload", payload);
             }
 
-            datastore.put(entity);
+            ds.put(entity);
 
             checkAndSchedule();
         } catch (Exception e) {
@@ -167,8 +168,8 @@ public class EventLogger {
             String action = getAction(current.getKey().getKind());
 
             // determine if this entity was created or updated
-            Date lastUpdateDatetime = (Date) current.getProperty(Prop.LAST_UPDATE_DATE_TIME);
-            Date createdDateTime = (Date) current.getProperty(Prop.CREATED_DATE_TIME);
+            Date lastUpdateDatetime = (Date) current.getProperty(Prop.UPDATED);
+            Date createdDateTime = (Date) current.getProperty(Prop.CREATED);
             String actionType = createdDateTime.equals(lastUpdateDatetime) ? Action.CREATED
                     : Action.UPDATED;
 
@@ -181,7 +182,7 @@ public class EventLogger {
             Map<String, Object> eventSource = newSource(authentication.getPrincipal());
 
             Date timestamp = (Date) context.getCurrentElement().getProperty(
-                    Prop.LAST_UPDATE_DATE_TIME);
+                    Prop.UPDATED);
             // create event context map
             Map<String, Object> eventContext = newContext(timestamp, eventSource);
 

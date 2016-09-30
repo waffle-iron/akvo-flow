@@ -32,11 +32,13 @@ import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.akvo.flow.domain.RuntimeProperty;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.StringUtils;
 import org.waterforpeople.mapping.app.web.rest.security.user.GaeUser;
 
 import com.google.appengine.api.backends.BackendServiceFactory;
+import com.google.appengine.api.datastore.Cursor;
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.EntityNotFoundException;
@@ -49,6 +51,7 @@ import com.google.appengine.api.datastore.Query.Filter;
 import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.google.appengine.api.datastore.Query.FilterPredicate;
 import com.google.appengine.api.datastore.Query.SortDirection;
+import com.google.appengine.api.datastore.QueryResultList;
 import com.google.appengine.api.datastore.Text;
 import com.google.appengine.api.datastore.Transaction;
 import com.google.appengine.api.datastore.TransactionOptions;
@@ -121,11 +124,11 @@ public class EventUtils {
     }
 
     static class Prop {
-        public static final String LAST_UPDATE_DATE_TIME = "lastUpdateDateTime";
-        public static final String CREATED_DATE_TIME = "createdDateTime";
+        public static final String UPDATED = "lastUpdateDateTime";
+        public static final String CREATED = "createdDateTime";
         public static final String EVENT_NOTIFICATION = "eventNotification";
         public static final String ENABLE_CHANGE_EVENTS = "enableChangeEvents";
-        public static final String SYNCED = "synced";
+        public static final String SYNC_VERSION = "syncVersion";
     }
 
     public static final String SURVEY_GROUP_TYPE_SURVEY = "SURVEY";
@@ -140,6 +143,8 @@ public class EventUtils {
     public static final double HTTP_DEADLINE = 60d;
 
     public static final int EVENTS_CHUNK_SIZE = 100;
+
+    public static final int DEFAULT_SYNC_VERSION = 0;
 
     static {
         try {
@@ -318,9 +323,11 @@ public class EventUtils {
         q.add(to);
     }
 
-    private static Filter getFilter() {
-        Filter notSynced = new FilterPredicate(Prop.SYNCED, FilterOperator.EQUAL, false);
-        Filter beforeNow = new FilterPredicate(Prop.CREATED_DATE_TIME, FilterOperator.LESS_THAN,
+    private static Filter getFilter(DatastoreService ds) {
+        Integer syncVersion = (Integer) RuntimeProperty.getProperty(ds, Prop.SYNC_VERSION);
+        Filter notSynced = new FilterPredicate(Prop.SYNC_VERSION, FilterOperator.NOT_EQUAL,
+                syncVersion);
+        Filter beforeNow = new FilterPredicate(Prop.CREATED, FilterOperator.LESS_THAN,
                 new Date());
         return new CompositeFilter(CompositeFilterOperator.AND, Arrays.asList(notSynced,
                 beforeNow));
@@ -328,7 +335,7 @@ public class EventUtils {
 
     private static List<Entity> getUnsyncedEvents(DatastoreService ds) {
         Query q = new Query("EventQueue");
-        q.setFilter(getFilter()).addSort(Prop.CREATED_DATE_TIME, SortDirection.ASCENDING);
+        q.setFilter(getFilter(ds)).addSort(Prop.CREATED, SortDirection.ASCENDING);
         PreparedQuery pq = ds.prepare(q);
 
         // FIXME: We'll need to adjust the chunk-size if we're sending answers with signature
@@ -340,10 +347,11 @@ public class EventUtils {
     private static void markAsSynced(DatastoreService ds, List<Entity> events) {
         Transaction t = ds.beginTransaction(TransactionOptions.Builder.withXG(true));
         Date now = new Date();
+        int syncVersion = (Integer) RuntimeProperty.getProperty(ds, Prop.SYNC_VERSION);
         try {
             for (Entity e : events) {
-                e.setProperty(Prop.SYNCED, true);
-                e.setProperty(Prop.LAST_UPDATE_DATE_TIME, now);
+                e.setProperty(Prop.SYNC_VERSION, syncVersion);
+                e.setProperty(Prop.UPDATED, now);
             }
             ds.put(events);
             t.commit();
@@ -421,6 +429,50 @@ public class EventUtils {
         } else {
             releaseLock(ds);
         }
+    }
+
+    @SuppressWarnings("deprecation")
+    public static void scheduleSyncVersionReset(String cursor) {
+        TaskOptions to = TaskOptions.Builder.withUrl("/app_worker/eventreset").method(Method.GET)
+                .param("cursor", cursor)
+                .header("host",
+                        BackendServiceFactory.getBackendService()
+                                .getBackendAddress("dataprocessor"));
+        Queue q = QueueFactory.getQueue("background-processing");
+        q.add(to);
+    }
+
+    public static void resetSyncVersion(DatastoreService ds, String startCursor) {
+        com.google.appengine.api.datastore.FetchOptions fetchOptions = com.google.appengine.api.datastore.FetchOptions.Builder
+                .withChunkSize(EVENTS_CHUNK_SIZE);
+
+        if (startCursor != null && !startCursor.equals("null") && startCursor.length() != 0) {
+            fetchOptions.startCursor(Cursor.fromWebSafeString(startCursor));
+        }
+
+        Query q = new Query("EventQueue").addSort(Prop.CREATED, SortDirection.ASCENDING);
+        PreparedQuery pq = ds.prepare(q);
+
+        try {
+            QueryResultList<Entity> events = pq.asQueryResultList(fetchOptions);
+
+            for (Entity e : events) {
+                e.setProperty(Prop.SYNC_VERSION, DEFAULT_SYNC_VERSION);
+            }
+
+            ds.put(events);
+
+            String cursor = events.getCursor().toWebSafeString();
+
+            if (events.size() == EVENTS_CHUNK_SIZE) {
+                scheduleSyncVersionReset(cursor);
+            }
+
+        } catch (IllegalArgumentException e) {
+            // IllegalArgumentException happens when an invalid cursor is used.
+            // no-op
+        }
+
     }
 
     // FIXME: Remove me
