@@ -323,8 +323,7 @@ public class EventUtils {
         q.add(to);
     }
 
-    private static Filter getFilter(DatastoreService ds) {
-        Integer syncVersion = (Integer) RuntimeProperty.getProperty(ds, Prop.SYNC_VERSION);
+    private static Filter getFilter(int syncVersion) {
         Filter notSynced = new FilterPredicate(Prop.SYNC_VERSION, FilterOperator.NOT_EQUAL,
                 syncVersion);
         Filter beforeNow = new FilterPredicate(Prop.CREATED, FilterOperator.LESS_THAN,
@@ -335,7 +334,8 @@ public class EventUtils {
 
     private static List<Entity> getUnsyncedEvents(DatastoreService ds) {
         Query q = new Query("EventQueue");
-        q.setFilter(getFilter(ds)).addSort(Prop.CREATED, SortDirection.ASCENDING);
+        int syncVersion = (Integer) RuntimeProperty.getProperty(ds, "syncVersion");
+        q.setFilter(getFilter(syncVersion)).addSort(Prop.CREATED, SortDirection.ASCENDING);
         PreparedQuery pq = ds.prepare(q);
 
         // FIXME: We'll need to adjust the chunk-size if we're sending answers with signature
@@ -443,6 +443,19 @@ public class EventUtils {
     }
 
     public static void resetSyncVersion(DatastoreService ds, String startCursor) {
+        int syncVersion = -1;
+
+        try {
+            syncVersion = (Integer) RuntimeProperty.getProperty(ds, "syncVersion");
+        } catch (NullPointerException e) {
+            // No-op
+        }
+
+        if (syncVersion != 0) {
+            log.warning("EventQueue reset process was aborted. syncVersion <> 0");
+            return;
+        }
+
         com.google.appengine.api.datastore.FetchOptions fetchOptions = com.google.appengine.api.datastore.FetchOptions.Builder
                 .withChunkSize(EVENTS_CHUNK_SIZE);
 
