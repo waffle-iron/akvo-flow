@@ -32,7 +32,7 @@ import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.akvo.flow.domain.RuntimeProperty;
+import org.akvo.flow.util.RuntimeProperty;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.StringUtils;
 import org.waterforpeople.mapping.app.web.rest.security.user.GaeUser;

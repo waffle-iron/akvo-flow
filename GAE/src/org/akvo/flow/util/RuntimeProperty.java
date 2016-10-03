@@ -14,7 +14,7 @@
  *  The full license text can also be seen at <http://www.gnu.org/licenses/agpl.html>.
  */
 
-package org.akvo.flow.domain;
+package org.akvo.flow.util;
 
 import java.util.Date;
 import java.util.HashMap;

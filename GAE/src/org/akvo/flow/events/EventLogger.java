@@ -33,9 +33,9 @@ import java.util.logging.Logger;
 
 import net.sf.jsr107cache.Cache;
 
-import org.akvo.flow.domain.RuntimeProperty;
 import org.akvo.flow.events.EventUtils.Action;
 import org.akvo.flow.events.EventUtils.Prop;
+import org.akvo.flow.util.RuntimeProperty;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
