@@ -44,6 +44,7 @@ public class RuntimeProperty {
     public static final String PROPERTY_UPDATED = "lastUpdateDateTime";
 
     private static final Map<String, Key> KEYS = new HashMap<String, Key>();
+    private static final Map<String, Object> VALUES = new HashMap<String, Object>();
 
     private static void checkNotNull(Object k, String message) {
         if (k == null) {
@@ -96,13 +97,19 @@ public class RuntimeProperty {
 
         checkParams(ds, key);
 
+        if (VALUES.containsKey(key)) {
+            return VALUES.get(key);
+        }
+
         Entity e = getEntity(ds, getKey(key));
 
         if (e == null) {
             return null;
         }
 
-        return e.getProperty(PROPERTY_VALUE);
+        Object value = e.getProperty(PROPERTY_VALUE);
+        VALUES.put(key, value);
+        return value;
     }
 
     /**
@@ -134,6 +141,7 @@ public class RuntimeProperty {
         e.setProperty(PROPERTY_VALUE, value);
         e.setProperty(PROPERTY_UPDATED, d);
         ds.put(e);
+        VALUES.put(key, value);
 
         return previousValue;
     }
@@ -156,6 +164,7 @@ public class RuntimeProperty {
         if (e != null) {
             previousValue = e.getProperty(PROPERTY_VALUE);
             ds.delete(k);
+            VALUES.remove(key);
         }
 
         return previousValue;
