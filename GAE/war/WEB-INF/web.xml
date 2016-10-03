@@ -481,6 +481,14 @@
 		<url-pattern>/app_worker/eventpush</url-pattern>
 	</servlet-mapping>
 	<servlet>
+	<servlet-name>EventQueueReset</servlet-name>
+		<servlet-class>org.akvo.flow.events.EventQueueResetServlet</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>EventQueueReset</servlet-name>
+		<url-pattern>/app_worker/eventreset</url-pattern>
+	</servlet-mapping>
+	<servlet>
 	<servlet-name>RequestDump</servlet-name>
 		<servlet-class>org.akvo.flow.events.RequestDumpServlet</servlet-class>
 	</servlet>
