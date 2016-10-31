@@ -32,12 +32,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.akvo.flow.events.EventUtils.Prop;
+import org.akvo.flow.util.RuntimeProperty;
 
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 
 public class EventPushServlet extends HttpServlet {
-
 
     private static final long serialVersionUID = -2863143139609299513L;
     private static final Logger log = Logger.getLogger(EventPushServlet.class.getName());
@@ -59,9 +59,14 @@ public class EventPushServlet extends HttpServlet {
             return;
         }
 
-
         DatastoreService ds = DatastoreServiceFactory.getDatastoreService();
+        Boolean eventPushEnabled = (Boolean) RuntimeProperty.getProperty(ds,
+                Prop.ENABLE_PUSH_EVENTS);
 
+        if (!Boolean.TRUE.equals(eventPushEnabled)) {
+            log.warning("Push events disabled");
+            return;
+        }
 
         String currentReqId = getReqId(getCurrentLock(ds));
 
@@ -76,6 +81,5 @@ public class EventPushServlet extends HttpServlet {
         }
 
     }
-
 
 }

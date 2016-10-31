@@ -129,6 +129,7 @@ public class EventUtils {
         public static final String EVENT_NOTIFICATION = "eventNotification";
         public static final String ENABLE_CHANGE_EVENTS = "enableChangeEvents";
         public static final String SYNC_VERSION = "syncVersion";
+        public static final String ENABLE_PUSH_EVENTS = "enablePushEvents";
     }
 
     public static final String SURVEY_GROUP_TYPE_SURVEY = "SURVEY";
