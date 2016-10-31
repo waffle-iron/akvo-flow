@@ -165,7 +165,7 @@ public class RawDataSpreadsheetImporter implements DataImporter {
 
     /**
      * Parse a raw data report file into a list of InstanceData
-     * 
+     *
      * @param sheet
      * @param columnIndexToQuestionId
      * @param questionIdToQuestionDto
@@ -261,19 +261,7 @@ public class RawDataSpreadsheetImporter implements DataImporter {
 
         // First check if we are done with the sheet
         Row baseRow = sheet.getRow(startRow);
-        if (baseRow == null // no such row
-                || baseRow.getFirstCellNum() == -1) { // a row without any cells defined
-            return null;
-        }
-        // maybe they are all blank/contain only spaces?
-        boolean blank = true;
-        for (int ix = baseRow.getFirstCellNum(); ix < baseRow.getLastCellNum(); ix++) {
-            if (!isEmptyCell(baseRow.getCell(ix))) {
-                blank = false;
-                break;
-            }
-        }
-        if (blank) {
+        if (isEmptyRow(baseRow)) { // a row without any cells defined
             return null;
         }
 
@@ -445,6 +433,11 @@ public class RawDataSpreadsheetImporter implements DataImporter {
                         case SIGNATURE:
                             // we do not allow importing / overwriting of signature question
                             // responses
+                            val = null;
+                            break;
+
+                        case CADDISFLY:
+                            // we do not allow importing / overwriting Caddisfly question responses
                             val = null;
                             break;
 
@@ -753,15 +746,20 @@ public class RawDataSpreadsheetImporter implements DataImporter {
             if (hasIterationColumn) {
                 Iterator<Row> iter = sheet.iterator();
                 iter.next(); // Skip the header row.
-                while (iter.hasNext()) {
+                while (iter.hasNext()) { // gets "phantom" rows, too
                     Row row = iter.next();
+                    if (isEmptyRow(row)) {
+                        break; // phantom row - just stop
+                    }
                     Cell cell = row.getCell(1);
                     if (cell == null) {
-                        errorMap.put(-1, "Repeat column is empty");
+                        // include 1-based row number in error log
+                        errorMap.put(-1, "Repeat column is empty in row: " + row.getRowNum() + 1);
                         break;
                     }
                     if (cell.getCellType() != Cell.CELL_TYPE_NUMERIC) {
-                        errorMap.put(-1, "Repeat column must contain a numeric value");
+                        errorMap.put(-1, "Repeat column must contain a numeric value in row: "
+                                + row.getRowNum() + 1);
                         break;
                     }
                 }
@@ -776,7 +774,7 @@ public class RawDataSpreadsheetImporter implements DataImporter {
 
     /**
      * Check if a cell is any kind of empty
-     * 
+     *
      * @param cell
      * @return
      */
@@ -785,6 +783,34 @@ public class RawDataSpreadsheetImporter implements DataImporter {
                 || cell.getCellType() == Cell.CELL_TYPE_BLANK
                 || (cell.getCellType() == Cell.CELL_TYPE_STRING
                 && cell.getStringCellValue().trim().equals(""));
+    }
+
+    /**
+     * Check if a row is any kind of empty
+     *
+     * @param row
+     * @return
+     */
+
+    private boolean isEmptyRow(Row row) {
+        if (row == null) {
+            return true;
+        }
+        if (row.getFirstCellNum() == -1) { // a row without any cells defined
+            return true; // phantom row
+        }
+        // maybe cells are all blank/contain only spaces?
+        boolean blank = true;
+        for (int ix = row.getFirstCellNum(); ix < row.getLastCellNum(); ix++) {
+            if (!isEmptyCell(row.getCell(ix))) {
+                blank = false;
+                break;
+            }
+        }
+        if (blank) {
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -809,7 +835,7 @@ public class RawDataSpreadsheetImporter implements DataImporter {
 
     public static void main(String[] args) throws Exception {
         if (args.length != 4) {
-            log.error("Error.\nUsage:\n\tjava org.waterforpeople.mapping.dataexport.RawDataSpreadsheetImporter <file> <serverBase> <surveyId>");
+            log.error("Error.\nUsage:\n\tjava org.waterforpeople.mapping.dataexport.RawDataSpreadsheetImporter <file> <serverBase> <surveyId> <apiKey>");
             System.exit(1);
         }
         File file = new File(args[0].trim());
