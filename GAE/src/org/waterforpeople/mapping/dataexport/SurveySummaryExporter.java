@@ -322,6 +322,9 @@ public class SurveySummaryExporter extends AbstractDataExporter {
                         if (!json.isNull("localeNameFlag")) {
                             dto.setLocaleNameFlag(json.getBoolean("localeNameFlag"));
                         }
+                        if (!json.isNull("caddisflyResourceUuid")) {
+                            dto.setCaddisflyResourceUuid(json.getString("caddisflyResourceUuid"));
+                        }
                         if (!json.isNull("levelNames")) {
                             final List<String> levelNames = new ArrayList<String>();
                             final JSONArray array = json.getJSONArray("levelNames");
@@ -463,12 +466,12 @@ public class SurveySummaryExporter extends AbstractDataExporter {
 
         public void tallyResponse(String questionId, Set<String> rollups,
                 String response, QuestionDto qDto) {
-            
+
             if (qDto != null && QuestionType.NUMBER == qDto.getQuestionType()) {
-                //for NUMBER questions, if decimals-allowed changes
-                //during survey, "1" and "1.0" should be tallied together
+                // for NUMBER questions, if decimals-allowed changes
+                // during survey, "1" and "1.0" should be tallied together
                 if (response.endsWith(".0")) {
-                    response = response.substring(0, response.length()-2);
+                    response = response.substring(0, response.length() - 2);
                 }
             }
             addResponse(questionId, response);

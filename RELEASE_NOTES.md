@@ -1,10 +1,76 @@
-Akvo FLOW (Field Level Operations Watch) is a system to collect, manage, analyse and display geographically-referenced monitoring and evaluation data.
+Akvo Flow is a system to collect, manage, analyse and display geographically-referenced monitoring and evaluation data.
 
 Read more about [Akvo FLOW](http://www.akvo.org/blog/?p=4836).
 Read more about the [Akvo Platform](http://www.akvo.org/blog/?p=4822).
 
 Akvo FLOW Dashboard release notes
 ----
+#1.9.11 Jubilant Jaguar
+Date: 7 November 2016
+
+#New and noteworthy
+* **Integration of the Akvo Caddisfly mobile app with the Flow dashboard** - As part of the [integration of the Akvo Caddisfly app with the Flow dashboard](https://github.com/akvo/akvo-product-design/issues/5), we introduce changes to; create a new question that is of type `Akvo Caddisfly` [#1577], and enable correctly transforming and displaying data gathered by the caddisfly app [#1570]. With this you can now add an Akvo Caddisfly water quality test to your Akvo Flow survey. 
+
+* **Implement data approval workflow management** - As part of the larger [data approval feature](https://github.com/akvo/akvo-product-design/issues/82), we have a number of changes introduced in this release that include; introducing a new tab in under the `Data > Data Approval`, where one is able to handle the creation and management of data approval groups along with their associated steps [#1803], enabling a user to activate data approval for a particular survey and associate a set of approval steps with a survey [#1660, #1771], and approving data points gathered in a survey, based on approval steps from the associated approval group [#1664]. This feature is currently under testing and is not available to all our partners yet. 
+
+
+# Resolved issues
+* **Improve copying of surveys between instances** [#873] - While copying surveys across different dashboards, a number of manual steps were required to complate the process.  We have now resolved these actions and copying the surveys across instances requires almost no manual intervention. The task is done by our Flow support team. 
+
+* **Hide Data Cleaning tab if permission is not given** [#1528] - Even for users who did not have any data cleaning permissions, we were showing the data cleaning tab with an empty list of surveys in the drop down box to select for data cleaning.  We now completely hide this tab if the user has no data cleaning permissions on any survey whatsoever.
+
+* **CartoDB maps - question order in side bar not the same as in survey definition** [#1593] - The order of display of questions under the CartoDB maps was out of sync with the order in the survey definition.  We fix it with these changes
+
+* **In public map responses for option questions, cascades, photos, and videos are rendered as a string** [#1635] - This ensures that responses to option questions and cascade questions are shown in a human-readable format, when viewed by selecting data points on the publicly visible Flow map.
+
+* **Fix an internal error when stored counts are null** [#1772] - We fix the system error that occurred in cases where no data had previously been gathered against a specific question.  This was caused by the system attempting to check for the current total of responses to that question, and yet no such total existed.
+
+* **Timeout while retrieving the devices list** [#1803] - This fixes the issue where the list of devices on the dashboard sometimes doesn't load due to a very large number of devices.
+
+* **Update the copyright year in the application footer to 2016** [#1815]
+
+
+#1.9.10 Intriguing Iguana
+Date: 18 August 2016
+
+# New and noteworthy
+* **Handle geotagged media on maps** [#1653] - Photos and videos having geolocation information associated with them during data collection, are now shown on (CartoDB) maps, when previewing the gathered data.
+
+* **Add Vietnamese language to dashboard** [#1728]
+
+# Resolved issues
+* **Empty repeat-question-group row error** [#1684] - A fix for a bug where importing of raw data reports, that contain an empty row, would result in the entire import failing.
+
+* **Devices without phone numbers are matched with wrong assignments** [#1741] - In a number of cases, some devices have been spontaneously downloading surveys that were not explicitly assigned to them.  This is as a result of the internal phone number not being set correctly.  This fix resolves this issue.
+
+* **Remove language dropdown from 'public' page** [#1657] - The public page on the dashboard had a language dropdown that was not functioning because the langauges are now associated with the users and not with the browser in which the dashboard is being viewed.  We have therefore eliminated language selection from the publicly visible part of the dashboard.
+
+
+#1.9.9 Hazardous Hedgehog
+
+Date: 18 July 2016
+# New and noteworthy
+* **Output multiple choice, option question responses into separate columns** [#1605] - We now enable the possibility to generate raw data reports with the responses to multiple choice, option questions split into separate columns, i.e., one column for each response.  This is facilitates the analysis of this data by external systems.
+
+* **Include geolocation data from geotagged media in raw data reports** [#1652] - For photos and videos that have been tagged with geolocation data, this data will now be included as extra columns in the raw data reports.  Note that these columns will only be visible in raw data reports that are *exported* for use in external systems, that is, the geolocation data cannot be reimported or edited.
+
+* **Displaying drone imagery in Flow** [#1562] - Besides the already existing Terrain, Street and Satellite layers, Flow maps now introduce an extra layer, the drone imagery layer. This enables partners who have gathered aerial images through drones or similar equipment to render these images on a Flow map.
+
+# Resolved issues
+* **Standardizing the date format** [#1637] - correctly format the date and time stamp displayed when browsing data points under the CartoDB maps.  This is part of a larger effort to standardize the date and time display on the entire Flow dashboard (#257)
+
+* **Rendering multiple geoshapes when previewing data points under the (CartoDB) map tab** [#1694] -  correctly render all geoshapes for forms that may contain more than one geoshape question.  Prior to this fix only the first geoshape response was rendered correctly.
+
+* **Re-enable modification of media links using data cleaning** [#1733] - This reintroduces the possibility to import links for photos and videos in new form responses or to update such links in existing form responses.
+
+* **Fixing an un-clickable dropdown menu** [#1703] - resolves an issue on the *Inspect Data tab* where it was not possible to select (click on) forms for certain surveys, that happened to be in folders where the folder hierarchy was very deep.
+
+* **Set up registration form correctly when copying monitored surveys** [#1279] - resolves an issue where the registration form of a copied survey was not configured correctly and resulted in all forms being greyed out on the mobile app with no possibility to gather data against them.
+
+* **Question responses shown out of order (CartoDB maps)** [#1593] - resolves the issue where question responses were displayed out of order, i.e. the same order as the questions, when browsing these responses under CartoDB maps
+
+* **Enable multi-lingual support for the 'Show' and 'Hide'** links under the maps tab [#1695]
+
 #1.9.8 Grappling Garanuug
 Date: 8 June 2016
 # New and noteworthy
