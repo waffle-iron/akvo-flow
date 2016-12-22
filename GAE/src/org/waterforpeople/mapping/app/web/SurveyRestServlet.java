@@ -48,8 +48,10 @@ import org.waterforpeople.mapping.domain.SurveyInstance;
 
 import com.gallatinsystems.framework.gwt.dto.client.BaseDto;
 import com.gallatinsystems.framework.rest.AbstractRestApiServlet;
+import com.gallatinsystems.framework.rest.RestError;
 import com.gallatinsystems.framework.rest.RestRequest;
 import com.gallatinsystems.framework.rest.RestResponse;
+import com.gallatinsystems.framework.rest.exception.RestException;
 import com.gallatinsystems.metric.dao.MetricDao;
 import com.gallatinsystems.metric.dao.SurveyMetricMappingDao;
 import com.gallatinsystems.metric.domain.Metric;
@@ -161,6 +163,11 @@ public class SurveyRestServlet extends AbstractRestApiServlet {
                     surveyReq.getCursor(), response);
         } else if (SurveyRestRequest.GET_SURVEY_ACTION.equals(surveyReq
                 .getAction())) {
+            if (surveyReq.getSurveyId() == null) {
+                throw new RestException(new RestError(RestError.MISSING_PARAM_ERROR_CODE,
+                        RestError.MISSING_PARAM_ERROR_MESSAGE, "surveyId"), null, null);
+            }
+
             List<SurveyDto> sDtoList = new ArrayList<SurveyDto>();
             sDtoList.add(getSurvey(new Long(surveyReq.getSurveyId())));
             response.setDtoList(sDtoList);
