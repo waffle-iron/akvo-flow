@@ -169,7 +169,10 @@ public class SurveyRestServlet extends AbstractRestApiServlet {
             }
 
             List<SurveyDto> sDtoList = new ArrayList<SurveyDto>();
-            sDtoList.add(getSurvey(new Long(surveyReq.getSurveyId())));
+
+            SurveyDto sDto = getSurvey(surveyReq.getSurveyId());
+            sDtoList.add(sDto);
+
             response.setDtoList(sDtoList);
         } else if (SurveyRestRequest.LIST_GROUP_ACTION.equals(surveyReq
                 .getAction())
@@ -289,6 +292,11 @@ public class SurveyRestServlet extends AbstractRestApiServlet {
         SurveyDAO surveyDao = new SurveyDAO();
         SurveyDto dto = new SurveyDto();
         Survey s = surveyDao.getById(surveyId);
+
+        if (s == null) {
+            return null;
+        }
+
         DtoMarshaller.copyToDto(s, dto);
 
         // difference in property names between Survey and SurveyDto
