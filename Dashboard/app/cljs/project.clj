@@ -1,16 +1,18 @@
-(defproject projects "0.8.0"
+(defproject projects "0.9.0"
   :description "Standalone apps for the Akvo Flow Dashboard"
   :url "http://akvo.org/products/akvoflow/"
 
-  :dependencies [[org.clojure/clojure "1.7.0"]
-                 [org.clojure/clojurescript "1.7.145"]
-                 [org.clojure/core.async "0.1.346.0-17112a-alpha"]
+  :dependencies [[org.clojure/clojure "1.8.0"]
+                 [org.clojure/clojurescript "1.9.456"]
+                 [org.clojure/core.async "0.2.395"]
                  [org.omcljs/om "0.8.8"]
-                 [cljs-ajax "0.3.10"]
-                 [sablono "0.3.4"]]
+                 [cljsjs/react "15.4.2-2"]
+                 [cljsjs/react-dom "15.4.2-2"]
+                 [cljs-ajax "0.5.8"]
+                 [sablono "0.7.7"]]
 
-  :plugins [[lein-cljsbuild "1.1.0"]
-            [lein-shell "0.4.0"]]
+  :plugins [[lein-cljsbuild "1.1.5"]
+            [lein-shell "0.5.0"]]
 
   :source-paths ["src"]
 
